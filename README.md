@@ -88,12 +88,17 @@ flowEngine.startProcess(processId, vars);
 ### 前端设计器
 
 源码在front目录下，代码使用原生javascript编写可以在所有主流框架中集成使用。
+可以直接运行查看效果(vue3外壳)
+```
+yarn install 
+yarn dev
+```
 
-安装
+在项目中安装
 ```
 yarn add wastflow (npm install wastflow --save)
 ```
-如何使用
+使用
 ```
 <div id="flow" ref="flow" class="wast-flow" 
     style="width: 100%; height: 680px; overflow: hidden;">
