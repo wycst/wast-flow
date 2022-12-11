@@ -116,3 +116,6 @@ const flow = wf.render("#flow", {
 ```
 flow.destroy();
 ```
+界面示意图
+
+![img.png](img.png)
