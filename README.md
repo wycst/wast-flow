@@ -123,4 +123,4 @@ flow.destroy();
 ```
 界面示意图
 
-![img.png](img.png)
+![https://github.com/wycst/wast-flow/blob/main/img.png](img.png)
