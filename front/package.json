@@ -1,0 +1,35 @@
+{
+  "name": "wastflow",
+  "version": "1.0.0-beta1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "description": "wastflow tools",
+  "main": "dist/wastflow.es.js",
+  "files": [
+    "dist",
+    "src/core"
+  ],
+  "author": "yunchao.wang",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "http://192.168.1.113:8181/repository/npm-releases/"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "wastflow": "^1.0.0-beta"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "1.0.0",
+    "@vue/compiler-sfc": "^3.0.4",
+    "axios": "^1.1.3",
+    "element-plus": "^2.2.20",
+    "events": "^3.3.0",
+    "font-awesome": "^4.7.0",
+    "raphael": "^2.3.0",
+    "vite": "2.0.0",
+    "vue": "^3.0.4",
+    "vue-router": "^4.1.6"
+  }
+}
