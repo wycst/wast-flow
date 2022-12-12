@@ -94,11 +94,31 @@ yarn install
 yarn dev
 ```
 
-在项目中安装
+html引入方式
+```
+<div id="app"></div>
+<script src="wastflow.umd.js"></script>
+<script type="text/javascript">
+   var flow = __wf.render("#app", {
+      grid: true,
+      width: "2000px",
+      height: "1000px",
+      menu: {
+        draggable: true
+      },
+      // background: "lightblue",
+      panable: true
+    })
+
+</script>
+```
+
+npm安装方式（私库）
 ```
 yarn add wastflow (npm install wastflow --save)
 ```
-使用
+
+node项目使用
 ```
 <div id="flow" ref="flow" class="wast-flow" 
     style="width: 100%; height: 680px; overflow: hidden;">
