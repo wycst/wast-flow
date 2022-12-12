@@ -667,89 +667,44 @@ class GraphicDesign {
     /** 打开元素的属性编辑窗口 */
     openElementPropertyPop(element) {
         let me = this;
-        let type = element.type;
-        let nodeType = element.data("nodeType");
-        let propertyModels = [
-            {
-                label: "元素ID",
-                value: element.id,
-                event: "input",
-                readonly: true,
-                key: "id",
-                html: `<input data-key="id" placeholder="请输入元素名称"/>`,
-            }
-        ];
-        if (type == "path") {
-            let fromElementOutPaths = element.data("from").data("out");
-            let uniqueConnect = Object.keys(fromElementOutPaths).length == 1;
+        let propertyModels = [];
+        // 双击空白区域可维护流程信息
+        if(!element) {
             propertyModels.push({
-                label: "元素名称",
-                value: element.data("text").attr("text") || "",
+                label: "流程标识",
+                value: me.processId || "",
                 event: "input",
-                key: "name",
-                html: `<input data-key="name" placeholder="请输入元素名称"/>`,
+                key: "processId",
+                html: `<input data-key="processId" placeholder="请输入流程标识"/>`,
                 callback(value) {
-                    element.data("text").attr("text", value);
+                    me.processId = value;
                 }
-            }, {
-                label: "连线样式",
-                value: element.data("pathStyle") || "",
+            },{
+                label: "流程名称",
+                value: me.processName || "",
                 event: "input",
-                key: "pathStyle",
-                html: `<select data-key="pathStyle">
-                           <option value="broken">折线</option>
-                           <option value="straight">直线</option>
-<!--                           <option value="h2v">h2v</option>-->
-<!--                           <option value="v2h">v2h</option>-->
-<!--                           <option value="curve">曲线</option>-->
-                       </select>`,
+                key: "processName",
+                html: `<input data-key="processName" placeholder="请输入流程名称"/>`,
                 callback(value) {
-                    if (value != element.data("pathStyle")) {
-                        me.resetConnectPathData(element, value);
-                        element.data("pathStyle", value);
-                    }
-                    // update path
-                }
-            }, {
-                label: "分支策略",
-                value: element.data("conditionType") || "Always",
-                event: "change",
-                readonly: uniqueConnect,
-                key: "conditionType",
-                html: `<select data-key="conditionType">
-                           <option value="Always">Always</option>
-                           <option value="Script">Script</option>
-                       </select>`,
-                callback(value) {
-                    element.data("conditionType", value);
-                }
-            }, {
-                label: "脚本表达式",
-                value: element.data("script") || "",
-                event: "input",
-                key: "script",
-                html: `<textarea data-key="script"></textarea>`,
-                readonly: uniqueConnect,
-                callback(value) {
-                    element.data("script", value);
-                }
-            }, {
-                label: "优先级",
-                value: element.data("priority") || 0,
-                event: "input",
-                key: "priority",
-                html: `<input data-key="priority" type="number"/>`,
-                readonly: uniqueConnect,
-                callback(value) {
-                    element.data("priority", !value ? 0 : Number(value));
+                    me.processName = value;
                 }
             });
         } else {
-            if (nodeType != "Start" && nodeType != "End") {
-                let handler = element.data("handler");
-                if (!handler) {
-                    element.data("handler", handler = {});
+            let type = element.type;
+            let nodeType = element.data("nodeType");
+            propertyModels = [
+                {
+                    label: "元素ID",
+                    value: element.id,
+                    event: "input",
+                    readonly: true,
+                    key: "id",
+                    html: `<input data-key="id" placeholder="请输入元素名称"/>`,
                 }
+            ];
+            if (type == "path") {
+                let fromElementOutPaths = element.data("from").data("out");
+                let uniqueConnect = Object.keys(fromElementOutPaths).length == 1;
                 propertyModels.push({
                     label: "元素名称",
                     value: element.data("text").attr("text") || "",
@@ -760,69 +715,138 @@ class GraphicDesign {
                         element.data("text").attr("text", value);
                     }
                 }, {
-                    label: "任务类型",
-                    value: element.data("nodeType") || "Business",
+                    label: "连线样式",
+                    value: element.data("pathStyle") || "",
+                    event: "input",
+                    key: "pathStyle",
+                    html: `<select data-key="pathStyle">
+                           <option value="broken">折线</option>
+                           <option value="straight">直线</option>
+<!--                           <option value="h2v">h2v</option>-->
+<!--                           <option value="v2h">v2h</option>-->
+<!--                           <option value="curve">曲线</option>-->
+                       </select>`,
+                    callback(value) {
+                        if (value != element.data("pathStyle")) {
+                            me.resetConnectPathData(element, value);
+                            element.data("pathStyle", value);
+                        }
+                        // update path
+                    }
+                }, {
+                    label: "分支策略",
+                    value: element.data("conditionType") || "Always",
                     event: "change",
-                    key: "nodeType",
-                    html: `<select data-key="nodeType">
+                    readonly: uniqueConnect,
+                    key: "conditionType",
+                    html: `<select data-key="conditionType">
+                           <option value="Always">Always</option>
+                           <option value="Script">Script</option>
+                       </select>`,
+                    callback(value) {
+                        element.data("conditionType", value);
+                    }
+                }, {
+                    label: "脚本表达式",
+                    value: element.data("script") || "",
+                    event: "input",
+                    key: "script",
+                    html: `<textarea data-key="script"></textarea>`,
+                    readonly: uniqueConnect,
+                    callback(value) {
+                        element.data("script", value);
+                    }
+                }, {
+                    label: "优先级",
+                    value: element.data("priority") || 0,
+                    event: "input",
+                    key: "priority",
+                    html: `<input data-key="priority" type="number"/>`,
+                    readonly: uniqueConnect,
+                    callback(value) {
+                        element.data("priority", !value ? 0 : Number(value));
+                    }
+                });
+            } else {
+                if (nodeType != "Start" && nodeType != "End") {
+                    let handler = element.data("handler");
+                    if (!handler) {
+                        element.data("handler", handler = {});
+                    }
+                    propertyModels.push({
+                        label: "元素名称",
+                        value: element.data("text").attr("text") || "",
+                        event: "input",
+                        key: "name",
+                        html: `<input data-key="name" placeholder="请输入元素名称"/>`,
+                        callback(value) {
+                            element.data("text").attr("text", value);
+                        }
+                    }, {
+                        label: "任务类型",
+                        value: element.data("nodeType") || "Business",
+                        event: "change",
+                        key: "nodeType",
+                        html: `<select data-key="nodeType">
                                <option value="Business">Business</option>
                                <option value="Service">Service</option>
                                <option value="Script">Script</option>
                                <option value="Manual">Manual</option>
                            </select>`,
-                    callback(value) {
-                        element.data("nodeType", value);
-                    }
-                }, {
-                    label: "是否异步执行",
-                    value: handler.asynchronous || false,
-                    event: "change",
-                    key: "asynchronous",
-                    checkbox: true,
-                    html: `<input data-key="asynchronous" type="checkbox">`,
-                    callback(value) {
-                        handler.asynchronous = value;
-                    }
-                }, {
-                    label: "超时设置",
-                    value: handler.timeout || 0,
-                    event: "input",
-                    key: "timeout",
-                    html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
-                    callback(value) {
-                        handler.timeout = !value ? 0 : Number(value);
-                    }
-                }, {
-                    label: "延迟设置",
-                    value: handler.delay || 0,
-                    event: "input",
-                    key: "delay",
-                    html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
-                    callback(value) {
-                        handler.delay = !value ? 0 : Number(value);
-                    }
-                }, {
-                    label: "循环迭代次数",
-                    value: handler.iterate || 0,
-                    event: "input",
-                    key: "iterate",
-                    html: `<input data-key="iterate" type="number"/>`,
-                    callback(value) {
-                        handler.iterate = !value ? 0 : Number(value);
-                    }
-                }, {
-                    label: "失败策略",
-                    value: handler.policy || "Stop",
-                    event: "change",
-                    key: "policy",
-                    html: `<select data-key="policy">
+                        callback(value) {
+                            element.data("nodeType", value);
+                        }
+                    }, {
+                        label: "是否异步执行",
+                        value: handler.asynchronous || false,
+                        event: "change",
+                        key: "asynchronous",
+                        checkbox: true,
+                        html: `<input data-key="asynchronous" type="checkbox">`,
+                        callback(value) {
+                            handler.asynchronous = value;
+                        }
+                    }, {
+                        label: "超时设置",
+                        value: handler.timeout || 0,
+                        event: "input",
+                        key: "timeout",
+                        html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
+                        callback(value) {
+                            handler.timeout = !value ? 0 : Number(value);
+                        }
+                    }, {
+                        label: "延迟设置",
+                        value: handler.delay || 0,
+                        event: "input",
+                        key: "delay",
+                        html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
+                        callback(value) {
+                            handler.delay = !value ? 0 : Number(value);
+                        }
+                    }, {
+                        label: "循环迭代次数",
+                        value: handler.iterate || 0,
+                        event: "input",
+                        key: "iterate",
+                        html: `<input data-key="iterate" type="number"/>`,
+                        callback(value) {
+                            handler.iterate = !value ? 0 : Number(value);
+                        }
+                    }, {
+                        label: "失败策略",
+                        value: handler.policy || "Stop",
+                        event: "change",
+                        key: "policy",
+                        html: `<select data-key="policy">
                            <option value="Stop">终止</option>
                            <option value="Continue">继续</option>
                        </select>`,
-                    callback(value) {
-                        handler.policy = value;
-                    }
-                });
+                        callback(value) {
+                            handler.policy = value;
+                        }
+                    });
+                }
             }
         }
 
@@ -1040,6 +1064,10 @@ class GraphicDesign {
     // 双击空白
     handleDblClickBlank(evt) {
         this.option.dblclickBlank && this.option.dblclickBlank(evt);
+        // 内部编辑
+        if (this.option.enablePropertyPop) {
+            this.openElementPropertyPop();
+        }
     };
 
     // 右键事件
@@ -3553,7 +3581,10 @@ class GraphicDesign {
      *
      * */
     getData() {
-        let data = {};
+        let data = {
+            id: this.processId || "",
+            name: this.processName || ""
+        };
         let startNodeId = null;
         let {elements, containers} = this;
         let nodes = (data.nodes = []), connects = (data.connects = []);
@@ -3651,8 +3682,11 @@ class GraphicDesign {
             } catch (err) {
             }
         }
-        let {nodes = [], connects = []} = data || {};
+        let {id, name, nodes = [], connects = []} = data || {};
         this.reset();
+
+        this.processId = id;
+        this.processName = name;
         // 重构数据结构
         let maxId = 0;
         for (let node of nodes) {
@@ -3746,7 +3780,7 @@ class GraphicDesign {
     /** 导出JSON */
     exportJSON() {
         let data = this.getData();
-        exportTextFile(JSON.stringify(data, null, 4), "flow.json")
+        exportTextFile(JSON.stringify(data, null, 4), `${this.processId || 'flow'}.json`)
     };
 
     /** 导入文件处理 */
@@ -3802,7 +3836,7 @@ class GraphicDesign {
                 u8arr[n] = bstr.charCodeAt(n);
             }
             const blob = new Blob([u8arr], {type: "image/png"});
-            exportBlob(blob, "flow.png");
+            exportBlob(blob, `${this.processId || 'flow'}.png`);
         }
     };
 

@@ -170,16 +170,8 @@ public class WastFlowTest {
 
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
-        // 环节记录
-        System.out.println(processInstance.getNodeInstances());
+        System.out.println("processInstanceId " + processInstance.getId());
 
-        // test per
-        long l1 = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            flowEngine.startProcess(processId, vars);
-        }
-        long l2 = System.currentTimeMillis();
-        System.out.println(" use " + (l2 - l1));
         flowEngine.destroy();
     }
 

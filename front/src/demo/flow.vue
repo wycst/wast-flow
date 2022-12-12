@@ -1,14 +1,5 @@
 <template>
   <div>
-    <el-button @click="getData">缓存数据</el-button>
-    <el-button @click="clearData">清楚面板</el-button>
-    <el-button @click="setData">回显数据</el-button>
-    <el-button @click="initStartAndEnd">初始化开始和结束</el-button>
-    <el-button @click="createNode">添加节点</el-button>
-    <el-button @click="setData">添加网关</el-button>
-    <el-button @click="setData">添加节点组</el-button>
-    <el-button @click="renderPath">绘制path</el-button>
-    <el-button @click="exportImage">导出图片</el-button>
     <div ref="flow" class="wast-flow" style="width: 100%; height: 680px; overflow: hidden;">
     </div>
   </div>
@@ -30,7 +21,7 @@ export default {
       menu: {
         draggable: true
       },
-      background: "lightblue",
+      // background: "lightblue",
       panable: true
     })
     // 绘制矩形
