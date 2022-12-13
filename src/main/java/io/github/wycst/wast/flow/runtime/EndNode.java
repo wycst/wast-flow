@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.runtime;
 
+import io.github.wycst.wast.flow.definition.Consts;
 import io.github.wycst.wast.flow.definition.Status;
 
 import java.sql.Timestamp;
@@ -13,7 +14,7 @@ import java.sql.Timestamp;
 public class EndNode extends RuntimeNode {
 
     public EndNode(String id, String name, RuleProcess process) {
-        super(id, name, process);
+        super(id, name == null ? Consts.EndNodeName : name, process);
     }
 
     @Override

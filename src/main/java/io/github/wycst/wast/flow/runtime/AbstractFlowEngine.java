@@ -1,17 +1,34 @@
 package io.github.wycst.wast.flow.runtime;
 
+import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.defaults.DefaultFlowEntityManager;
-import io.github.wycst.wast.flow.defaults.DefaultProcessHook;
 import io.github.wycst.wast.flow.definition.FlowEntityManager;
+import io.github.wycst.wast.flow.definition.FlowResource;
 import io.github.wycst.wast.flow.definition.ProcessHook;
+import io.github.wycst.wast.flow.defaults.DefaultProcessHook;
+import io.github.wycst.wast.flow.entitys.ProcessDeployEntity;
+import io.github.wycst.wast.log.Log;
+import io.github.wycst.wast.log.LogFactory;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @Author wangyunchao
  * @Date 2022/12/1 15:07
  */
 class AbstractFlowEngine {
+
+    // 日志
+    private static Log log = LogFactory.getLog(AbstractFlowEngine.class);
 
     // 流程生命周期钩子
     private ProcessHook processHook = new DefaultProcessHook();
@@ -27,7 +44,7 @@ class AbstractFlowEngine {
     protected boolean persistenceInstanceLog;
 
     // 静态资源
-    protected String staticResources;
+    protected String staticResources = "";
 
     public void setProcessHook(ProcessHook processHook) {
         if (processHook != null) {
@@ -42,6 +59,7 @@ class AbstractFlowEngine {
      */
     public void setDatasource(DataSource dataSource) {
         this.flowEntityManager = new DefaultFlowEntityManager(dataSource);
+        this.flowEntityManager.init();
     }
 
     /**
@@ -51,6 +69,7 @@ class AbstractFlowEngine {
      */
     public void setFlowEntityManager(FlowEntityManager entityManager) {
         this.flowEntityManager = entityManager;
+        entityManager.init();
     }
 
     public FlowEntityManager getFlowEntityManager() {
@@ -109,4 +128,81 @@ class AbstractFlowEngine {
         processHook.onCompleted(processInstance);
     }
 
+    /**
+     * 1、加载部署已发布的流程（db）
+     * 2、加载存储在磁盘目录的流程，已后缀名区分Kind（file dir）
+     * 3、加载资源目录(resources)
+     */
+    public void loadDeployedProcess() {
+        loadFromDatabase();
+        loadFromFileDir();
+        loadStaticResources();
+    }
+
+    // static
+    private void loadStaticResources() {
+        try {
+            if(staticResources == null) return;
+            // 约定:注意路径首字母不能是/,否则为空
+            Enumeration<URL> urls = this.getClass().getClassLoader().getResources(staticResources);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                String protocol = url.getProtocol();
+                if ("jar".equalsIgnoreCase(protocol)) {
+                    JarFile jar = ((JarURLConnection) url.openConnection()).getJarFile();
+                    Enumeration<JarEntry> entries = jar.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry jarEntry = entries.nextElement();
+                        String jarEntryName = jarEntry.getName();
+                        // 排除文件夹或class
+                        if (!jarEntry.isDirectory()) {
+                            if (jarEntryName.toLowerCase().endsWith(".json")) {
+                                try {
+                                    String json = StringUtils.fromResource(jarEntryName);
+                                    FlowHelper.deployment(FlowResource.ofJson(json));
+                                } catch (Throwable throwable) {
+                                    log.error(throwable.getMessage(), throwable);
+                                }
+                            }
+                        }
+                    }
+                } else if ("file".equalsIgnoreCase(protocol)) {
+                    String filePath = url.getFile();
+                    File file = new File(filePath);
+                    if (file.isDirectory()) {
+                        File[] files = file.listFiles();
+                        for (File f : files) {
+                            String path = f.getPath();
+                            if (path.toLowerCase().endsWith(".json")) {
+                                try {
+                                    String json = StringUtils.fromStream(new FileInputStream(f));
+                                    FlowHelper.deployment(FlowResource.ofJson(json));
+                                } catch (Throwable throwable) {
+                                    log.error(throwable.getMessage(), throwable);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+        }
+
+    }
+
+    private void loadFromFileDir() {
+    }
+
+    private void loadFromDatabase() {
+        if (flowEntityManager == null) {
+            log.info("- skip db loading because the flowEntityManager is not initialized.");
+            return;
+        }
+        List<ProcessDeployEntity> deployEntities = flowEntityManager.queryBy(ProcessDeployEntity.class, null);
+        for (ProcessDeployEntity deployEntity : deployEntities) {
+            FlowResource flowResource = FlowResource.of(deployEntity.getResourceKind(), deployEntity.getResourceContent());
+            FlowHelper.loadDeployedProcess(deployEntity.getProcessId(), deployEntity.getVersion(), flowResource);
+        }
+    }
 }

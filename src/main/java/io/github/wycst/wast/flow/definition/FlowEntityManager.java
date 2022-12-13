@@ -15,7 +15,7 @@ public interface FlowEntityManager {
      * 初始化
      * @throws Exception
      */
-    public void init() throws Exception;
+    public void init() ;
 
     /**
      * 保存实体信息

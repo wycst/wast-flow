@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.definition;
 
+import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.deployment.DeploymentProcess;
 import io.github.wycst.wast.json.JSON;
 
@@ -20,6 +21,9 @@ public abstract class FlowResource {
     }
 
     public static FlowResource of(ResourceKind resourceKind, String resourceContent) {
+        if(StringUtils.isEmpty(resourceContent)) {
+            throw new RuntimeException("content is null");
+        }
         switch (resourceKind) {
             case JSON:
                 return FlowResource.ofJson(resourceContent);

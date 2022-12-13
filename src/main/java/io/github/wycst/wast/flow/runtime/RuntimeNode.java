@@ -9,7 +9,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 运行时节点，统一定义为多进多出
@@ -85,6 +88,15 @@ public class RuntimeNode extends Node {
     }
 
     /**
+     * 当发生异常时回滚
+     *
+     * @return
+     */
+    protected boolean rollbackIfException() {
+        return false;
+    }
+
+    /**
      * 准备
      */
     void prepare() {
@@ -107,10 +119,10 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     final void run(ProcessInstance processInstance, NodeInstance prev) throws Exception {
-        // 构建实例
+        // create instance
         NodeInstance nodeInstance = new NodeInstance(this, prev, processInstance);
         try {
-            // 入栈记录
+            // in
             runIn(nodeInstance, processInstance);
             long delay = handlerOption.getDelay();
             // sleep
@@ -125,6 +137,20 @@ public class RuntimeNode extends Node {
             // processInstance.addNodeInstance();
             nodeInstance.setOutDate(new Timestamp(System.currentTimeMillis()));
             nodeInstance.setStatus(Status.Completed);
+        } catch (Exception exception) {
+            // node instance Error
+            nodeInstance.setStatus(Status.Error);
+            // process instance Error
+            processInstance.setStatus(Status.Error);
+            // log time
+            processInstance.setLastModifyDate(new Timestamp(System.currentTimeMillis()));
+            if(rollbackIfException()) {
+                // continue throw up
+                throw exception;
+            } else {
+                // stop
+                return;
+            }
         } finally {
             // on Leave
             onNodeLeave(processInstance, nodeInstance);
@@ -134,8 +160,7 @@ public class RuntimeNode extends Node {
         runOut(processInstance, nodeInstance);
     }
 
-    // on Leave
-    // if manualNode please override this method
+    // on Leave if manualNode please override this method
     protected void onNodeLeave(ProcessInstance processInstance, NodeInstance nodeInstance) {
         processInstance.getExecuteEngine().onNodeLeave(processInstance, nodeInstance);
         // persistence
@@ -150,7 +175,7 @@ public class RuntimeNode extends Node {
         long timeout = handlerOption.getTimeout();
         FailurePolicy policy = handlerOption.getPolicy();
         try {
-            if(asynchronous || timeout > 0) {
+            if (asynchronous || timeout > 0) {
                 Future future = defaultFlowEngine.submitRunnable(new Callable() {
                     @Override
                     public Object call() throws Exception {
@@ -158,20 +183,21 @@ public class RuntimeNode extends Node {
                         return null;
                     }
                 });
-                if(!asynchronous) {
+                if (!asynchronous) {
                     future.get(timeout, TimeUnit.MILLISECONDS);
                 }
             } else {
                 callHandler(nodeHandler, nodeContext);
             }
         } catch (Exception exception) {
-            if(exception instanceof TimeoutException) {
+            if (exception instanceof TimeoutException) {
                 log.error("timeout {}", timeout);
             }
             if (policy == FailurePolicy.Stop) {
                 throw exception;
             } else {
                 exception.printStackTrace();
+                log.error(exception.getMessage(), exception);
             }
         }
     }

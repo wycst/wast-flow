@@ -12,6 +12,16 @@ public class ManualNode extends RuntimeNode {
         super(id, name, process);
     }
 
+    /**
+     * 工作流发生异常时必须回滚操作
+     *
+     * @return
+     */
+    @Override
+    protected boolean rollbackIfException() {
+        return true;
+    }
+
     @Override
     public String toString() {
         return "ManualNode{" +

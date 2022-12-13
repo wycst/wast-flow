@@ -1,29 +1,25 @@
 package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.common.utils.ExecutorServiceUtils;
-import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.definition.*;
 import io.github.wycst.wast.flow.entitys.NodeInstanceEntity;
 import io.github.wycst.wast.flow.entitys.ProcessDefinitionEntity;
 import io.github.wycst.wast.flow.entitys.ProcessDeployEntity;
 import io.github.wycst.wast.flow.entitys.ProcessInstanceEntity;
+import io.github.wycst.wast.flow.exception.FlowDeploymentException;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
 import javax.annotation.PreDestroy;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.JarURLConnection;
-import java.net.URL;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 /**
  * 流程引擎（会话，服务）
@@ -77,12 +73,11 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     ProcessInstance startProcess(String processId, ProcessInstance parent, Map<String, Object> context) {
         // get flow
         RuleProcess ruleProcess = FlowHelper.getProcess(processId);
-        beginTransaction();
         try {
+            beginTransaction();
             // create instance and set context
             ProcessInstance processInstance = ProcessInstance.createInstance(ruleProcess, parent, this);
             processInstance.setContextValues(context);
-
             // Synchronous blocking execution
             onStarted(processInstance);
             // start
@@ -91,6 +86,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             commitTransaction();
             return processInstance;
         } catch (Throwable throwable) {
+            // 发生了未捕获的异常回滚数据
             rollbackTransaction();
             // 回滚事务
             if (throwable instanceof RuntimeException) {
@@ -162,11 +158,9 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         if (flowEntityManager != null) {
             flowEntityManager.close();
         }
-
         if (executorService != null) {
             ExecutorServiceUtils.shutdownExecutorService(executorService);
         }
-
         // 后续拓展命名空间，只销毁命名空间下的流程
         FlowHelper.destroy();
     }
@@ -196,16 +190,45 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     /**
-     * （定义）流程部署发布，并持久化
+     * 根据流程标识删除流程定义信息
      *
-     * @param definedId
+     * @param processId
+     */
+    public void deleteDefinition(String processId) {
+        ProcessDefinitionEntity definitionEntity = getProcessDefinition(processId);
+        if(definitionEntity != null) {
+            flowEntityManager.deleteEntity(ProcessDefinitionEntity.class, definitionEntity.getId());
+        }
+    }
+
+    /**
+     * 根据流程标识查询流程定义实体类
+     *
+     * @param processId
      * @return
      */
-    public RuleProcess deploymentProcess(String definedId) {
-        ProcessDefinitionEntity definitionEntity = flowEntityManager.getEntity(ProcessDefinitionEntity.class, definedId);
-        definitionEntity.getClass();
+    public ProcessDefinitionEntity getProcessDefinition(String processId) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("processId", processId);
+        List<ProcessDefinitionEntity> definitionEntityList = flowEntityManager.queryBy(ProcessDefinitionEntity.class, params);
+        return definitionEntityList.size() == 0 ? null : definitionEntityList.get(0);
+    }
 
-        String processId = definitionEntity.getProcessId();
+    /**
+     * 根据流程标识(唯一)发布新版本
+     *
+     * @param processId
+     * @return
+     */
+    public RuleProcess deploymentProcess(String processId) {
+
+        // query entity
+        ProcessDefinitionEntity definitionEntity = getProcessDefinition(processId);
+        if (definitionEntity == null) {
+            throw new FlowDeploymentException("process[processId = '" + processId + "'] is not defined.");
+        }
+
+        // String processId = definitionEntity.getProcessId();
         FlowResource flowResource = FlowResource.of(definitionEntity.getResourceKind(), definitionEntity.getResourceContent());
 
         RuleProcess ruleProcess = FlowHelper.deployment(processId, flowResource);
@@ -239,6 +262,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         instanceEntity.setCompletedDate(processInstance.getCompletedDate());
         instanceEntity.setInstanceStatus(processInstance.getStatus());
         instanceEntity.setVariables(processInstance.serializeVariables());
+        instanceEntity.setLastModifyDate(processInstance.getLastModifyDate());
         flowEntityManager.insert(instanceEntity);
     }
 
@@ -271,82 +295,5 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         instanceEntity.setOutDate(nodeInstance.getOutDate());
 
         flowEntityManager.insert(instanceEntity);
-    }
-
-    /**
-     * 1、加载部署已发布的流程（db）
-     * 2、加载存储在磁盘目录的流程，已后缀名区分Kind（file dir）
-     * 3、加载资源目录(resources)
-     */
-    public void loadDeployedProcess() {
-        loadFromDatabase();
-        loadFromFileDir();
-        loadStaticResources();
-    }
-
-    // static
-    private void loadStaticResources() {
-        try {
-            // 约定:注意路径首字母不能是/,否则为空
-            Enumeration<URL> urls = this.getClass().getClassLoader().getResources(staticResources);
-            while (urls.hasMoreElements()) {
-                URL url = urls.nextElement();
-                String protocol = url.getProtocol();
-                if ("jar".equalsIgnoreCase(protocol)) {
-                    JarFile jar = ((JarURLConnection) url.openConnection()).getJarFile();
-                    Enumeration<JarEntry> entries = jar.entries();
-                    while (entries.hasMoreElements()) {
-                        JarEntry jarEntry = entries.nextElement();
-                        String jarEntryName = jarEntry.getName();
-                        // 排除文件夹或class
-                        if (!jarEntry.isDirectory()) {
-                            if (jarEntryName.toLowerCase().endsWith(".json")) {
-                                try {
-                                    String json = StringUtils.fromResource(jarEntryName);
-                                    FlowHelper.deployment(FlowResource.ofJson(json));
-                                } catch (Throwable throwable) {
-                                    log.error(throwable.getMessage(), throwable);
-                                }
-                            }
-                        }
-                    }
-                } else if ("file".equalsIgnoreCase(protocol)) {
-                    String filePath = url.getFile();
-                    File file = new File(filePath);
-                    if (file.isDirectory()) {
-                        File[] files = file.listFiles();
-                        for (File f : files) {
-                            String path = f.getPath();
-                            if (path.toLowerCase().endsWith(".json")) {
-                                try {
-                                    String json = StringUtils.fromStream(new FileInputStream(f));
-                                    FlowHelper.deployment(FlowResource.ofJson(json));
-                                } catch (Throwable throwable) {
-                                    log.error(throwable.getMessage(), throwable);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        } catch (IOException e) {
-        }
-
-    }
-
-    private void loadFromFileDir() {
-    }
-
-    private void loadFromDatabase() {
-        if (flowEntityManager == null) {
-            log.info("- skip db loading because the flowEntityManager is not initialized.");
-            return;
-        }
-        List<ProcessDeployEntity> deployEntities = flowEntityManager.queryBy(ProcessDeployEntity.class, null);
-        for (ProcessDeployEntity deployEntity : deployEntities) {
-            FlowResource flowResource = FlowResource.of(deployEntity.getResourceKind(), deployEntity.getResourceContent());
-            FlowHelper.loadDeployedProcess(deployEntity.getProcessId(), deployEntity.getVersion(), flowResource);
-        }
     }
 }

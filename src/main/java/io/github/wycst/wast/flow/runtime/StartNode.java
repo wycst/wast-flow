@@ -1,5 +1,7 @@
 package io.github.wycst.wast.flow.runtime;
 
+import io.github.wycst.wast.flow.definition.Consts;
+
 /**
  * 开始节点（单出）
  *
@@ -9,7 +11,7 @@ package io.github.wycst.wast.flow.runtime;
 public class StartNode extends RuntimeNode {
 
     public StartNode(String id, String name, RuleProcess process) {
-        super(id, name, process);
+        super(id, name == null ? Consts.StartNodeName : name, process);
     }
 
     @Override

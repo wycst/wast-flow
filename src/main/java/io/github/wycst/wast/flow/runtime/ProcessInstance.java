@@ -31,7 +31,7 @@ public class ProcessInstance {
     // 启动时间
     private Date completedDate;
 
-    // 启动时间
+    // 最后一次修改时间
     private Date lastModifyDate;
 
     // 当前状态
@@ -73,7 +73,7 @@ public class ProcessInstance {
      * @param executeEngine
      * @return
      */
-    public static ProcessInstance createInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
+    static ProcessInstance createInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         return new ProcessInstance(ruleProcess, parent, executeEngine);
     }
 

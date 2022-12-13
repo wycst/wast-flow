@@ -24,10 +24,7 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
     public DefaultFlowEntityManager(DataSource dataSource) {
         DefaultSqlExecuter sqlExecuter = new DefaultSqlExecuter();
         sqlExecuter.setDataSource(dataSource);
-//        sqlExecuter.setShowSql(false);
-//        sqlExecuter.setShowSqlParameters(false);
         this.sqlExecuter = sqlExecuter;
-        this.init();
     }
 
     public void setEnableTransaction(boolean enableTransaction) {
