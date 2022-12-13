@@ -102,7 +102,11 @@ public abstract class Node extends Data {
         /**
          * 子流程
          */
-        SubProcess
+        SubProcess,
 
+        /**
+         * 未知类型
+         */
+        Unknown
     }
 }

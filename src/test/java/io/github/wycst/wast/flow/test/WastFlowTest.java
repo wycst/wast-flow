@@ -127,6 +127,7 @@ public class WastFlowTest {
         flowEngine.registerHandler(Node.Type.Business, new NodeHandler() {
             @Override
             public void handle(NodeContext nodeContext) throws Exception {
+
             }
         });
         flowEngine.setDatasource(getDatasource());
@@ -165,7 +166,7 @@ public class WastFlowTest {
         vars.put("a", 8);
 
         // 流程标识
-        String processId = "sample";
+        String processId = "test1";
         System.out.println("processID " + processId);
 
         //6 启动流程

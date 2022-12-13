@@ -343,6 +343,7 @@ class GraphicDesign {
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
         let nextNode = this.createNode(x + width + 100, y);
+        nextNode.data("nodeType", NodeTypes.Business);
         let {height: h2} = nextNode.attrs;
         // 对齐
         nextNode.attr({y: centerY - h2 / 2});
@@ -359,6 +360,7 @@ class GraphicDesign {
         let centerY = y + height / 2;
 
         let nextOneNode = this.createNode(x + width + 100, y);
+        nextOneNode.data("nodeType", NodeTypes.Business);
         let {height: h1} = nextOneNode.attrs;
         // 对齐
         nextOneNode.attr({y: centerY - h1 / 2 - 100});
@@ -367,6 +369,7 @@ class GraphicDesign {
         this.hideEditElements(this.createPath(fromNode, nextOneNode));
 
         let nextTwoNode = this.createNode(x + width + 100, y);
+        nextTwoNode.data("nodeType", NodeTypes.Business);
         let {height: h2} = nextTwoNode.attrs;
         // 对齐
         nextTwoNode.attr({y: centerY - h2 / 2 + 100});

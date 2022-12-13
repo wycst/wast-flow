@@ -223,6 +223,10 @@ public class FlowHelper {
     private static RuntimeNode toRuntimeNode(DeploymentNode deploymentNode, RuleProcess process) {
         RuntimeNode runtimeNode = null;
         Node.Type type = deploymentNode.getType();
+        if(type == null) {
+            // add Unknown
+            type = Node.Type.Unknown;
+        }
         switch (type) {
             case Start:
                 runtimeNode = new StartNode(deploymentNode.getId(), deploymentNode.getName(), process);
@@ -257,6 +261,10 @@ public class FlowHelper {
             case SubProcess:
                 runtimeNode = new SubProcessNode(deploymentNode.getId(), deploymentNode.getName(), process);
                 break;
+            default: {
+                // Unknown
+                runtimeNode = new RuntimeNode(deploymentNode.getId(), deploymentNode.getName(), process);
+            }
         }
         runtimeNode.setMeta(deploymentNode.getMeta());
         runtimeNode.setType(type);
