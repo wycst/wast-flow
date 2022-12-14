@@ -672,7 +672,7 @@ class GraphicDesign {
         let me = this;
         let propertyModels = [];
         // 双击空白区域可维护流程信息
-        if(!element) {
+        if (!element) {
             propertyModels.push({
                 label: "流程标识",
                 value: me.processId || "",
@@ -682,7 +682,7 @@ class GraphicDesign {
                 callback(value) {
                     me.processId = value;
                 }
-            },{
+            }, {
                 label: "流程名称",
                 value: me.processName || "",
                 event: "input",
@@ -2655,9 +2655,9 @@ class GraphicDesign {
                         x: x0,
                         y: y0
                     });
-                    if (outPath.data("container")) {
-                        this.relativePosition(controlElement, outPath.data("container"));
-                    }
+                    // if (outPath.data("container")) {
+                    //     this.relativePosition(controlElement, outPath.data("container"));
+                    // }
                     this.updatePathByControlRect(controlElement);
                 }
             }
@@ -2806,6 +2806,11 @@ class GraphicDesign {
         if (targetElement) {
             targetElement.attr("cursor", "auto");
         }
+    };
+
+    setSelectElement(element) {
+        this.selectElement = element;
+        this.showEditElements(element);
     };
 
     showEditElements(targetElement) {
@@ -3455,7 +3460,7 @@ class GraphicDesign {
         } else if (target.type == "path") {
             // 解决连线不好选中的问题
             target.hover(function () {
-                this.attr("stroke-width", 3.2);
+                this.attr("stroke-width", 5);
             }, function () {
                 this.attr("stroke-width", 2);
             });
@@ -3475,42 +3480,38 @@ class GraphicDesign {
     };
 
     isConnect(fromElement, toElement, reverse) {
-        // 暂时写死不做转弯处理
-        return false;
-        /*// 临时对象记录遍历过的元素，防死循环
-            var temp = {};
-            var outLines = fromElement.data("out");
-            temp[fromElement.id] = fromElement;
-            var testCount = 0;
-            while(outLines && Object.getOwnPropertyNames(outLines).length) {
-                var nextErgodicLines = {};
-                for (var i in outLines) {
-                    var link = outLines[i];
-                    var to = link.data("to");
-                    if(to != toElement) {
-                        if(!temp[to.id]) {
-                            var nextOutLines = to.data("out");
-                            for(var j in nextOutLines) {
-                                nextErgodicLines[j] = nextOutLines[j];
-                            }
+        let temp = {};
+        let outLines = fromElement.data("out");
+        temp[fromElement.id] = fromElement;
+        let testCount = 0;
+        while(outLines && Object.getOwnPropertyNames(outLines).length) {
+            var nextErgodicLines = {};
+            for (var i in outLines) {
+                var link = outLines[i];
+                var to = link.data("to");
+                if(to != toElement) {
+                    if(!temp[to.id]) {
+                        var nextOutLines = to.data("out");
+                        for(var j in nextOutLines) {
+                            nextErgodicLines[j] = nextOutLines[j];
                         }
-                    } else {
-                        return true;
                     }
-                }
-                outLines = nextErgodicLines;
-                if(testCount ++ > 1000) {
-                    console.log(" maybe bug happen ! ");
-                    return false;
+                } else {
+                    return true;
                 }
             }
+            outLines = nextErgodicLines;
+            if(testCount ++ > 1000) {
+                console.log(" maybe bug happen ! ");
+                return false;
+            }
+        }
+        // 双向判断
+        if(reverse) {
+            return this.isConnect(toElement,fromElement,false);
+        }
 
-            // 双向判断
-            if(reverse) {
-                return this.isConnect(toElement,fromElement,false);
-            }
-            delete temp;
-            return false;*/
+        return false;
     };
 
     // /** 获取连线的数据*/
@@ -3776,12 +3777,113 @@ class GraphicDesign {
         }
     };
 
+    /**
+     * 校验返回错误信息，如果通过返回null
+     *
+     * @returns {null}
+     */
     validate() {
-        return true;
+        // 校验流程id是否为空
+        if (!this.processId) {
+            return "流程id不能为空"
+        }
+        if (!this.processName) {
+            return "流程名称不能为空"
+        }
+        let startNodeIds = [];
+        let endNodeIds = [];
+        let {elements} = this;
+        let connects = [];
+        for (let id in elements) {
+            let element = elements[id];
+            // 组件类型
+            let componentType = element.type;
+            // 数据类型
+            let dataType = element.data("type");
+            // 节点类型
+            if (componentType != "path") {
+                let nodeType = element.data("nodeType");
+                let textEle = element.data("text");
+                let name = textEle && textEle.attr("text");
+                // 入口
+                let inLines = element.data("in") || {};
+                // 判断是否有出口
+                let outLines = element.data("out") || {};
+                if (nodeType == "Start") {
+                    startNodeIds.push(id);
+                    if (Object.keys(outLines).length == 0) {
+                        this.setSelectElement(element);
+                        return "开始节点没有定义出口";
+                    }
+                } else if (nodeType == "End") {
+                    endNodeIds.push(id);
+                    if (Object.keys(inLines).length == 0) {
+                        this.setSelectElement(element);
+                        return "结束节点没有定义入口";
+                    }
+                } else {
+                    // 没有定义入口
+                    if (Object.keys(inLines).length == 0) {
+                        this.setSelectElement(element);
+                        return `节点[id=${id},name=${name}]没有定义入口`
+                    }
+                    // 判断是否有出口
+                    let outLineKeys = [];
+                    if ((outLineKeys = Object.keys(outLines)).length == 0) {
+                        this.setSelectElement(element);
+                        return `节点[id=${id},name=${name}]没有定义出口`
+                    }
+                    // 检查是否存在死循环
+                    if (outLineKeys.length == 1) {
+                        let outLine = outLines[outLineKeys[0]];
+                        let toElement = outLine.data("to");
+                        let outLines2 = toElement.data("out");
+                        let keys2 = [];
+                        if (outLines2 && (keys2 = Object.keys(outLines2)).length == 1) {
+                            let target = outLines2[keys2[0]];
+                            if (target == element) {
+                                let targetTextEle = toElement.data("text");
+                                let targetName = targetTextEle && targetTextEle.data("text");
+                                this.setSelectElement(element);
+                                return `节点[id=${id},name=${name}]和节点[id=${toElement.id},name=${targetName}]两个节点形成了闭环`
+                            }
+                        }
+                    }
+                }
+
+            } else {
+                let from = element.data("from");
+                let to = element.data("to");
+                let connect = {
+                    id: element.id,
+                    fromId: from.id,
+                    toId: to.id,
+                }
+                connects.push(connect);
+            }
+        }
+
+        let startCount = startNodeIds.length;
+        if (startCount == 0) {
+            return "流程没有找到开始节点"
+        } else if (startCount > 1) {
+            return "流程开始节点有且只有能一个"
+        }
+        if (endNodeIds.length == 0) {
+            return "流程没有找到结束节点"
+        }
+
+
+        return null;
     };
 
     /** 导出JSON */
     exportJSON() {
+        let errorMessage = this.validate();
+        if (errorMessage) {
+            alert("流程图错误：" + errorMessage);
+            return;
+        }
         let data = this.getData();
         exportTextFile(JSON.stringify(data, null, 4), `${this.processId || 'flow'}.json`)
     };

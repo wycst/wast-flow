@@ -1,5 +1,6 @@
 <template>
   <div>
+    <el-button @click="validateProcess">校验</el-button>
     <div ref="flow" class="wast-flow" style="width: 100%; height: 680px; overflow: hidden;">
     </div>
   </div>
@@ -40,6 +41,14 @@ export default {
       this.tmpData = this.graphicDesign.getData();
       console.log(this.tmpData);
       console.log(JSON.stringify(this.tmpData, null, 4));
+    },
+    validateProcess() {
+      let error = this.graphicDesign.validate();
+      if(error) {
+        this.$message.error(error);
+      } else {
+        this.$message.success("成功");
+      }
     },
     clearData() {
       this.graphicDesign.reset();
