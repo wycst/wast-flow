@@ -10,7 +10,22 @@ import io.github.wycst.wast.json.JSON;
  */
 public abstract class FlowResource {
 
+    final protected ResourceKind resourceKind;
+    final protected String source;
     protected DeploymentProcess deploymentProcess;
+
+    FlowResource(ResourceKind resourceKind, String source) {
+        this.resourceKind = resourceKind;
+        this.source = source;
+    }
+
+    public ResourceKind getResourceKind() {
+        return resourceKind;
+    }
+
+    public String getSource() {
+        return source;
+    }
 
     public DeploymentProcess getDeploymentProcess() {
         return deploymentProcess;
@@ -37,7 +52,9 @@ public abstract class FlowResource {
      * JSON 格式源
      */
     static class JsonFlowResource extends FlowResource {
+
         public JsonFlowResource(String json) {
+            super(ResourceKind.JSON, json);
             deploymentProcess = JSON.parseObject(json, DeploymentProcess.class);
         }
     }

@@ -12,10 +12,7 @@ import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
 import javax.annotation.PreDestroy;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -196,7 +193,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
      */
     public void deleteDefinition(String processId) {
         ProcessDefinitionEntity definitionEntity = getProcessDefinition(processId);
-        if(definitionEntity != null) {
+        if (definitionEntity != null) {
             flowEntityManager.deleteEntity(ProcessDefinitionEntity.class, definitionEntity.getId());
         }
     }
@@ -215,7 +212,23 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     /**
-     * 根据流程标识(唯一)发布新版本
+     * 根据流程标识获取最新部署的版本实体
+     *
+     * @param processId
+     * @return
+     */
+    public ProcessDeployEntity getDeploymentProcess(String processId) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("processId", processId);
+        List<ProcessDeployEntity> deployEntities = flowEntityManager.queryBy(ProcessDeployEntity.class, params);
+        if (deployEntities.size() > 1) {
+            Collections.sort(deployEntities);
+        }
+        return deployEntities.size() == 0 ? null : deployEntities.get(deployEntities.size() - 1);
+    }
+
+    /**
+     * 根据流程标识(唯一)查询在流程定义表中的流程并发布一个新版本
      *
      * @param processId
      * @return
@@ -240,6 +253,28 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         deployEntity.setDeployDate(new Date());
         deployEntity.setVersion(ruleProcess.getVersion());
         deployEntity.setCreator(definitionEntity.getCreator());
+
+        // 持久化已发布的流程
+        flowEntityManager.insert(deployEntity);
+        return ruleProcess;
+    }
+
+    /**
+     * 根据流程资源直接发布（跳过流程定义表）并持久化到数据库
+     *
+     * @param flowResource
+     * @return
+     */
+    public RuleProcess deploymentResource(FlowResource flowResource) {
+        RuleProcess ruleProcess = FlowHelper.deployment(flowResource);
+        ProcessDeployEntity deployEntity = new ProcessDeployEntity();
+        deployEntity.setProcessId(ruleProcess.getId());
+        deployEntity.setProcessName(ruleProcess.getName());
+        deployEntity.setResourceKind(flowResource.getResourceKind());
+        deployEntity.setResourceContent(flowResource.getSource());
+        deployEntity.setDeployDate(new Date());
+        deployEntity.setVersion(ruleProcess.getVersion());
+        deployEntity.setCreator(null);
 
         // 持久化已发布的流程
         flowEntityManager.insert(deployEntity);

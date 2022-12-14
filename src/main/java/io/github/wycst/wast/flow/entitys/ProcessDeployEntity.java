@@ -14,7 +14,7 @@ import java.util.Date;
  * @Date 2022/12/1 21:51
  */
 @Table(name = "wrf_process_deploy")
-public class ProcessDeployEntity implements IEntity {
+public class ProcessDeployEntity implements IEntity, Comparable<ProcessDeployEntity> {
 
     // 主键(部署id)
     @Id(strategy = Id.GenerationType.AutoAlg)
@@ -107,5 +107,10 @@ public class ProcessDeployEntity implements IEntity {
 
     public void setCreator(String creator) {
         this.creator = creator;
+    }
+
+    @Override
+    public int compareTo(ProcessDeployEntity o) {
+        return version.compareTo(o.getVersion());
     }
 }
