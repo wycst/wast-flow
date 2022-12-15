@@ -172,7 +172,7 @@ class GraphicDesign {
         // 连线绑定在element中的属性集合
         this.connectDatas = {
             "priority": 0,
-            "conditionType": "Always",
+            "conditionType": "Script",
             "script": "",
             "meta": {},
             "pathStyle": "broken"
@@ -738,7 +738,7 @@ class GraphicDesign {
                     }
                 }, {
                     label: "分支策略",
-                    value: element.data("conditionType") || "Always",
+                    value: element.data("conditionType") || "Script",
                     event: "change",
                     readonly: uniqueConnect,
                     key: "conditionType",
@@ -3484,15 +3484,15 @@ class GraphicDesign {
         let outLines = fromElement.data("out");
         temp[fromElement.id] = fromElement;
         let testCount = 0;
-        while(outLines && Object.getOwnPropertyNames(outLines).length) {
+        while (outLines && Object.getOwnPropertyNames(outLines).length) {
             var nextErgodicLines = {};
             for (var i in outLines) {
                 var link = outLines[i];
                 var to = link.data("to");
-                if(to != toElement) {
-                    if(!temp[to.id]) {
+                if (to != toElement) {
+                    if (!temp[to.id]) {
                         var nextOutLines = to.data("out");
-                        for(var j in nextOutLines) {
+                        for (var j in nextOutLines) {
                             nextErgodicLines[j] = nextOutLines[j];
                         }
                     }
@@ -3501,14 +3501,14 @@ class GraphicDesign {
                 }
             }
             outLines = nextErgodicLines;
-            if(testCount ++ > 1000) {
+            if (testCount++ > 1000) {
                 console.log(" maybe bug happen ! ");
                 return false;
             }
         }
         // 双向判断
-        if(reverse) {
-            return this.isConnect(toElement,fromElement,false);
+        if (reverse) {
+            return this.isConnect(toElement, fromElement, false);
         }
 
         return false;
@@ -3793,7 +3793,7 @@ class GraphicDesign {
         let startNodeIds = [];
         let endNodeIds = [];
         let {elements} = this;
-        let connects = [];
+        let nodeElements = [];
         for (let id in elements) {
             let element = elements[id];
             // 组件类型
@@ -3833,33 +3833,21 @@ class GraphicDesign {
                         this.setSelectElement(element);
                         return `节点[id=${id},name=${name}]没有定义出口`
                     }
-                    // 检查是否存在死循环
-                    if (outLineKeys.length == 1) {
-                        let outLine = outLines[outLineKeys[0]];
-                        let toElement = outLine.data("to");
-                        let outLines2 = toElement.data("out");
-                        let keys2 = [];
-                        if (outLines2 && (keys2 = Object.keys(outLines2)).length == 1) {
-                            let target = outLines2[keys2[0]];
-                            if (target == element) {
-                                let targetTextEle = toElement.data("text");
-                                let targetName = targetTextEle && targetTextEle.data("text");
-                                this.setSelectElement(element);
-                                return `节点[id=${id},name=${name}]和节点[id=${toElement.id},name=${targetName}]两个节点形成了闭环`
-                            }
-                        }
-                    }
-                }
 
-            } else {
-                let from = element.data("from");
-                let to = element.data("to");
-                let connect = {
-                    id: element.id,
-                    fromId: from.id,
-                    toId: to.id,
+                    nodeElements.push(element);
                 }
-                connects.push(connect);
+            }
+        }
+
+        // 检查节点闭环
+        for (let nodeElement of nodeElements) {
+            let id = nodeElement.id;
+            let textEle = nodeElement.data("text");
+            let name = textEle && textEle.attr("text");
+            // 检查是否存在闭环
+            if (this.checkClosedLoop(nodeElement)) {
+                this.setSelectElement(nodeElement);
+                return `从节点[id=${id},name=${name}]开始存在闭环`
             }
         }
 
@@ -3873,8 +3861,45 @@ class GraphicDesign {
             return "流程没有找到结束节点"
         }
 
-
         return null;
+    };
+
+    /**
+     * 检查节点是否形成了闭环,无法结束
+     *
+     * @return true 闭环； false 无闭环；
+     */
+    checkClosedLoop(element) {
+        // 是否可关闭的
+        let closedAble = (element, historyIds) => {
+            let nodeType = element.data("nodeType");
+            if (nodeType == "End") {
+                return true;
+            }
+            let id = element.id;
+            if (historyIds.includes(id)) {
+                return false;
+            } else {
+                historyIds.push(id);
+            }
+            let outLines = element.data("out") || {};
+            if (Object.keys(outLines).length == 0) {
+                return false;
+            }
+            for (let lineId in outLines) {
+                let outLine = outLines[lineId];
+                let toElement = outLine.data("to");
+                let closed = closedAble(toElement, historyIds);
+                if (closed) {
+                    // 如果找到了结束返回true
+                    return true;
+                }
+            }
+            // 最后返回false
+            return false;
+        }
+        // 不可关闭代表出现闭环
+        return !closedAble(element, []);
     };
 
     /** 导出JSON */
