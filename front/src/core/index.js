@@ -646,8 +646,7 @@ class GraphicDesign {
 
         // 鼠标按下拦截组织冒泡平移事件
         bindDomEvent(inputDom, "mousedown", function (evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
+            me.disablePan = true;
         });
 
         this.textElement = null;
@@ -960,6 +959,7 @@ class GraphicDesign {
         if (this.textElement) {
             this.textElement.show();
         }
+        this.disablePan = false;
     };
 
     // 导入初始化
