@@ -640,9 +640,16 @@ class GraphicDesign {
         });
 
         bindDomEvent(inputDom, "blur", function (evt) {
-            console.log(" blur ", evt.target.innerText.replace(/[\s\r\n]/g, ''));
+            // console.log(" blur ", evt.target.innerText.replace(/[\s\r\n]/g, ''));
             me.endInputEdit();
         });
+
+        // 鼠标按下拦截组织冒泡平移事件
+        bindDomEvent(inputDom, "mousedown", function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        });
+
         this.textElement = null;
     };
 
@@ -678,7 +685,7 @@ class GraphicDesign {
                 value: me.processId || "",
                 event: "input",
                 key: "processId",
-                html: `<input data-key="processId" placeholder="请输入流程标识"/>`,
+                html: `<input data-key="processId" placeholder="流程id"/>`,
                 callback(value) {
                     me.processId = value;
                 }
@@ -687,7 +694,7 @@ class GraphicDesign {
                 value: me.processName || "",
                 event: "input",
                 key: "processName",
-                html: `<input data-key="processName" placeholder="请输入流程名称"/>`,
+                html: `<input data-key="processName" placeholder="流程名称"/>`,
                 callback(value) {
                     me.processName = value;
                 }
