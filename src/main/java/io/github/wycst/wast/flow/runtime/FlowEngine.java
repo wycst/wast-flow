@@ -314,6 +314,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         instanceEntity.setNodeId(nodeInstance.getNode().getId());
         instanceEntity.setNodeName(nodeInstance.getNode().getName());
         instanceEntity.setNodeInstanceId(nodeInstance.getId());
+        instanceEntity.setNodeType(nodeInstance.getNode().getType());
 
         if (nodeInstance.getPrev() != null) {
             instanceEntity.setPrevNodeInstanceId(nodeInstance.getPrev().getId());

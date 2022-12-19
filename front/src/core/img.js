@@ -8,7 +8,9 @@ import reset from './img/svg/reset.svg'
 import exp from './img/svg/export.svg'
 import imp from './img/svg/import.svg'
 import end from './img/svg/end.svg'
+import end_complete from './img/svg/end_complete.svg'
 import start from './img/svg/start.svg'
+import start_complete from './img/svg/start_complete.svg'
 import task from './img/tools/task.png'
 import split from './img/tools/split.svg'
 import tool_end from './img/tools/tool_end.svg'
@@ -25,5 +27,7 @@ export default {
     task,
     split,
     tool_end,
-    picture
+    picture,
+    start_complete,
+    end_complete
 }

@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `wrf_node_instance`
     `prev_node_instance_id` int(19)     DEFAULT NULL,
     `node_id`               varchar(36) DEFAULT NULL,
     `node_name`             varchar(64) DEFAULT NULL,
+    `node_type`             varchar(32) DEFAULT NULL,
     `node_unique_id`        varchar(36) DEFAULT NULL,
     `process_id`            varchar(64) DEFAULT NULL,
     `process_instance_id`   varchar(36) DEFAULT NULL,

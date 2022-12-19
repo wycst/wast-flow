@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.entitys;
 
+import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.definition.Status;
 import io.github.wycst.wast.jdbc.annotations.Id;
 import io.github.wycst.wast.jdbc.annotations.Table;
@@ -32,6 +33,9 @@ public class NodeInstanceEntity implements IEntity {
 
     // 节点名称
     private String nodeName;
+
+    // 节点类型
+    private Node.Type nodeType;
 
     // 上一个节点实例id
     private long prevNodeInstanceId;
@@ -84,6 +88,14 @@ public class NodeInstanceEntity implements IEntity {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public Node.Type getNodeType() {
+        return nodeType;
+    }
+
+    public void setNodeType(Node.Type nodeType) {
+        this.nodeType = nodeType;
     }
 
     public String getProcessId() {

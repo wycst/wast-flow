@@ -3,20 +3,24 @@ import Raphael from 'raphael'
 // 图标库
 import imgs from "./img"
 import {bindDomEvent, exportBlob, exportTextFile} from "./util"
-// 定义一些常量
+
 const DefaultSettings = {
     linkName: "",
     nodeName: "节点名称",
-    mutiSubProcessName: "子流程",
     nodeBackgroundColor: "#fff",
     nodeStrokeColor: "#409eff",
     nodeStrokeWith: "3",
     connectFillColor: "#409eff",
     connectStrokeColor: "#409eff",
-
     startStrokeColor: "",
     endStrokeColor: "#f56c6c",
-};
+
+    // 完成api样式配置
+    // 环节执行完成设置背景色默认浅绿色
+    completeColor: "green",
+    // 完成状态的连线背景色默认浅绿色
+    completeConnectColor: "green",
+}
 
 const NodeTypes = {
     Business: "Business"
@@ -64,6 +68,11 @@ const defaultOption = {
     panable: true,
 
     /**
+     * 是否可编辑
+     */
+    editable: true,
+
+    /**
      * 单击事件（可覆盖）
      * @param element
      * @param evt
@@ -78,7 +87,12 @@ const defaultOption = {
      * @param evt
      */
     dblclickElement(element, evt) {
-    }
+    },
+
+    /***
+     * 配置项
+     */
+    settings: DefaultSettings
 }
 
 /**
@@ -136,6 +150,11 @@ class GraphicDesign {
             dom = document.querySelector(dom);
         }
         this.option = Object.assign({}, defaultOption, option || {});
+        if (!this.option.settings) {
+            this.option.settings = DefaultSettings;
+        } else {
+            this.option.settings = Object.assign({}, DefaultSettings, this.option.settings);
+        }
         let {width = '100%', height = '100%'} = this.option;
         dom.innerHTML = extensionTemplate;
         if (this.option.menu) {
@@ -199,7 +218,7 @@ class GraphicDesign {
 
         let attr = {
             fill: "#ffffff",
-            stroke: DefaultSettings.nodeStrokeColor
+            stroke: this.option.settings.nodeStrokeColor
         }
         // 控制点信息
         let nw = this.nw = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
@@ -675,6 +694,7 @@ class GraphicDesign {
 
     /** 打开元素的属性编辑窗口 */
     openElementPropertyPop(element) {
+        if (!this.option.editable) return;
         let me = this;
         let propertyModels = [];
         // 双击空白区域可维护流程信息
@@ -932,7 +952,8 @@ class GraphicDesign {
 
     // 开始编辑
     beginInputEdit(element) {
-        if (element.data("editable") && element.data("text")) {
+        if (!this.option.editable) return;
+        if (element.data("text")) {
             let textElement = element.data("text");
             this.textElement = textElement;
             let textValue = textElement.attr("text");
@@ -1837,11 +1858,10 @@ class GraphicDesign {
      * @param x
      * @param y
      * @param r
-     * @param editable
      * @returns {*}
      */
     createStartNode(x, y) {
-        return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start", true);
+        return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start");
     };
 
     /**
@@ -1858,27 +1878,19 @@ class GraphicDesign {
      * @param y
      * @param width
      * @param height
-     * @param editable
      * @returns {*}
      */
-    createNode(x, y, width, height, editable) {
+    createNode(x, y, width, height) {
         // let rect = this.renderRect(x, y, width, height, 4);
-        if (arguments.length < 3) {
-            editable = true;
-        }
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
         // rect.id = this.createElementId();
         rect.attr({
-            stroke: DefaultSettings.nodeStrokeColor,
-            "stroke-width": DefaultSettings.nodeStrokeWith,
+            stroke: this.option.settings.nodeStrokeColor,
+            "stroke-width": this.option.settings.nodeStrokeWith,
             title: "id:" + rect.id,
-            fill: DefaultSettings.nodeBackgroundColor
+            fill: this.option.settings.nodeBackgroundColor
         });
         rect.data("type", "node");
-        if (!editable) {
-            return rect;
-        }
-        rect.data("editable", true);
         this.autoContainerSelect(rect);
         this.initElement(rect);
         return rect;
@@ -1893,21 +1905,16 @@ class GraphicDesign {
      * @param w
      * @param h
      * @param nodeType
-     * @param editable
      * @returns {*}
      */
-    createImage(src, x, y, w, h, nodeType, editable) {
+    createImage(src, x, y, w, h, nodeType) {
         let image = this.renderImage(src, x, y, w, h);
         // id需要第一时间修改
         // image.id = this.createElementId();
         image.data("type", "node");
         image.data("nodeType", nodeType);
-        image.attr("title", nodeType);
+        image.attr("title", nodeType + ":" + image.id);
         this.autoContainerSelect(image);
-        if (!editable) {
-            // 非编辑模式直接返回不绑定事件
-            return image;
-        }
         this.initElement(image);
         return image;
     };
@@ -1919,7 +1926,6 @@ class GraphicDesign {
      * @param y
      * @param width
      * @param height
-     * @param editable 是否可编辑
      * @returns {*}
      */
     createBusinessNode(x, y) {
@@ -1927,7 +1933,6 @@ class GraphicDesign {
         rect.data("nodeType", NodeTypes.Business);
         return rect;
     };
-
 
     // createMutiSubProcess(x, y, width, height, editable) {
     //     let rect = this.renderRect(x, y, width, height);
@@ -1949,10 +1954,9 @@ class GraphicDesign {
      * 根据数据构建节点
      *
      * @param node
-     * @param editable
      * @returns {null}
      */
-    createNodeElement(node, editable) {
+    createNodeElement(node) {
         let {id, type, component} = node;
         let {type: componentType, attrs, textAttrs} = component;
         let nodeElement = null;
@@ -1973,10 +1977,6 @@ class GraphicDesign {
         let nodeText = this.paper.text("").attr(textAttrs);
         // nodeText.id = this.getUUID();
         nodeElement.data("text", nodeText);
-        if (!editable) {
-            return nodeElement;
-        }
-        nodeElement.data("editable", true);
         this.setElementDatas(nodeElement, this.nodeDatas, node);
         nodeElement.attr("title", "id:" + id);
         this.textEditing(nodeText);
@@ -1991,10 +1991,9 @@ class GraphicDesign {
      * @param src
      * @param component
      * @param nodeType
-     * @param editable
      * @returns {*}
      */
-    loadImageElement(id, src, component, nodeType, editable) {
+    loadImageElement(id, src, component, nodeType) {
         let {attrs} = component;
         attrs.src = src;
         let image = this.renderImage("", 0, 0, 0, 0);
@@ -2002,11 +2001,7 @@ class GraphicDesign {
         image.data("type", "node");
         image.data("nodeType", nodeType);
         image.attr(attrs);
-        if (!editable) {
-            // 非编辑模式直接返回不绑定事件
-            return image;
-        }
-        // image.attr("title", "id:" + image.id);
+        image.attr("title", "id:" + image.id);
         this.initElement(image);
         return image;
     };
@@ -2017,10 +2012,9 @@ class GraphicDesign {
      * @param connectData
      * @param fromElement
      * @param toElement
-     * @param editable
      * @returns {*}
      */
-    createConnectElement(connectData, fromElement, toElement, editable) {
+    createConnectElement(connectData, fromElement, toElement) {
         let {id, component} = connectData;
         let {attrs, arrowAttrs, textAttrs} = component;
 
@@ -2038,10 +2032,6 @@ class GraphicDesign {
         // set or init
         this.setElementDatas(connect, this.connectDatas, connectData);
 
-        if (!editable) {
-            return connect;
-        }
-        connect.data("editable", true);
         // 绑定数据关系
         connect.data("from", fromElement);
         connect.data("to", toElement);
@@ -2109,7 +2099,7 @@ class GraphicDesign {
     // 创建连线路径
     createPath(fromNode, toNode) {
         let linkPath = this.paper.path("").attr({
-            "stroke": DefaultSettings.connectStrokeColor,
+            "stroke": this.option.settings.connectStrokeColor,
             "stroke-width": 2
         });
         let pathStyle = this.option.pathStyle || "broken";
@@ -2220,10 +2210,9 @@ class GraphicDesign {
                 "font-size": 13,
                 "text-anchor": "middle",
                 "font-style": "normal",
-                text: DefaultSettings.linkName || " "
+                text: this.option.settings.linkName || " "
             });
             pathElement.data("text", pathText);
-            pathElement.data("editable", true);
         } else {
             pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
         }
@@ -2233,9 +2222,9 @@ class GraphicDesign {
         let arrowPath = pathElement.data("arrow");
         if (!arrowPath) {
             arrowPath = this.paper.path(arrowPathData).attr({
-                "stroke": DefaultSettings.connectStrokeColor,
+                "stroke": this.option.settings.connectStrokeColor,
                 "stroke-width": 2,
-                "fill": DefaultSettings.connectFillColor
+                "fill": this.option.settings.connectFillColor
             });
             pathElement.data("arrow", arrowPath);
         } else {
@@ -2247,7 +2236,7 @@ class GraphicDesign {
         let controlDragRect = this.renderRect(x - 2.5, y - 2.5, 5,
             5, 2.5, 2.5).attr({
             fill: "#ffffff",
-            stroke: DefaultSettings.nodeStrokeColor,
+            stroke: this.option.settings.nodeStrokeColor,
             cursor: 'move'
         });
         // controlDragRect.id = this.getUUID();
@@ -2419,12 +2408,15 @@ class GraphicDesign {
         let me = this;
         // 支持拖拽
         target.drag((dx, dy) => {
+            if (!me.option.editable) return;
             me.elementDragMove(target, dx, dy);
         }, (event) => {
+            if (!me.option.editable) return;
             me.elementDragStart(target);
             me.dragingElement = target;
             return false;
         }, () => {
+            if (!me.option.editable) return;
             me.dragingElement = null;
             target.attr({opacity: 1});
         });
@@ -2567,9 +2559,9 @@ class GraphicDesign {
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
-                "stroke": DefaultSettings.connectFillColor,
+                "stroke": this.option.settings.connectFillColor,
                 "stroke-width": 2,
-                "fill": DefaultSettings.connectFillColor
+                "fill": this.option.settings.connectFillColor
             });
             if (virtualPath.node) {
                 virtualPath.node.setAttribute("stroke-dasharray", "2 2");
@@ -2815,12 +2807,16 @@ class GraphicDesign {
         }
     };
 
+
     setSelectElement(element) {
         this.selectElement = element;
         this.showEditElements(element);
     };
 
     showEditElements(targetElement) {
+        if (!this.option.editable) {
+            return;
+        }
         let type = targetElement.type;
         let isImage = type == "image";
         if (type == "rect" || isImage) {
@@ -2841,13 +2837,13 @@ class GraphicDesign {
                 + hiddenPathEndX + "," + hiddenPathStartY + "L"
                 + hiddenPathStartX + "," + hiddenPathStartY;
 
-            if (!isImage) {
-                dashOuterPath.attr({
-                    path: outerPathD,
-                    fill: "none",
-                    stroke: "#909399"
-                }).show();
+            dashOuterPath.attr({
+                path: outerPathD,
+                fill: "none",
+                stroke: "#909399"
+            }).show();
 
+            if (!isImage) {
                 // 8个矩形点
                 nw.data("host", targetElement).attr({x: hiddenPathStartX - 2.5, y: hiddenPathStartY - 2.5}).show();
                 w.data("host", targetElement).attr({
@@ -2937,7 +2933,7 @@ class GraphicDesign {
                         "text-anchor": "middle",
                         "font-style": "normal",
                         "width": 3,
-                        text: DefaultSettings.nodeName + " " + this.nextId()
+                        text: this.option.settings.nodeName + " " + this.nextId()
                     });
                     // text.id = me.getUUID();
                     targetElement.data("text", text);
@@ -3683,9 +3679,8 @@ class GraphicDesign {
      * 设置数据 回显流程图
      *
      * @param data     输入JSON数据
-     * @param editable
      */
-    setData(data, editable) {
+    setData(data) {
         // 如果传入字符串作为JSON字符串解析为对象
         if (typeof data == "string") {
             try {
@@ -3708,15 +3703,15 @@ class GraphicDesign {
             let element = null;
             switch (type) {
                 case "Start": {
-                    element = this.loadImageElement(id, imgs.start, component, "Start", editable);
+                    element = this.loadImageElement(id, imgs.start, component, "Start");
                     break;
                 }
                 case "End": {
-                    element = this.loadImageElement(id, imgs.end, component, "End", editable);
+                    element = this.loadImageElement(id, imgs.end, component, "End");
                     break;
                 }
                 default: {
-                    element = this.createNodeElement(node, editable);
+                    element = this.createNodeElement(node);
                     element.data("nodeType", type);
                 }
             }
@@ -3725,9 +3720,6 @@ class GraphicDesign {
         // 初始化 idPool
         this.idPool = [];
         this.initIdPond(maxId + 1, maxId + 100);
-        if (!editable) {
-            //this.elements = tempElementMap;
-        }
 
         // 如果存在子容器（子流程），在所有元素初始化完毕后开始绑定容器与元素的关系
         // if (editable && data.containers) {
@@ -3776,11 +3768,9 @@ class GraphicDesign {
             let fromElement = this.elements[fromId];
             let toElement = this.elements[toId];
             let connectElement = this.createConnectElement(connectData, fromElement,
-                toElement, editable);
+                toElement);
             connectElement.data("meta", connectData.meta);
-            if (editable) {
-                this.elements[connectElement.id] = connectElement;
-            }
+            this.elements[connectElement.id] = connectElement;
         }
     };
 
@@ -3907,6 +3897,110 @@ class GraphicDesign {
         }
         // 不可关闭代表出现闭环
         return !closedAble(element, []);
+    };
+
+    /** 设置编辑模式 */
+    setEditable(editable) {
+        this.option.editable = editable;
+        if (!editable) {
+            this.hideEditElements(this.selectElement);
+        }
+        this.endInputEdit();
+    };
+
+    /**
+     * 根据id获取元素
+     */
+    getElementById(id) {
+        return this.elements[id];
+    };
+
+    /**
+     * 完成一条路径
+     *
+     * @param fromElementId 开始环节的id
+     * @param toElementId   结束环节的id
+     * @param styles        自定义样式
+     */
+    complete(fromElementId, toElementId, styles) {
+        let fromElement = this.getElementById(fromElementId);
+        if (!fromElement) {
+            alert("开始节点[id=" + fromElementId + "]不存在");
+            return;
+        }
+        let toElement = null, connect = null;
+        let connects = fromElement.data("out");
+        if (connects) {
+            for (let connectId in connects) {
+                let conn = connects[connectId];
+                let ele = conn.data("to");
+                if (ele.id == toElementId) {
+                    connect = conn;
+                    toElement = ele;
+                    break;
+                }
+            }
+        }
+
+        if (!toElement) {
+            alert("结束节点[id=" + toElementId + "]不存在或无效");
+            return;
+        }
+        if(fromElement.type == "image") {
+            let nodeType = fromElement.data("nodeType");
+            if(nodeType == "Start") {
+                fromElement.attr("src", imgs.start_complete)
+            }
+        } else {
+            fromElement.attr({
+                stroke: this.option.settings.completeColor
+            });
+        }
+        if(toElement.type == "image") {
+            let nodeType = toElement.data("nodeType");
+            if(nodeType == "End") {
+                toElement.attr("src", imgs.end_complete);
+            }
+        } else {
+            toElement.attr({
+                stroke: this.option.settings.completeColor
+            });
+        }
+        let pathAttr = {
+            fill: this.option.settings.completeConnectColor,
+            stroke: this.option.settings.completeConnectColor,
+        }
+        // 路径
+        connect.attr(pathAttr).data("arrow").attr(pathAttr);
+    };
+
+    /**
+     * 按节点被完成的顺序进行批量的状态标色
+     *
+     * */
+    completeQueue(elementIds) {
+        if(!Array.isArray(elementIds) || elementIds.length < 2) {
+            alert("参数错误");
+            return ;
+        }
+        let elementId = elementIds[0];
+        for(let i = 1, len = elementIds.length; i < len; ++i) {
+            this.complete(elementId, elementIds[i]);
+            elementId = elementIds[i];
+        }
+    };
+
+    // 获取connect
+    getConnect(fromElementId, toElementId) {
+        for(let elementId in this.elements) {
+            let element = this.elements[elementId];
+            if(element.type == "path") {
+                if(element.data("from").id == fromElementId && element.data("to").id == toElementId) {
+                    return element;
+                }
+            }
+        }
+        return null;
     };
 
     /** 导出JSON */

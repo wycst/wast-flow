@@ -1,6 +1,7 @@
 <template>
   <div>
     <el-button @click="validateProcess">校验</el-button>
+    <el-switch v-model="editable" active-text="可编辑" inactive-text="不可编辑" style="margin-left: 10px;"></el-switch>
     <div ref="flow" class="wast-flow" style="width: 100%; height: 680px; overflow: hidden;">
     </div>
   </div>
@@ -13,6 +14,11 @@ import {wf} from "../core/index"
 console.log(wf);
 export default {
   name: "flow.vue",
+  data() {
+    return {
+      editable: true
+    }
+  },
   mounted() {
     console.log(" mounted ");
     this.graphicDesign = wf.render(this.$refs.flow, {
@@ -23,7 +29,7 @@ export default {
         draggable: true
       },
       // background: "lightblue",
-      panable: true
+      panable: true,
     })
     // 绘制矩形
     // let node = this.graphicDesign.createNode(100, 100, 100, 90, 8);
@@ -74,6 +80,19 @@ export default {
     },
     exportImage() {
       this.graphicDesign.exportImage();
+    },
+
+    setEditable() {
+      this.editable = !this.editable;
+      this.graphicDesign.setEditable(this.editable);
+    }
+  },
+
+  watch: {
+    editable() {
+      if(this.graphicDesign) {
+        this.graphicDesign.setEditable(this.editable);
+      }
     }
   }
 }

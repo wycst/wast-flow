@@ -13,6 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <wast-version>0.0.10.1</wast-version>
     </properties>
 
     <licenses>
@@ -136,7 +137,7 @@
         <dependency>
             <groupId>io.github.wycst</groupId>
             <artifactId>wast</artifactId>
-            <version>0.0.10</version>
+            <version>${wast-version}</version>
         </dependency>
 
 <!--        <dependency>-->
