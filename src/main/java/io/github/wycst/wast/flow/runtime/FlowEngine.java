@@ -8,6 +8,7 @@ import io.github.wycst.wast.flow.entitys.ProcessDeployEntity;
 import io.github.wycst.wast.flow.entitys.ProcessInstanceEntity;
 import io.github.wycst.wast.flow.exception.FlowDeploymentException;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
+import io.github.wycst.wast.jdbc.oql.OqlQuery;
 import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
@@ -225,6 +226,19 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             Collections.sort(deployEntities);
         }
         return deployEntities.size() == 0 ? null : deployEntities.get(deployEntities.size() - 1);
+    }
+
+    /**
+     * 根据流程实例id查询节点记录
+     *
+     * @param processInstanceId
+     * @return
+     */
+    public List<NodeInstanceEntity> getNodeInstances(String processInstanceId) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("processInstanceId", processInstanceId);
+        OqlQuery oqlQuery = OqlQuery.create().addConditions("processInstanceId").order("id");
+        return flowEntityManager.queryList(NodeInstanceEntity.class, oqlQuery, params);
     }
 
     /**

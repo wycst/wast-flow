@@ -1,6 +1,7 @@
 package io.github.wycst.wast.flow.definition;
 
 import io.github.wycst.wast.flow.entitys.IEntity;
+import io.github.wycst.wast.jdbc.oql.OqlQuery;
 
 import java.io.Serializable;
 import java.util.List;
@@ -13,9 +14,10 @@ public interface FlowEntityManager {
 
     /**
      * 初始化
+     *
      * @throws Exception
      */
-    public void init() ;
+    public void init();
 
     /**
      * 保存实体信息
@@ -59,6 +61,16 @@ public interface FlowEntityManager {
      * @return
      */
     public <E> List<E> queryBy(Class<E> cls, Map<String, Object> params);
+
+    /***
+     * 执行map条件查询实体列表
+     * 使用场景：加载流程节点实例列表；
+     *
+     * @param cls
+     * @param params
+     * @return
+     */
+    public <E> List<E> queryList(Class<E> cls, OqlQuery oqlQuery, Map<String, Object> params);
 
     /**
      * 开启事务

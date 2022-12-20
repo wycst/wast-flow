@@ -166,12 +166,15 @@ public class WastFlowTest {
         vars.put("a", 8);
 
         // 流程标识
-        String processId = "test1";
+        String processId = "sample";
         System.out.println("processID " + processId);
 
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
         System.out.println("processInstanceId " + processInstance.getId());
+
+        List list = flowEngine.getNodeInstances(processInstance.getId());
+        System.out.println(list);
 
         flowEngine.destroy();
     }

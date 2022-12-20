@@ -16,7 +16,7 @@ import java.util.Date;
  * @Date 2022/11/29 13:17
  */
 @Table(name = "wrf_node_instance")
-public class NodeInstanceEntity implements IEntity {
+public class NodeInstanceEntity implements IEntity, Comparable<NodeInstanceEntity> {
 
     // 主键id
     @Id(strategy = Id.GenerationType.AutoAlg)
@@ -160,5 +160,10 @@ public class NodeInstanceEntity implements IEntity {
 
     public void setPrevNodeInstanceId(long prevNodeInstanceId) {
         this.prevNodeInstanceId = prevNodeInstanceId;
+    }
+
+    @Override
+    public int compareTo(NodeInstanceEntity o) {
+        return id.compareTo(o.id);
     }
 }

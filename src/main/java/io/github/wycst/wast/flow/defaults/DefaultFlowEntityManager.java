@@ -4,6 +4,7 @@ import io.github.wycst.wast.flow.definition.FlowEntityManager;
 import io.github.wycst.wast.flow.entitys.IEntity;
 import io.github.wycst.wast.jdbc.executer.DefaultSqlExecuter;
 import io.github.wycst.wast.jdbc.executer.EntityManagementFactory;
+import io.github.wycst.wast.jdbc.oql.OqlQuery;
 
 import javax.sql.DataSource;
 import java.io.Serializable;
@@ -57,7 +58,7 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
 
     @Override
     public void update(IEntity entity, String... fields) {
-        if(fields.length > 0) {
+        if (fields.length > 0) {
             sqlExecuter.getEntityExecuter().updateFields(entity, fields);
         } else {
             sqlExecuter.getEntityExecuter().update(entity);
@@ -79,26 +80,31 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
         return sqlExecuter.getEntityExecuter().queryBy(cls, params);
     }
 
+    @Override
+    public <E> List<E> queryList(Class<E> cls, OqlQuery oqlQuery, Map<String, Object> params) {
+        return sqlExecuter.getEntityExecuter().queryList(cls, oqlQuery, params);
+    }
+
     public void beginTransaction() {
-        if(enableTransaction) {
+        if (enableTransaction) {
             sqlExecuter.beginTransaction();
         }
     }
 
     public void commitTransaction() {
-        if(enableTransaction) {
+        if (enableTransaction) {
             sqlExecuter.commitTransaction();
         }
     }
 
     public void rollbackTransaction() {
-        if(enableTransaction) {
+        if (enableTransaction) {
             sqlExecuter.rollbackTransaction();
         }
     }
 
     public void endTransaction() {
-        if(enableTransaction) {
+        if (enableTransaction) {
             sqlExecuter.endTransaction();
         }
     }
