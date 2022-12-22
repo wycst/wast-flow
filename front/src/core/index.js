@@ -1787,9 +1787,14 @@ class GraphicDesign {
         this.translateX = x;
         this.translateY = y;
 
-        // svg 画板
-        Object.assign(this.paper.canvas.style, {
-            transform: `translate(${x}px, ${y}px)`
+        // // svg 画板
+        // Object.assign(this.paper.canvas.style, {
+        //     transform: `translate(${x}px, ${y}px)`
+        // });
+        this.paper.canvas.childNodes.forEach(child => {
+            Object.assign(child.style, {
+                transform: `translate(${x}px, ${y}px)`
+            });
         });
 
         // update HtmlNodes
