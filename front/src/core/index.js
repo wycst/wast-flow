@@ -231,7 +231,9 @@ class GraphicDesign {
         this.initPopwin(dom.querySelector(".flow-popwin"));
         this.initFileInput(dom.querySelector(".flow-import-input"));
         this.paper = new Raphael(dom, width, height);
-        window._design_paper = this.paper;
+        Object.assign(this.paper.canvas.style, {
+            userSelect: `none`
+        });
         this.dom = dom;
         // 初始化
         this.init();
@@ -408,7 +410,7 @@ class GraphicDesign {
 
         // 快速追加结束任务
         this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
-        // this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
+            // this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -600,6 +602,7 @@ class GraphicDesign {
                     } else if (type == "end") {
                         dragContext.element = element = me.createEndNode(x, y);
                     }
+                    me.selectElement = element;
                     me.elementDragStart(element);
                 }
                 // 更新element的位置
@@ -726,7 +729,7 @@ class GraphicDesign {
                     item.style.color = this.option.settings.themeColor;
                     item.innerHTML = DefaultHtmlTypes["user"];
                 }
-                
+
                 // 拖动处理
                 bindDomEvent(item, "mousedown", function (event) {
                     onDragStart(event, item);
@@ -1129,19 +1132,22 @@ class GraphicDesign {
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
-                if (Object.keys(me.elements).length < 256) {
-                    canvasDragContext.px = pageX;
-                    canvasDragContext.py = pageY;
-                    me.panTo(dx, dy);
-                } else {
-                    let translateX = me.translateX = canvasDragContext.translateX + dx;
-                    let translateY = me.translateY = canvasDragContext.translateY + dy;
-                    Object.assign(me.paper.canvas.style, {
-                        transform: `translate(${translateX}px, ${translateY}px)`
-                    });
-                }
+
+                // if (Object.keys(me.elements).length < 256) {
+                //     canvasDragContext.px = pageX;
+                //     canvasDragContext.py = pageY;
+                //     me.panTo(dx, dy);
+                // } else {
+                //
+                // }
+                me.translateX = canvasDragContext.translateX + dx;
+                me.translateY = canvasDragContext.translateY + dy;
+
+                me.translateTo(me.translateX, me.translateY);
             }
             const onCanvasDragUp = (event) => {
+                // panto and remove transform
+                me.panTo(me.translateX, me.translateY);
                 document.removeEventListener("mousemove", onCanvasDragMove);
                 document.removeEventListener("mouseup", onCanvasDragUp);
             }
@@ -1496,25 +1502,18 @@ class GraphicDesign {
         return h;
     };
 
-    unBindMouseOverOutEvent(targetElement) {
-        let type = targetElement.type;
-        if (type == "rect" || type == "image") {
-            targetElement.unmouseover();
-            targetElement.unmouseout();
-        }
-    };
-
     delSelectElement() {
         if (this.selectElement) {
             this.hideEditElements(this.selectElement);
             this.removeElement(this.selectElement);
+            this.selectElement = null;
         }
     };
 
     removeElement(targetElement) {
         let type = targetElement.type;
         let dataObject = targetElement.data();
-        if (type == "rect" || type == "image") {
+        if (type == "rect" || type == "image" || type == "html") {
             // 元素，注意需要移除关联的连线
             for (let i in dataObject) {
                 let dataProp = dataObject[i];
@@ -1528,8 +1527,6 @@ class GraphicDesign {
                     }
                 }
             }
-            // 解绑鼠标移除事件
-            this.unBindMouseOverOutEvent(targetElement);
             let elementId = targetElement.id;
 
             // 删除元素时与子流程有关的需要特殊解除关系
@@ -1780,15 +1777,42 @@ class GraphicDesign {
         return true;
     };
 
+    /**
+     * 通过translate平移
+     *
+     * @param x
+     * @param y
+     */
+    translateTo(x, y) {
+        this.translateX = x;
+        this.translateY = y;
+
+        // svg 画板
+        Object.assign(this.paper.canvas.style, {
+            transform: `translate(${x}px, ${y}px)`
+        });
+
+        // update HtmlNodes
+        for(let elementId in this.elements) {
+            let element = this.elements[elementId];
+            if(element.type == "html") {
+                Object.assign(element.node.style, {
+                    transform: `translate(${x}px, ${y}px)`
+                });
+            }
+        }
+    };
+
     /***
      * 整体平移
      *
-     * @param dx
-     * @param dy
+     * @param dx x方向偏移量
+     * @param dy y方向偏移量
      * @param elements
      */
     panTo(dx, dy) {
         this.hideEditElements(null);
+        this.translateTo(0, 0);
         for (let elementId in this.elements) {
             let element = this.elements[elementId];
             this.moveTo(element, dx, dy);

@@ -296,6 +296,7 @@ class ElementData {
         this.node.remove();
         this.attrs = null;
         this.datas = null;
+        this.removed = true;
     };
 }
 
