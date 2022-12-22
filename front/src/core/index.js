@@ -409,8 +409,8 @@ class GraphicDesign {
         });
 
         // 快速追加结束任务
-        this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
-            // this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
+        // this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
+        this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -1132,7 +1132,6 @@ class GraphicDesign {
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
-
                 // if (Object.keys(me.elements).length < 256) {
                 //     canvasDragContext.px = pageX;
                 //     canvasDragContext.py = pageY;
@@ -1143,6 +1142,7 @@ class GraphicDesign {
                 me.translateX = canvasDragContext.translateX + dx;
                 me.translateY = canvasDragContext.translateY + dy;
 
+                me.hideEditElements(this.selectElement);
                 me.translateTo(me.translateX, me.translateY);
             }
             const onCanvasDragUp = (event) => {

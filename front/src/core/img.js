@@ -10,14 +10,14 @@ import sequenceflow from './img/tools/sequenceflow.png'
 // import start_complete from './img/svg/start_complete.svg'
 import task from './img/tools/task.png'
 import split from './img/tools/split.svg'
-import tool_end from './img/tools/tool_end.svg'
+// import tool_end from './img/tools/tool_end.svg'
 
 export default {
     bg,
     sequenceflow,
     task,
     split,
-    tool_end,
+    // tool_end,
     // start,
     // end,
     // start_complete,

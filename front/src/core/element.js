@@ -277,7 +277,11 @@ class ElementData {
      * 数据属性设置或者读取
      */
     data() {
-        return getOrSetValue(this.datas, arguments);
+        let len = arguments.length;
+        let p1 = arguments[0];
+        let setterMode = len > 1 || (p1 && typeof p1 == "object");
+        let result = getOrSetValue(this.datas, arguments);
+        return setterMode ? this : result;
     };
 
     /**
