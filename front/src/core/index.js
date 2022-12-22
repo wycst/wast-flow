@@ -3870,12 +3870,12 @@ class GraphicDesign {
             switch (type) {
                 case "Start": {
                     // element = this.loadImageElement(id, imgs.start, component, "Start");
-                    element = this.loadHTMLElement(id, "start", component, "Start");
+                    element = this.loadHTMLElement(id, "start", component, "Start").attr({color: this.option.settings.themeColor});
                     break;
                 }
                 case "End": {
                     // element = this.loadImageElement(id, imgs.end, component, "End");
-                    element = this.loadHTMLElement(id, "end", component, "End");
+                    element = this.loadHTMLElement(id, "end", component, "End").attr({color: this.option.settings.themeColor});
                     break;
                 }
                 default: {
