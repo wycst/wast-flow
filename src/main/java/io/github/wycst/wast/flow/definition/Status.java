@@ -5,7 +5,6 @@ package io.github.wycst.wast.flow.definition;
  */
 public enum Status {
 
-
     /**
      * 准备就绪
      */
@@ -25,6 +24,11 @@ public enum Status {
      * 完成
      */
     Completed,
+
+    /**
+     * 跳过
+     */
+    Skipped,
 
     /**
      * 终止或者退出

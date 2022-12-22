@@ -4,6 +4,64 @@ import Raphael from 'raphael'
 import imgs from "./img"
 import {bindDomEvent, exportBlob, exportTextFile} from "./util"
 
+import {ElementData} from "./element"
+
+// 内置html块
+const DefaultHtmlTypes = {
+    start: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+               <path d="M400.43759 732.273456a71.33239 71.33239 0 0 0 34.157473 8.810938 75.556813 75.556813 0 0 0 41.157944-12.069778l219.790665-144.837341a85.574729 85.574729 0 0 0 38.502593-72.418671 83.402169 83.402169 0 0 0-37.295615-70.608203l-221.842527-144.837341a72.41867 72.41867 0 0 0-74.591231-3.741631 84.488449 84.488449 0 0 0-41.761433 75.436115v289.674681a84.488449 84.488449 0 0 0 41.882131 74.591231z m42.002829-82.315889V374.163131l207.600188 135.664309v0.965582a13.156058 13.156058 0 0 1 0 2.293258z"></path>
+               <path d="M149.989688 874.093352a509.948138 509.948138 0 1 0-109.714286-162.700613 513.206978 513.206978 0 0 0 109.714286 162.700613zM84.571489 512a428.11504 428.11504 0 1 1 427.511551 428.11504A428.597831 428.597831 0 0 1 84.571489 512z" ></path>
+            </svg>`,
+    end: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M512 0c282.752 0 512 229.248 512 512s-229.248 512-512 512S0 794.752 0 512 229.248 0 512 0z m0 85.333333C276.352 85.333333 85.333333 276.352 85.333333 512s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m85.333333 256a85.333333 85.333333 0 0 1 85.333334 85.333334v170.666666a85.333333 85.333333 0 0 1-85.333334 85.333334h-170.666666a85.333333 85.333333 0 0 1-85.333334-85.333334v-170.666666a85.333333 85.333333 0 0 1 85.333334-85.333334h170.666666z"></path>
+          </svg>`,
+    user: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M512 0C230.4 0 0 230.4 0 512s230.4 512 512 512 512-230.4 512-512S793.6 0 512 0zM512 960c-249.6 0-448-198.4-448-448 0-249.6 198.4-448 448-448 249.6 0 448 198.4 448 448C960 761.6 761.6 960 512 960z"></path>
+                <path d="M704 320c0-108.8-83.2-192-192-192C403.2 128 320 211.2 320 320s83.2 192 192 192C620.8 512 704 428.8 704 320zM512 448C441.6 448 384 390.4 384 320c0-70.4 57.6-128 128-128 70.4 0 128 57.6 128 128C640 390.4 582.4 448 512 448z"></path>
+                <path d="M512 512c-179.2 0-320 115.2-320 256 0 19.2 12.8 32 32 32S256 787.2 256 768c0-108.8 115.2-192 256-192 140.8 0 256 83.2 256 192 0 19.2 12.8 32 32 32S832 787.2 832 768C832 627.2 691.2 512 512 512z"></path>
+           </svg>`,
+    reset: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M790.2 590.67l105.978 32.29C847.364 783.876 697.86 901 521 901c-216.496 0-392-175.504-392-392s175.504-392 392-392c108.502 0 206.708 44.083 277.685 115.315l-76.64 76.64C670.99 257.13 599.997 225 521.5 225 366.032 225 240 351.032 240 506.5 240 661.968 366.032 788 521.5 788c126.148 0 232.916-82.978 268.7-197.33z"></path>
+                <path d="M855.58 173.003L650.426 363.491l228.569 32.285z"></path>
+           </svg>`,
+    imp: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M746.666667 469.333333H554.666667V213.333333l42.666666 42.666667 51.2 51.2L746.666667 213.333333l59.733333 59.733334-98.133333 98.133333 21.333333 21.333333 38.4 34.133334 42.666667 42.666666h-64zM512 213.333333v85.333334H298.666667v426.666666h426.666666v-213.333333h85.333334v298.666667H213.333333V213.333333h298.666667z"></path>
+           </svg>`,
+    exp: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M469.333333 162.133333h85.333334v469.333334c0 12.8-8.533333 21.333333-21.333334 21.333333h-42.666666c-12.8 0-21.333333-8.533333-21.333334-21.333333v-469.333334z"></path>
+                <path d="M315.733333 392.533333L285.866667 362.666667c-8.533333-8.533333-8.533333-21.333333 0-29.866667l211.2-211.2c8.533333-8.533333 21.333333-8.533333 29.866666 0l44.8 44.8-226.133333 226.133333c-8.533333 8.533333-21.333333 8.533333-29.866667 0z"></path>
+                <path d="M452.266667 166.4l44.8-44.8c8.533333-8.533333 21.333333-8.533333 29.866666 0l211.2 211.2c8.533333 8.533333 8.533333 21.333333 0 29.866667l-29.866666 29.866666c-8.533333 8.533333-21.333333 8.533333-29.866667 0L452.266667 166.4zM896 503.466667h-42.666667c-12.8 0-21.333333 8.533333-21.333333 21.333333v277.333333c0 12.8-8.533333 21.333333-21.333333 21.333334H213.333333c-12.8 0-21.333333-8.533333-21.333333-21.333334v-277.333333c0-12.8-8.533333-21.333333-21.333333-21.333333H128c-12.8 0-21.333333 8.533333-21.333333 21.333333v362.666667c0 12.8 8.533333 21.333333 21.333333 21.333333h768c12.8 0 21.333333-8.533333 21.333333-21.333333v-362.666667c0-12.8-8.533333-21.333333-21.333333-21.333333z"></path>
+                <path d="M277.333333 588.8H149.333333v-85.333333h128c12.8 0 21.333333 8.533333 21.333334 21.333333v42.666667c0 10.666667-8.533333 21.333333-21.333334 21.333333zM874.666667 588.8h-128c-12.8 0-21.333333-8.533333-21.333334-21.333333v-42.666667c0-12.8 8.533333-21.333333 21.333334-21.333333h128v85.333333z"></path>
+           </svg>`,
+    picture: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M986.112 446.7712a38.4 38.4 0 0 0 38.4-38.4V144.128a140.9536 140.9536 0 0 0-140.8-140.8L140.7488 3.6864a140.9536 140.9536 0 0 0-140.8 140.8v735.3856a140.9536 140.9536 0 0 0 140.8 140.8l742.9632-0.4096a140.9536 140.9536 0 0 0 140.8-140.8V588.288c0-3.6864-1.1264-7.0144-2.0992-10.3936a37.8368 37.8368 0 0 0-11.9808-29.5936L785.8176 342.6304c-26.0096-23.8592-65.8432-24.576-96.2048 1.9968l-163.1232 182.8864-146.2272-84.9408a70.8608 70.8608 0 0 0-53.3504-13.6192 70.3488 70.3488 0 0 0-44.544 26.4704L179.6096 563.8656a38.4 38.4 0 0 0 55.7056 52.8384l103.8336-109.568 145.9712 84.8384c25.9584 20.0192 62.976 18.9952 91.5968-5.888l162.3552-182.1184 208.5888 191.0272v284.4672c0 35.2768-28.7232 64-64 64l-742.912 0.4096c-35.2768 0-64-28.7232-64-64V144.4864c0-35.2768 28.7232-64 64-64l742.9632-0.4096c35.2768 0 64 28.7232 64 64v264.2944c0 21.1968 17.2032 38.4 38.4 38.4z"></path>
+                <path d="M264.4992 248.4224m-49.664 0a49.664 49.664 0 1 0 99.328 0 49.664 49.664 0 1 0-99.328 0Z"></path>
+              </svg>`,
+};
+
+/** 全局映射html块 */
+const GlobalHTMLTypes = {...DefaultHtmlTypes};
+
+/**
+ * 注册html映射类型
+ *
+ * @param type
+ * @param innerHTML
+ */
+export const registerHTML = (type, innerHTML) => {
+    GlobalHTMLTypes[type] = innerHTML;
+}
+
+/**
+ * 获取类型的html代码
+ *
+ * @param type
+ * @param innerHTML
+ */
+export const getHTML = (type) => {
+    return GlobalHTMLTypes[type];
+}
+
 const DefaultSettings = {
     linkName: "",
     nodeName: "节点名称",
@@ -14,6 +72,7 @@ const DefaultSettings = {
     connectStrokeColor: "#409eff",
     startStrokeColor: "",
     endStrokeColor: "#f56c6c",
+    themeColor: "#409eff",
 
     // 完成api样式配置
     // 环节执行完成设置背景色默认浅绿色
@@ -89,6 +148,14 @@ const defaultOption = {
     dblclickElement(element, evt) {
     },
 
+    /**
+     * 右键事件
+     *
+     * @param evt
+     */
+    contextMenu(evt) {
+    },
+
     /***
      * 配置项
      */
@@ -101,7 +168,7 @@ const defaultOption = {
  * @type {string}
  */
 const extensionTemplate = `
-    <div class="flow-menu" style="display:none">
+    <div class="flow-menu" style="display:none;z-index: 100;">
         <div class="menu-item" data-type="start" draggable="true"></div>
         <div>开始</div>
         <div class="menu-item" data-type="task" draggable="true"></div>
@@ -116,11 +183,11 @@ const extensionTemplate = `
         <div>导入</div>
         <div class="menu-item" data-type="exp"></div>
         <div>导出</div>
-        <div class="menu-item" data-type="picture"></div>
-        <div>图片</div>
+<!--        <div class="menu-item" data-type="picture"></div>-->
+<!--        <div>图片</div>-->
     </div>
     <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
-    <div class="flow-popwin" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);">
+    <div class="flow-popwin" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);z-index: 100;">
        <div>
             <span class="close-handle" style="color:red;float: right;cursor: pointer;" title="关闭">x</span>
             <h4>基本属性</h4>
@@ -203,6 +270,7 @@ class GraphicDesign {
         this.translateY = 0;
     };
 
+    // 初始化及事件处理
     initDragControlElements() {
         let me = this;
         let resizeOnMove = function (dx, dy, x, y) {
@@ -292,6 +360,7 @@ class GraphicDesign {
                 // move
                 me.linkToolOnDragMove(this, dx, dy, x, y, e);
             },
+            // start
             function () {
                 me.dragingElement = me.linkTool;
             },
@@ -339,6 +408,7 @@ class GraphicDesign {
 
         // 快速追加结束任务
         this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
+        // this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -356,6 +426,9 @@ class GraphicDesign {
         });
     };
 
+    /**
+     * 追加任务
+     */
     nextNode() {
         let fromNode = this.nextTaskTool.data("from");
         if (!fromNode) return;
@@ -372,6 +445,9 @@ class GraphicDesign {
         this.hideEditElements(path);
     };
 
+    /**
+     * 追加分支
+     */
     nextSplit() {
         let fromNode = this.nextTaskTool.data("from");
         if (!fromNode) return;
@@ -465,11 +541,15 @@ class GraphicDesign {
         };
 
         /** 拖动初始化 */
-        const onDragStart = (event, dragmenu) => {
+        const onDragStart = (event, domHandle) => {
             const {pageX, pageY} = event;
-            // 当前拖拽类型
-            let type = event.target.dataset.type;
-            dragContext.type = type;
+
+            let dragmenu = domHandle == menuDom;
+            if (!dragmenu) {
+                // 当前拖拽类型menu-item
+                let type = domHandle.dataset.type;
+                dragContext.type = type;
+            }
             // 记录
             dragContext.px = pageX;
             dragContext.py = pageY;
@@ -508,7 +588,7 @@ class GraphicDesign {
             } else {
                 if (!element) {
                     let x = dragContext.px - dragContext.offsetX - 20,
-                        y = me.translateY + dragContext.py - dragContext.offsetY - 20;
+                        y = dragContext.py - dragContext.offsetY - 20;
                     x -= me.translateX;
                     y -= me.translateY;
 
@@ -549,7 +629,7 @@ class GraphicDesign {
             });
             // 拖动处理
             bindDomEvent(menuDom, "mousedown", function (event) {
-                onDragStart(event, true);
+                onDragStart(event, menuDom);
                 document.addEventListener("mousemove", onDragMove);
                 document.addEventListener("mouseup", onDragUp);
                 event.stopPropagation();
@@ -566,12 +646,13 @@ class GraphicDesign {
                 margin: "10px 0 4px 0"
             });
             if (type == "selection") {
-                item.style.cursor = `pointer`;
-                item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=) 50% no-repeat`
+                // item.style.cursor = `pointer`;
+                // item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=) 50% no-repeat`
                 // 绑定全选事件
             } else if (type == "reset") {
                 item.style.cursor = `pointer`;
-                item.style.background = `url(${imgs.reset}) 50% no-repeat`;
+                item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes["reset"];
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
                     event.preventDefault();
@@ -584,7 +665,8 @@ class GraphicDesign {
                 });
             } else if (type == "exp") {
                 item.style.cursor = `pointer`;
-                item.style.background = `url(${imgs.exp}) 50% no-repeat`;
+                item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes["exp"];
                 // 点击处理
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
@@ -598,7 +680,8 @@ class GraphicDesign {
                 });
             } else if (type == "imp") {
                 item.style.cursor = `pointer`;
-                item.style.background = `url(${imgs.imp}) 50% no-repeat`;
+                item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes["imp"];
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
                     event.preventDefault();
@@ -610,36 +693,43 @@ class GraphicDesign {
                     event.preventDefault();
                 });
             } else if (type == "picture") {
-                item.style.cursor = `pointer`;
-                item.style.background = `url(${imgs.picture}) 50% no-repeat`;
-                bindDomEvent(item, "mousedown", function (event) {
-                    event.stopPropagation();
-                    event.preventDefault();
-                });
-                // 点击处理
-                bindDomEvent(item, "click", function (event) {
-                    me.exportImage();
-                    event.stopPropagation();
-                    event.preventDefault();
-                });
+                // item.style.cursor = `pointer`;
+                // item.style.background = `url(${imgs.picture}) 50% no-repeat`;
+                // bindDomEvent(item, "mousedown", function (event) {
+                //     event.stopPropagation();
+                //     event.preventDefault();
+                // });
+                // // 点击处理
+                // bindDomEvent(item, "click", function (event) {
+                //     me.exportImage();
+                //     event.stopPropagation();
+                //     event.preventDefault();
+                // });
             } else {
                 Object.assign(item.style, {
                     cursor: "move"
                 });
                 if (type == "start") {
-                    item.style.background = `url(${imgs.start}) 50% no-repeat`
+                    // item.style.background = `url(${imgs.start}) 50% no-repeat`
+                    item.style.color = this.option.settings.themeColor;
+                    item.innerHTML = DefaultHtmlTypes["start"];
                 } else if (type == "end") {
-                    item.style.background = `url(${imgs.end}) 50% no-repeat`
+                    // item.style.background = `url(${imgs.end}) 50% no-repeat`
+                    item.style.color = this.option.settings.themeColor;
+                    item.innerHTML = DefaultHtmlTypes["end"];
                 } else if (type == "task") {
-                    item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==) 50% no-repeat`
-                    item.style.border = "2px solid #1890FF";
-                    item.style.borderRadius = "25px";
-                } else if (type == "selection") {
-                    item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=) 50% no-repeat`
+                    // item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==) 50% no-repeat`
+                    // item.style.border = "2px solid " + this.option.settings.themeColor;
+                    // item.style.color = this.option.settings.themeColor;
+                    // item.style.borderRadius = "25px";
+
+                    item.style.color = this.option.settings.themeColor;
+                    item.innerHTML = DefaultHtmlTypes["user"];
                 }
+                
                 // 拖动处理
                 bindDomEvent(item, "mousedown", function (event) {
-                    onDragStart(event, false);
+                    onDragStart(event, item);
                     document.addEventListener("mousemove", onDragMove);
                     document.addEventListener("mouseup", onDragUp);
                     event.stopPropagation();
@@ -1015,7 +1105,6 @@ class GraphicDesign {
         bindDomEvent(me.paper.canvas, "dblclick", (evt) => me.handleDblClickBlank(evt));
 
         this.handleDocumentKeyDown = (e) => {
-            console.log("keydown 123");
             if (e.keyCode == 46) {
                 me.delSelectElement();
             } else if (e.keyCode == 8) {
@@ -1027,9 +1116,6 @@ class GraphicDesign {
         }
         // 键盘事件(在销毁时需要移除)
         document.addEventListener("keydown", this.handleDocumentKeyDown);
-
-        bindDomEvent(me.paper.canvas, "click", (evt) => me.handleClickBlank(evt));
-
         if (this.option.panable) {
             const canvasDragContext = {};
             const onCanvasDragStart = (event) => {
@@ -1079,12 +1165,8 @@ class GraphicDesign {
         this.option.clickBlank && this.option.clickBlank(evt);
         let selectElement = this.selectElement;
         if (selectElement) {
-            if (selectElement.data("editing")) {
-                selectElement.removeData("editing");
-            } else {
-                // hideEditElements(selectElement);
-                this.unSelectAll();
-            }
+            this.hideEditElements(selectElement);
+            this.selectElement = null;
         }
         if (this.activeFromElement) {
             this.activeFromElement = null;
@@ -1103,13 +1185,10 @@ class GraphicDesign {
 
     // 右键事件
     handleContextmenu(evt) {
+        this.option.onContextMenu && this.option.onContextMenu(evt);
         evt.preventDefault();
         evt.stopPropagation();
         return false;
-    };
-
-    getUUID() {
-        return Raphael.createUUID();
     };
 
     setDesignMode(designMode) {
@@ -1118,6 +1197,31 @@ class GraphicDesign {
 
     getDesignMode() {
         return this.designMode;
+    };
+
+    /**
+     * 根据html创建节点（以div作为容器）
+     */
+    renderHTML(type, x, y, width, height) {
+        let html = null;
+        if (!(html = GlobalHTMLTypes[type])) {
+            console.error(`html type [${type}] is not register `);
+            return;
+        }
+        let domEle = document.createElement("div");
+        // 插入到指定节点
+        this.dom.appendChild(domEle);
+        domEle.innerHTML = html;
+        domEle.style.position = "absolute";
+        let element = new ElementData(domEle);
+        element.attr({
+            x: Number(x) || 0,
+            y: Number(y) || 0,
+            width: Number(width) || 0,
+            height: Number(height) || 0
+        });
+        // this.initElement(element);
+        return element;
     };
 
     /**
@@ -1497,14 +1601,6 @@ class GraphicDesign {
         }
     };
 
-    unSelectAll() {
-        let selectElement = this.selectElement;
-        if (selectElement) {
-            this.hideEditElements(selectElement);
-            this.selectElement = null;
-        }
-    };
-
     /**
      * 绑定选择事件
      *
@@ -1570,7 +1666,7 @@ class GraphicDesign {
     bindMouseOverOutEvent(targetElement) {
         let type = targetElement.type;
         let me = this;
-        if (type == "rect" || type == "image") {
+        if (type == "rect" || type == "image" || type == "html") {
             let nodeType = targetElement.data("nodeType");
             if (nodeType != "Start") {
                 targetElement.mouseover(function () {
@@ -1861,14 +1957,42 @@ class GraphicDesign {
      * @returns {*}
      */
     createStartNode(x, y) {
-        return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start");
+        // return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start");
+        return this.createHTMLNode("start", x || 100, y || 150, 48, 48, "Start").attr({
+            color: this.option.settings.themeColor
+        });
     };
 
     /**
      * 创建结束节点(使用图片)
      */
     createEndNode(x, y) {
-        return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
+        // return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
+        return this.createHTMLNode("end", x || 100, y || 150, 48, 48, "End").attr({
+            color: this.option.settings.themeColor
+        });
+    };
+
+    /**
+     * 创建图片节点
+     *
+     * @param src
+     * @param x
+     * @param y
+     * @param w
+     * @param h
+     * @param nodeType
+     * @returns {*}
+     */
+    createHTMLNode(type, x, y, w, h, nodeType) {
+        let htmlElement = this.renderHTML(type, x, y, w, h);
+        if (!htmlElement) return null;
+        htmlElement.data("type", "node");
+        htmlElement.data("nodeType", nodeType);
+        htmlElement.attr("title", nodeType + ":" + htmlElement.id);
+        this.autoContainerSelect(htmlElement);
+        this.initElement(htmlElement);
+        return htmlElement;
     };
 
     /**
@@ -1891,6 +2015,18 @@ class GraphicDesign {
             fill: this.option.settings.nodeBackgroundColor
         });
         rect.data("type", "node");
+
+        // create text
+        let text = this.paper.text(0, 0).attr({
+            "font-size": 13,
+            "text-anchor": "middle",
+            "font-style": "normal",
+            "width": 3,
+            text: this.option.settings.nodeName + " " + this.nextId()
+        });
+        // text.id = me.getUUID();
+        rect.data("text", text);
+
         this.autoContainerSelect(rect);
         this.initElement(rect);
         return rect;
@@ -1982,6 +2118,27 @@ class GraphicDesign {
         this.textEditing(nodeText);
         this.initElement(nodeElement);
         return nodeElement;
+    };
+
+    /**
+     * 根据数据生成元素（html）
+     *
+     * @param id
+     * @param type
+     * @param component
+     * @param nodeType
+     * @returns {*}
+     */
+    loadHTMLElement(id, type, component, nodeType) {
+        let {attrs} = component;
+        let htmlElement = this.renderHTML(type, 0, 0, 0, 0);
+        htmlElement.id = id;
+        htmlElement.data("type", "node");
+        htmlElement.data("nodeType", nodeType);
+        htmlElement.attr(attrs);
+        htmlElement.attr("title", "id:" + htmlElement.id);
+        this.initElement(htmlElement);
+        return htmlElement;
     };
 
     /**
@@ -2534,10 +2691,13 @@ class GraphicDesign {
         this.showEditElements(selectRect);
     };
 
-    linkToolOnDragMove(linkTool, dx, dy, x, y, e) {
+    linkToolOnDragMove(linkTool, dx, dy) {
+        // 初始化位置
+        let {x, y} = linkTool.attrs;
         // move 修改鼠标
-        let mx = e.layerX || e.x;
-        let my = e.layerY || e.y;
+        let mx = x + dx;
+        let my = y + dy;
+        console.log(mx, my);
         // 创建一个透明的点
         let dropEndRect = linkTool.data("dropEndRect");
         let element = linkTool.data("from");
@@ -2578,7 +2738,6 @@ class GraphicDesign {
 
         // 设置禁用样式
         this.validateDropLink(virtualPath);
-
     };
 
     linkToolOnDragUp(linkTool) {
@@ -2774,7 +2933,7 @@ class GraphicDesign {
 
     hideEditElements(targetElement) {
         let type = null;
-        if (!targetElement || (type = targetElement.type) == "rect" || type == "image") {
+        if (!targetElement || (type = targetElement.type) == "rect" || type == "image" || type == "html") {
             let {nw, w, sw, n, s, ne, e, se, dashOuterPath, linkTool, nextTaskTool, nextSplitTool, nextEndTool} = this;
             nw.hide();
             w.hide();
@@ -2819,7 +2978,7 @@ class GraphicDesign {
         }
         let type = targetElement.type;
         let isImage = type == "image";
-        if (type == "rect" || isImage) {
+        if (type == "rect" || isImage || type == "html") {
             let {x, y, width, height} = targetElement.attrs;
             let nodeType = targetElement.data("nodeType");
             let {nw, w, sw, n, s, ne, e, se, dashOuterPath, linkTool, nextTaskTool, nextSplitTool, nextEndTool} = this;
@@ -2914,36 +3073,14 @@ class GraphicDesign {
     };
 
     updateElements(targetElement, isNew) {
-
         let me = this;
-        let type = targetElement.data("nodeType");
-        let isImage = type == "Start" || type == "End";
-
         let text = targetElement.data("text");
-        let {x, y, width, height} = targetElement.attrs;
-
-        let textX = x + width / 2;
-        let textY = y + height / 2;
-        if (isNew) {
-            if (!isImage) {
-                if (!text) {
-                    text = me.paper.text(textX, textY);
-                    text.attr({
-                        "font-size": 13,
-                        "text-anchor": "middle",
-                        "font-style": "normal",
-                        "width": 3,
-                        text: this.option.settings.nodeName + " " + this.nextId()
-                    });
-                    // text.id = me.getUUID();
-                    targetElement.data("text", text);
-                }
-            }
-        } else {
-            if (!isImage) {
-                // 更新text位置
-                text.attr("x", textX).attr("y", textY);
-            }
+        if (text) {
+            let {x, y, width, height} = targetElement.attrs;
+            let textX = x + width / 2;
+            let textY = y + height / 2;
+            // 更新text位置
+            text.attr("x", textX).attr("y", textY);
         }
         if (targetElement.data("in")) {
             let inLines = targetElement.data("in");
@@ -3703,11 +3840,13 @@ class GraphicDesign {
             let element = null;
             switch (type) {
                 case "Start": {
-                    element = this.loadImageElement(id, imgs.start, component, "Start");
+                    // element = this.loadImageElement(id, imgs.start, component, "Start");
+                    element = this.loadHTMLElement(id, "start", component, "Start");
                     break;
                 }
                 case "End": {
-                    element = this.loadImageElement(id, imgs.end, component, "End");
+                    // element = this.loadImageElement(id, imgs.end, component, "End");
+                    element = this.loadHTMLElement(id, "end", component, "End");
                     break;
                 }
                 default: {
@@ -3922,7 +4061,10 @@ class GraphicDesign {
      * @param toElementId   结束环节的id
      * @param styles        自定义样式
      */
-    complete(fromElementId, toElementId, styles) {
+    complete(fromElementId, toElementId, completeColor) {
+
+        completeColor = completeColor || this.option.settings.completeColor;
+
         let fromElement = this.getElementById(fromElementId);
         if (!fromElement) {
             alert("开始节点[id=" + fromElementId + "]不存在");
@@ -3946,29 +4088,23 @@ class GraphicDesign {
             alert("结束节点[id=" + toElementId + "]不存在或无效");
             return;
         }
-        if(fromElement.type == "image") {
-            let nodeType = fromElement.data("nodeType");
-            if(nodeType == "Start") {
-                fromElement.attr("src", imgs.start_complete)
-            }
+        if (fromElement.type == "html") {
+            fromElement.attr("color", completeColor);
         } else {
             fromElement.attr({
-                stroke: this.option.settings.completeColor
+                stroke: completeColor
             });
         }
-        if(toElement.type == "image") {
-            let nodeType = toElement.data("nodeType");
-            if(nodeType == "End") {
-                toElement.attr("src", imgs.end_complete);
-            }
+        if (toElement.type == "html") {
+            toElement.attr("color", completeColor);
         } else {
             toElement.attr({
-                stroke: this.option.settings.completeColor
+                stroke: completeColor
             });
         }
         let pathAttr = {
-            fill: this.option.settings.completeConnectColor,
-            stroke: this.option.settings.completeConnectColor,
+            fill: completeColor,
+            stroke: completeColor
         }
         // 路径
         connect.attr(pathAttr).data("arrow").attr(pathAttr);
@@ -3979,12 +4115,12 @@ class GraphicDesign {
      *
      * */
     completeQueue(elementIds) {
-        if(!Array.isArray(elementIds) || elementIds.length < 2) {
+        if (!Array.isArray(elementIds) || elementIds.length < 2) {
             alert("参数错误");
-            return ;
+            return;
         }
         let elementId = elementIds[0];
-        for(let i = 1, len = elementIds.length; i < len; ++i) {
+        for (let i = 1, len = elementIds.length; i < len; ++i) {
             this.complete(elementId, elementIds[i]);
             elementId = elementIds[i];
         }
@@ -3992,10 +4128,10 @@ class GraphicDesign {
 
     // 获取connect
     getConnect(fromElementId, toElementId) {
-        for(let elementId in this.elements) {
+        for (let elementId in this.elements) {
             let element = this.elements[elementId];
-            if(element.type == "path") {
-                if(element.data("from").id == fromElementId && element.data("to").id == toElementId) {
+            if (element.type == "path") {
+                if (element.data("from").id == fromElementId && element.data("to").id == toElementId) {
                     return element;
                 }
             }
@@ -4049,6 +4185,7 @@ class GraphicDesign {
         const svg = this.paper.canvas;
         const content = new XMLSerializer().serializeToString(svg);// svg.outerHTML;
         const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(content)))}`;
+        console.log(src);
         const img = new Image();
         img.src = src;
         img.onload = () => {
@@ -4072,11 +4209,25 @@ class GraphicDesign {
     };
 
     /**
+     * 清除元素
+     */
+    clearElements() {
+        // 移除绑定
+        for (let elementId in this.elements) {
+            let element = this.elements[elementId];
+            element.remove();
+            this.elements[elementId] = null;
+        }
+        // 清除svg画板
+        this.paper.clear();
+    };
+
+    /**
      * 重置
      */
     reset() {
+        this.clearElements();
         this.initData();
-        this.paper.clear();
         this.initDragControlElements();
     };
 
@@ -4084,8 +4235,8 @@ class GraphicDesign {
      * 销毁
      */
     destroy() {
+        this.clearElements();
         this.initData();
-        this.paper.clear();
         document.removeEventListener("keydown", this.handleDocumentKeyDown);
     }
 }
