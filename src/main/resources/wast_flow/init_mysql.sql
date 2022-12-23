@@ -80,3 +80,21 @@ CREATE TABLE IF NOT EXISTS `wrf_node_instance`
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
+
+-- ----------------------------
+-- Table structure for `wrf_connect_instance`
+-- ----------------------------
+-- DROP TABLE IF EXISTS `wrf_connect_instance`;
+CREATE TABLE IF NOT EXISTS `wrf_connect_instance`
+(
+    `id`                  varchar(36) NOT NULL,
+    `connect_id`          varchar(36) DEFAULT NULL,
+    `process_instance_id` varchar(36) DEFAULT NULL,
+    `node_id`             varchar(36) DEFAULT NULL,
+    `node_instance_id`    int(19)     DEFAULT NULL,
+    `execute_time`        datetime    DEFAULT NULL,
+    `condition_type`      varchar(16) DEFAULT NULL,
+    `instance_status`     varchar(16) DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;

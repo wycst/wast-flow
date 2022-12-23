@@ -3,17 +3,22 @@ package io.github.wycst.wast.flow.definition;
 public enum ConditionType {
 
     /**
-     * 永远，通过，true
+     * 永远，pass，true
      */
     Always,
 
     /**
-     * 永不，pass， false
+     * 永不，reject， false
      */
     Never,
 
     /**
-     * 脚本判断 condition?
+     * 脚本表达式判断 condition?
      */
-    Script
+    Script,
+
+    /**
+     * 拓展实现
+     */
+    HandlerCall
 }

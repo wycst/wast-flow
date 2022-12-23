@@ -45,7 +45,7 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
         // scan entitys
         EntityManagementFactory.defaultManagementFactory().scanPackages(IEntity.class.getPackage().getName());
         try {
-            sqlExecuter.executeScript(this.getClass().getResourceAsStream("/wast_flow/init.sql"));
+            sqlExecuter.executeScript(this.getClass().getResourceAsStream("/wast_flow/init_mysql.sql"));
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }

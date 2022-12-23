@@ -8,6 +8,7 @@ import io.github.wycst.wast.log.LogFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -29,7 +30,8 @@ public class RuntimeNode extends Node {
     protected final String name;
     private final RuleProcess ruleProcess;
 
-    private RuntimeNode onlyOneOut;
+    private RuntimeConnect onlyOneOut;
+    private RuntimeNode onlyOneNext;
     private boolean prepared;
 
     protected HandlerOption handlerOption = new HandlerOption();
@@ -103,8 +105,9 @@ public class RuntimeNode extends Node {
         if (this.prepared) return;
         int outCount = outConnects.size();
         if (outCount == 1) {
-            onlyOneOut = outConnects.get(0).getTo();
-            onlyOneOut.prepare();
+            onlyOneOut = outConnects.get(0);
+            onlyOneNext = onlyOneOut.getTo();
+            onlyOneNext.prepare();
         } else {
             // 优先级
             Collections.sort(outConnects);
@@ -144,7 +147,26 @@ public class RuntimeNode extends Node {
             processInstance.setStatus(Status.Error);
             // log time
             processInstance.setLastModifyDate(new Timestamp(System.currentTimeMillis()));
-            if(rollbackIfException()) {
+            if (rollbackIfException()) {
+                // continue throw up
+                throw exception;
+            }
+            return;
+        } finally {
+            // on Leave
+            onNodeLeave(processInstance, nodeInstance);
+        }
+
+        //
+        try {
+            // chain call
+            runOut(processInstance, nodeInstance);
+        } catch (Exception exception) {
+            // process instance Error
+            processInstance.setStatus(Status.Error);
+            // log time
+            processInstance.setLastModifyDate(new Timestamp(System.currentTimeMillis()));
+            if (rollbackIfException()) {
                 // continue throw up
                 throw exception;
             } else {
@@ -152,12 +174,9 @@ public class RuntimeNode extends Node {
                 return;
             }
         } finally {
-            // on Leave
-            onNodeLeave(processInstance, nodeInstance);
+            // save connect
+            processInstance.getExecuteEngine().persistenceConnectInstances(nodeInstance);
         }
-
-        // chain call
-        runOut(processInstance, nodeInstance);
     }
 
     // on Leave if manualNode please override this method
@@ -245,15 +264,27 @@ public class RuntimeNode extends Node {
     protected void runOut(ProcessInstance processInstance, NodeInstance nodeInstance) throws Exception {
 
         // 是否对非网关类的节点进行排除？
-        if (onlyOneOut != null) {
-            // 当只有一个出口时会无视条件的结果运行下一个节点
-            onlyOneOut.run(processInstance, nodeInstance);
+        if (onlyOneNext != null) {
+            ConnectInstance connectInstance = new ConnectInstance(onlyOneOut);
+            nodeInstance.addConnectInstance(connectInstance);
+            boolean result = onlyOneOut.run(processInstance, nodeInstance);
+            connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
+            connectInstance.setExecuteTime(new Date());
+            if (result) {
+                onlyOneNext.run(processInstance, nodeInstance);
+            } else {
+                processInstance.setStatus(Status.Stop);
+            }
         } else {
             // 如果存在多出口,以xor逻辑处理
             // gateway节点会override此方法
             RuntimeNode nextOut = null;
             for (RuntimeConnect runtimeConnect : outConnects) {
-                boolean result = runtimeConnect.run(processInstance);
+                ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);
+                nodeInstance.addConnectInstance(connectInstance);
+                boolean result = runtimeConnect.run(processInstance, nodeInstance);
+                connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
+                connectInstance.setExecuteTime(new Date());
                 if (result) {
                     nextOut = runtimeConnect.getTo();
                     break;

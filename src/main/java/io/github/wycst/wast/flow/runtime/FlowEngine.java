@@ -1,11 +1,10 @@
 package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.common.utils.ExecutorServiceUtils;
-import io.github.wycst.wast.flow.definition.*;
-import io.github.wycst.wast.flow.entitys.NodeInstanceEntity;
-import io.github.wycst.wast.flow.entitys.ProcessDefinitionEntity;
-import io.github.wycst.wast.flow.entitys.ProcessDeployEntity;
-import io.github.wycst.wast.flow.entitys.ProcessInstanceEntity;
+import io.github.wycst.wast.flow.definition.FlowResource;
+import io.github.wycst.wast.flow.definition.ProcessEngine;
+import io.github.wycst.wast.flow.definition.TaskEngine;
+import io.github.wycst.wast.flow.entitys.*;
 import io.github.wycst.wast.flow.exception.FlowDeploymentException;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 import io.github.wycst.wast.jdbc.oql.OqlQuery;
@@ -25,13 +24,10 @@ import java.util.concurrent.Future;
  * @Author wangyunchao
  * @Date 2022/11/29 22:05
  */
-public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, TaskEngine, NodeEngine {
+public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, TaskEngine {
 
     // 日志
     private static Log log = LogFactory.getLog(FlowEngine.class);
-
-    // 节点执行器
-    private final NodeHandler[] nodeHandlers = new NodeHandler[Node.Type.values().length];
 
     // 线程池
     private ExecutorService executorService = Executors.newCachedThreadPool();
@@ -139,16 +135,6 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     @Override
     public void skipTask(String taskId, String actorId) {
 
-    }
-
-    @Override
-    public void registerHandler(Node.Type type, NodeHandler nodeHandler) {
-        nodeHandlers[type.ordinal()] = nodeHandler;
-    }
-
-    @Override
-    public NodeHandler getHandler(Node.Type type) {
-        return nodeHandlers[type.ordinal()];
     }
 
     @PreDestroy
@@ -323,11 +309,15 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     void persistenceNodeInstance(NodeInstance nodeInstance) {
         if (flowEntityManager == null || !persistenceInstanceLog) return;
 
+        String nodeId = nodeInstance.getNode().getId();
+        long nodeInstanceId = nodeInstance.getId();
+        String processInstanceId = nodeInstance.getProcessInstance().getId();
+
         NodeInstanceEntity instanceEntity = new NodeInstanceEntity();
         instanceEntity.setInstanceStatus(nodeInstance.getStatus());
-        instanceEntity.setNodeId(nodeInstance.getNode().getId());
+        instanceEntity.setNodeId(nodeId);
         instanceEntity.setNodeName(nodeInstance.getNode().getName());
-        instanceEntity.setNodeInstanceId(nodeInstance.getId());
+        instanceEntity.setNodeInstanceId(nodeInstanceId);
         instanceEntity.setNodeType(nodeInstance.getNode().getType());
 
         if (nodeInstance.getPrev() != null) {
@@ -339,11 +329,31 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         RuleProcess ruleProcess = nodeInstance.getProcessInstance().getRuleProcess();
         instanceEntity.setProcessId(ruleProcess.getId());
         instanceEntity.setProcessName(ruleProcess.getName());
-        instanceEntity.setProcessInstanceId(nodeInstance.getProcessInstance().getId());
+        instanceEntity.setProcessInstanceId(processInstanceId);
 
         instanceEntity.setInDate(nodeInstance.getInDate());
         instanceEntity.setOutDate(nodeInstance.getOutDate());
 
         flowEntityManager.insert(instanceEntity);
+    }
+
+    void persistenceConnectInstances(NodeInstance nodeInstance) {
+        String nodeId = nodeInstance.getNode().getId();
+        long nodeInstanceId = nodeInstance.getId();
+        String processInstanceId = nodeInstance.getProcessInstance().getId();
+        List<ConnectInstance> connectInstances = nodeInstance.getConnectInstances();
+        if (connectInstances != null && connectInstances.size() > 0) {
+            for (ConnectInstance connectInstance : connectInstances) {
+                ConnectInstanceEntity connectInstanceEntity = new ConnectInstanceEntity();
+                connectInstanceEntity.setConnectId(connectInstance.getConnect().getId());
+                connectInstanceEntity.setNodeInstanceId(nodeInstanceId);
+                connectInstanceEntity.setNodeId(nodeId);
+                connectInstanceEntity.setProcessInstanceId(processInstanceId);
+                connectInstanceEntity.setInstanceStatus(connectInstance.getConnectStatus());
+                connectInstanceEntity.setExecuteTime(connectInstance.getExecuteTime());
+                connectInstanceEntity.setConditionType(connectInstance.getConnect().getConditionType());
+                flowEntityManager.insert(connectInstanceEntity);
+            }
+        }
     }
 }

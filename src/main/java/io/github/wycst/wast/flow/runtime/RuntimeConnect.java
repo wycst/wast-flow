@@ -28,6 +28,16 @@ public class RuntimeConnect extends Connect {
         this.to = to;
     }
 
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
     public RuntimeNode getFrom() {
         return from;
     }
@@ -45,20 +55,38 @@ public class RuntimeConnect extends Connect {
         this.prepared = true;
     }
 
-    public boolean run(ProcessInstance processInstance) {
-        if (conditionType == ConditionType.Script) {
-            Object result = null;
-            try {
-                result = scriptEL.evaluate(processInstance.getContext());
-            } catch (RuntimeException runtimeException) {
-                throw new FlowRuntimeException(String.format("Script[%s] execute error: %s", getScript(), runtimeException.getMessage()), runtimeException);
-            }
-            if (result instanceof Boolean) {
-                return result != null && (Boolean) result;
-            }
-            return result != null;
+    public boolean run(ProcessInstance processInstance, NodeInstance fromNodeInstance) {
+        if (conditionType == null) {
+            throw new UnsupportedOperationException("conditionType is null ");
         } else {
-            return conditionType != ConditionType.Never;
+            switch (conditionType) {
+                case Script: {
+                    Object result;
+                    try {
+                        result = scriptEL.evaluate(processInstance.getContext());
+                    } catch (RuntimeException runtimeException) {
+                        throw new FlowRuntimeException(String.format("Script[%s] execute error: %s", getScript(), runtimeException.getMessage()), runtimeException);
+                    }
+                    if (result instanceof Boolean) {
+                        return result != null && (Boolean) result;
+                    }
+                    return result != null;
+                }
+                case Never:
+                    return false;
+                case Always:
+                    return true;
+                case HandlerCall:
+                    try {
+                        return processInstance.getExecuteEngine().getConnectHandler().handle(new ConnectRuntimeContext(this, fromNodeInstance));
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
+                        return false;
+                    }
+                default: {
+                    throw new UnsupportedOperationException("unknown conditionType " + conditionType);
+                }
+            }
         }
     }
 }

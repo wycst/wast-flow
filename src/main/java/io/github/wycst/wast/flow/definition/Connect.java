@@ -15,11 +15,11 @@ public abstract class Connect extends Data implements Comparable<Connect> {
     // 优先级
     private int priority;
 
-    // 连线条件类型（默认true）
+    // 连线条件类型（默认Always）
     protected ConditionType conditionType = ConditionType.Always;
 
     // 脚本代码,当conditionType == Script时有效
-    private String script;
+    protected String script;
 
     public String getFromId() {
         return fromId;
