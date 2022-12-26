@@ -42,7 +42,7 @@ class AbstractFlowEngine implements NodeEngine {
     protected FlowEntityManager flowEntityManager;
 
     // 连线运行handler
-    private ConnectHandler connectHandler = new ConnectPassHandler();
+    private ConnectHandler[] connectHandlers = new ConnectHandler[ConditionType.values().length];
 
     // 是否持久化实例记录(流程实例和节点实例)
     protected boolean persistenceInstanceLog;
@@ -91,12 +91,12 @@ class AbstractFlowEngine implements NodeEngine {
         return nodeHandlers[type.ordinal()];
     }
 
-    public ConnectHandler getConnectHandler() {
-        return connectHandler;
+    public ConnectHandler getHandler(ConditionType conditionType) {
+        return connectHandlers[conditionType.ordinal()];
     }
 
-    public void setConnectHandler(ConnectHandler connectHandler) {
-        this.connectHandler = connectHandler;
+    public void registerHandler(ConditionType conditionType, ConnectHandler connectHandler) {
+        connectHandlers[conditionType.ordinal()] = connectHandler;
     }
 
     public void setPersistenceInstanceLog(boolean persistenceInstanceLog) {

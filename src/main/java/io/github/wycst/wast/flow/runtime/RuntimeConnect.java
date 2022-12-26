@@ -1,8 +1,10 @@
 package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.common.expression.Expression;
+import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.definition.ConditionType;
 import io.github.wycst.wast.flow.definition.Connect;
+import io.github.wycst.wast.flow.definition.ConnectHandler;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 
 /**
@@ -48,7 +50,7 @@ public class RuntimeConnect extends Connect {
 
     public void prepare() {
         if (prepared) return;
-        if (getConditionType() == ConditionType.Script) {
+        if (getConditionType() == ConditionType.Script && !StringUtils.isEmpty(getScript())) {
             scriptEL = Expression.parse(getScript());
         }
         to.prepare();
@@ -76,15 +78,17 @@ public class RuntimeConnect extends Connect {
                     return false;
                 case Always:
                     return true;
-                case HandlerCall:
+                default: {
+                    ConnectHandler connectHandler = processInstance.getExecuteEngine().getHandler(conditionType);
+                    if (connectHandler == null) {
+                        throw new UnsupportedOperationException("unregister connect handler for" + conditionType);
+                    }
                     try {
-                        return processInstance.getExecuteEngine().getConnectHandler().handle(new ConnectRuntimeContext(this, fromNodeInstance));
+                        return connectHandler.handle(new ConnectRuntimeContext(this, fromNodeInstance));
                     } catch (Throwable throwable) {
                         throwable.printStackTrace();
                         return false;
                     }
-                default: {
-                    throw new UnsupportedOperationException("unknown conditionType " + conditionType);
                 }
             }
         }
