@@ -885,6 +885,7 @@ class GraphicDesign {
                     html: `<select data-key="conditionType">
                            <option value="Always">Always</option>
                            <option value="Script">Script</option>
+                           <option value="HandlerCall">HandlerCall</option>
                        </select>`,
                     callback(value) {
                         element.data("conditionType", value);
