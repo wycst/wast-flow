@@ -130,6 +130,15 @@ class ElementData {
     };
 
     /**
+     * 更新node内容
+     *
+     * @param html
+     */
+    updateHTML(html) {
+        this.node.innerHTML = html;
+    };
+
+    /**
      * 提供元素拖动api
      *
      * @param moveFn

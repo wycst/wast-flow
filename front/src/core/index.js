@@ -15,7 +15,21 @@ const DefaultHtmlTypes = {
     end: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <path d="M512 0c282.752 0 512 229.248 512 512s-229.248 512-512 512S0 794.752 0 512 229.248 0 512 0z m0 85.333333C276.352 85.333333 85.333333 276.352 85.333333 512s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m85.333333 256a85.333333 85.333333 0 0 1 85.333334 85.333334v170.666666a85.333333 85.333333 0 0 1-85.333334 85.333334h-170.666666a85.333333 85.333333 0 0 1-85.333334-85.333334v-170.666666a85.333333 85.333333 0 0 1 85.333334-85.333334h170.666666z"></path>
           </svg>`,
-    user: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    // 网关（默认xor）
+    xor: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M485.871492 47.174338c-9.168729-0.008066-18.33651 3.392487-25.137616 10.224908L57.381424 460.755494c-13.603161 13.602212-13.540056 36.674443 0.062631 50.276655l403.288872 403.286025c13.603161 13.606956 36.673969 13.66674 50.276655 0l403.352926-403.350079c13.602686-13.601737 13.539581-36.674918-0.064054-50.27713L511.009107 57.399246c-6.801106-6.801106-15.969361-10.217316-25.137615-10.224908z m-0.030841 59.805036l378.943153 378.946-378.943153 378.94173-378.943153-378.94173 378.943153-378.946zM344.31891 317.829311c-0.006643 0-4.560641 0.872083-4.564436 0.872083-0.004745 0-3.864114 2.615773-3.866961 2.615773l-14.581525 14.584847c-0.004745 0-2.661797 3.902546-2.663696 3.94857 0 0.004745-0.824161 4.498011-0.823686 4.498011 0 0.004745 0.886317 4.452936 0.88774 4.452935 0 0.004745 2.532741 3.94857 2.535588 3.94857l133.188084 133.184763-133.12403 133.12498v-0.041754c0 0.004745-2.661797 3.947621-2.663696 3.947621 0 0.004745-0.823686 4.499434-0.823686 4.499434 0 0.009489 0.886317 4.452936 0.88774 4.452936 0 0 2.533215 3.901597 2.535588 3.947621l14.582474 14.579627c0.004745 0.004745 3.990798 2.617197 3.994119 2.617197 0.004745 0 4.434431 0.872083 4.438227 0.872083 0.004745 0 4.497536-0.825584 4.500858-0.825584 0.004745 0 3.928642-2.663695 3.931014-2.663696l133.125929-133.128775 133.154871 133.156769c0.004745 0.004745 3.991273 2.617197 3.99412 2.617197 0.004745 0 4.434431 0.872083 4.438226 0.872083 0.004745 0 4.498011-0.827008 4.501807-0.827008 0.004745 0 3.926744-2.661797 3.929116-2.661797l14.582949-14.580577c0.004745-0.004745 2.597743-3.855573 2.600116-3.855573 0-0.004745 0.88774-4.545458 0.88774-4.591007 0-0.004745-0.886791-4.452936-0.888689-4.452936 0 0-2.59632-3.994119-2.599167-3.994119l-133.140163-133.142535 133.141112-133.139214c0.004745 0 2.596794-3.856048 2.599167-3.856048 0-0.004745 0.88774-4.544509 0.88774-4.544509 0-0.009489-0.886317-4.452936-0.887266-4.452935 0-0.004745-2.659899-3.94857-2.662746-3.94857l-14.582949-14.584372c-0.004745 0-3.863639-2.616248-3.86696-2.616248-0.004745 0-4.433957-0.873032-4.437753-0.873032-0.004745 0-4.561116 0.873032-4.564436 0.873032-0.004745 0-3.864588 2.616248-3.866961 2.616248l-133.143484 133.143484-133.203268-133.207538v-0.041754c-0.004745 0-3.927693-2.5242-3.931014-2.5242-0.004745 0-4.431584-0.871608-4.436804-0.872083h-0.000949z"></path>
+                </svg>`,
+    or: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M485.871492 47.174338c-9.168729-0.008066-18.33651 3.392487-25.137616 10.224908L57.381424 460.755494c-13.603161 13.602212-13.540056 36.674443 0.062631 50.276655l403.288872 403.286025c13.603161 13.606956 36.673969 13.66674 50.276655 0l403.352926-403.350079c13.602686-13.601737 13.539581-36.674918-0.064054-50.27713L511.009107 57.399246c-6.801106-6.801106-15.969361-10.217316-25.137615-10.224908z m-0.030841 59.805036l378.943153 378.946-378.943153 378.94173-378.943153-378.94173 378.943153-378.946z m-8.957589 186.164969l-0.000949 0.197381c0 0.004745-3.969921 0.735434-3.971345 0.735435-0.004745 0-3.251568 2.203456-3.25394 2.203455-0.004745 0-2.260393 3.350733-2.262291 3.350734 0 0.004745-0.763903 3.994119-0.765326 3.994119V439.440713l-96.147347-96.147348h0.004745c-0.004745 0-3.414787-2.203456-3.416211-2.203456-0.005694 0-3.803856-0.771969-3.832798-0.777188-0.037009 0.005694-3.945249 0.732113-3.947147 0.732113-0.004745-0.004745-3.352157 2.249005-3.35358 2.249006l-12.636658 12.629066-2.306416 3.397231c-0.004745 0-0.713608 3.901597-0.713609 3.901597 0 0.004745 0.765801 3.856048 0.766275 3.856048 0 0.004745 2.188747 3.397232 2.189696 3.397232l96.099901 96.101323H303.419279l-0.026571-0.032264c0 0.004745-3.953315 0.871608-3.955212 0.871608-0.004745 0.004745-3.250619 2.20393-3.252992 2.20393v-0.023249c-0.004745 0.004745-2.259918 3.352157-2.261816 3.352157-0.004745 0-0.764852 3.993171-0.766275 3.99317v17.871526s0.759158 4.040143 0.786677 4.040143c0 0.009489 2.251378 3.259634 2.251852 3.259635 0.004745 0 3.271022 2.203456 3.271971 2.203455 0.004745 0.009489 3.970396 0.872083 3.971819 0.872083h135.870285L343.2912 601.205873v-0.03606c-0.004745 0.004745-2.305942 3.397232-2.306891 3.397231-0.004745 0.004745-0.714557 3.901597-0.714557 3.901597 0 0.009015 0.767224 3.856048 0.767698 3.856048 0 0 2.196813 3.397232 2.189696 3.397232l12.638556 12.629066c0.004745 0.004745 3.453219 2.249005 3.454168 2.249005l3.847033 0.780509c0.005694 0 3.896852-0.734011 3.89875-0.734011 0 0 3.402451-2.295504 3.403874-2.295503l96.160633-96.160633v136.107996l-0.025147-0.026571c0 0.004745 0.787626 4.039194 0.786677 4.039195 0 0.004745 2.251378 3.259634 2.251378 3.259634 0.004745 0.004745 3.271022 2.203456 3.271971 2.203456 0 0 3.942402 0.826059 3.971819 0.872082l17.865832-0.004745c0.004745 0 4.048209-0.825584 4.050582-0.825584 0 0 3.250619-2.20393 3.252991-2.20393 0.004745-0.004745 2.24948-3.25916 2.251853-3.25916 0 0 0.774816-4.040143 0.776713-4.040143v-136.030657l96.091834 96.087564c-0.004745 0.009489 3.452271 2.249005 3.454168 2.249005 0.004745 0.004745 3.846084 0.735434 3.847508 0.735435 0.005694 0 3.896378-0.735434 3.89875-0.735435 0 0 3.401976-2.295504 3.404823-2.295503l12.632862-12.637132c0.004745 0 2.239041-3.352157 2.26751-3.352157 0-0.009489 0.778137-3.947621 0.759157-3.99317 0-0.004745-0.767698-3.856997-0.768647-3.856997-0.005694 0.004745-2.236194-3.442781-2.265612-3.442781l-95.851276-95.857444h135.679072c0.004745 0.004745 4.048209-0.826533 4.049633-0.826533 0.004745 0 3.251568-2.20393 3.252991-2.203931 0.004745-0.009015 2.249005-3.25916 2.251852-3.259159 0 0 0.774816-4.039194 0.776714-4.039195v-17.867255c0-0.004745-0.771494-3.947621-0.770071-3.99412-0.004745-0.004745-2.240465-3.350733-2.267984-3.350733-0.004745-0.004745-3.271496-2.20393-3.27292-2.20393 0 0.004745-4.036822-0.871608-4.03872-0.825584h-136.09044l96.283047-96.280201c0.004745-0.004745 2.238092-3.351682 2.266561-3.351682 0-0.009489 0.77956-3.947621 0.77956-3.947621 0-0.004745-0.766749-3.856522-0.767224-3.856522-0.004745-0.004745-2.299299-3.397232-2.300248-3.397231l-12.635709-12.638082c-0.004745 0-3.341244-2.249005-3.342667-2.249005-0.004745-0.004745-3.846084-0.734485-3.848456-0.734485-0.005694 0-3.960432 0.734011-3.961855 0.734011-0.004745 0.004745-3.352631 2.249005-3.35358 2.249005l-96.162531 96.161582V303.47838c0-0.004745-0.771494-3.948096-0.770071-3.994119-0.004745-0.009489-2.239516-3.351208-2.239516-3.351208-0.004745-0.004745-3.271496-2.203456-3.272445-2.203456-0.004745 0-4.048209-0.780509-4.049158-0.780509l-17.868679-0.004745z m-113.645937 47.167429l0.016132-0.002372h-0.029892l0.014235 0.002847z" p-id="3577"></path>
+                </svg>`,
+    and: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M485.871492 47.174338c-9.168729-0.008066-18.33651 3.392487-25.137616 10.224908L57.381424 460.755494c-13.603161 13.602212-13.540056 36.674443 0.062631 50.276655l403.288872 403.286025c13.603161 13.606956 36.673969 13.66674 50.276655 0l403.352926-403.350079c13.602686-13.601737 13.539581-36.674918-0.064054-50.27713L511.009107 57.399246c-6.801106-6.801106-15.969361-10.217316-25.137615-10.224908z m-0.030841 59.805036l378.943153 378.946-378.943153 378.94173-378.943153-378.94173 378.943153-378.946z m-10.34495 156.490911c0 0.004745-4.581992 0.872083-4.584365 0.872082-0.004745 0-3.752138 2.525623-3.754984 2.525624-0.004745 0.004745-2.608182 3.856048-2.610555 3.856047 0 0.004745-0.882521 4.590533-0.883944 4.590533V463.610402H275.283938l-0.03179-0.037009c0 0.004745-4.563488 1.010154-4.56586 1.010155-0.004745 0.004745-3.751663 2.525149-3.754036 2.525149l0.003796-0.046499c-0.004745 0.004745-2.608182 3.856048-2.610554 3.856048-0.004745 0-0.882996 4.591007-0.884893 4.591007v20.625371s0.876827 4.641776 0.908142 4.673566c0 0.004745 2.599167 3.764474 2.599167 3.764474 0.004745 0.004745 3.775387 2.525149 3.776811 2.525149 0.004745 0.004745 4.581518 1.009206 4.583415 1.009206h188.355615v188.264041l-0.029892-0.02752c0 0.004745 0.909092 4.673566 0.908617 4.673566 0 0.004745 2.598218 3.764 2.598218 3.764 0.004745 0.004745 3.776811 2.5242 3.777285 2.5242 0 0 4.550203 0.964131 4.584365 1.010629l20.6211-0.004745c0.005219 0 4.671668-0.964131 4.674515-0.964131 0 0 3.752138-2.5242 3.754985-2.5242 0.004745-0.004745 2.595371-3.765423 2.598218-3.765423 0 0 0.895332-4.659332 0.896755-4.659331V508.125523h188.309116c0.005219 0.004745 4.672142-0.963656 4.67404-0.963656 0.004745 0 3.753087-2.525149 3.754985-2.525149 0.004745-0.004745 2.595846-3.764474 2.598692-3.764474 0 0 0.894857-4.659332 0.896756-4.659332v-20.6211c0-0.004745-0.890587-4.545458-0.889164-4.591008-0.004745-0.004745-2.585882-3.856048-2.618146-3.856047-0.004745-0.004745-3.775862-2.5242-3.77681-2.5242 0 0.004745-4.659332-1.010629-4.661704-0.964605h-188.289188V275.364866c0-0.004745-0.891062-4.544034-0.889638-4.590059-0.004745-0.004745-2.585882-3.856997-2.585882-3.856996-0.004745-0.004745-3.774913-2.5242-3.775862-2.5242-0.004745 0-4.672617-0.918581-4.674514-0.918582l-20.624897-0.004744z"></path>
+                </svg>`,
+    // 聚合网关
+    join: `<svg style="width: 100%;height: 100%;transform: rotate(45deg); vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M485.871492 47.174338c-9.168729-0.008066-18.33651 3.392487-25.137616 10.224908L57.381424 460.755494c-13.603161 13.602212-13.540056 36.674443 0.062631 50.276655l403.288872 403.286025c13.603161 13.606956 36.673969 13.66674 50.276655 0l403.352926-403.350079c13.602686-13.601737 13.539581-36.674918-0.064054-50.27713L511.009107 57.399246c-6.801106-6.801106-15.969361-10.217316-25.137615-10.224908z m-0.030841 59.805036l378.943153 378.946-378.943153 378.94173-378.943153-378.94173 378.943153-378.946zM344.31891 317.829311c-0.006643 0-4.560641 0.872083-4.564436 0.872083-0.004745 0-3.864114 2.615773-3.866961 2.615773l-14.581525 14.584847c-0.004745 0-2.661797 3.902546-2.663696 3.94857 0 0.004745-0.824161 4.498011-0.823686 4.498011 0 0.004745 0.886317 4.452936 0.88774 4.452935 0 0.004745 2.532741 3.94857 2.535588 3.94857l133.188084 133.184763-133.12403 133.12498v-0.041754c0 0.004745-2.661797 3.947621-2.663696 3.947621 0 0.004745-0.823686 4.499434-0.823686 4.499434 0 0.009489 0.886317 4.452936 0.88774 4.452936 0 0 2.533215 3.901597 2.535588 3.947621l14.582474 14.579627c0.004745 0.004745 3.990798 2.617197 3.994119 2.617197 0.004745 0 4.434431 0.872083 4.438227 0.872083 0.004745 0 4.497536-0.825584 4.500858-0.825584 0.004745 0 3.928642-2.663695 3.931014-2.663696l133.125929-133.128775 133.154871 133.156769c0.004745 0.004745 3.991273 2.617197 3.99412 2.617197 0.004745 0 4.434431 0.872083 4.438226 0.872083 0.004745 0 4.498011-0.827008 4.501807-0.827008 0.004745 0 3.926744-2.661797 3.929116-2.661797l14.582949-14.580577c0.004745-0.004745 2.597743-3.855573 2.600116-3.855573 0-0.004745 0.88774-4.545458 0.88774-4.591007 0-0.004745-0.886791-4.452936-0.888689-4.452936 0 0-2.59632-3.994119-2.599167-3.994119l-133.140163-133.142535 133.141112-133.139214c0.004745 0 2.596794-3.856048 2.599167-3.856048 0-0.004745 0.88774-4.544509 0.88774-4.544509 0-0.009489-0.886317-4.452936-0.887266-4.452935 0-0.004745-2.659899-3.94857-2.662746-3.94857l-14.582949-14.584372c-0.004745 0-3.863639-2.616248-3.86696-2.616248-0.004745 0-4.433957-0.873032-4.437753-0.873032-0.004745 0-4.561116 0.873032-4.564436 0.873032-0.004745 0-3.864588 2.616248-3.866961 2.616248l-133.143484 133.143484-133.203268-133.207538v-0.041754c-0.004745 0-3.927693-2.5242-3.931014-2.5242-0.004745 0-4.431584-0.871608-4.436804-0.872083h-0.000949z"></path>
+                </svg>`,
+    task: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <path d="M512 0C230.4 0 0 230.4 0 512s230.4 512 512 512 512-230.4 512-512S793.6 0 512 0zM512 960c-249.6 0-448-198.4-448-448 0-249.6 198.4-448 448-448 249.6 0 448 198.4 448 448C960 761.6 761.6 960 512 960z"></path>
                 <path d="M704 320c0-108.8-83.2-192-192-192C403.2 128 320 211.2 320 320s83.2 192 192 192C620.8 512 704 428.8 704 320zM512 448C441.6 448 384 390.4 384 320c0-70.4 57.6-128 128-128 70.4 0 128 57.6 128 128C640 390.4 582.4 448 512 448z"></path>
                 <path d="M512 512c-179.2 0-320 115.2-320 256 0 19.2 12.8 32 32 32S256 787.2 256 768c0-108.8 115.2-192 256-192 140.8 0 256 83.2 256 192 0 19.2 12.8 32 32 32S832 787.2 832 768C832 627.2 691.2 512 512 512z"></path>
@@ -175,6 +189,10 @@ const extensionTemplate = `
         <div>任务</div>
         <div class="menu-item" data-type="end" draggable="true"></div>
         <div>结束</div>
+        <div class="menu-item" data-type="xor" draggable="true"></div>
+        <div>分支</div>
+        <div class="menu-item" data-type="join" draggable="true"></div>
+        <div>聚合</div>
 <!--        <div class="menu-item" data-type="selection"></div>-->
 <!--        <div>圈选</div>-->
         <div class="menu-item" data-type="reset"></div>
@@ -519,6 +537,7 @@ class GraphicDesign {
     /** 初始化菜单 */
     initMenu(menuDom) {
         let me = this;
+        this.menu = menuDom;
         Object.assign(menuDom.style, {
             position: "absolute",
             left: "10px",
@@ -601,6 +620,10 @@ class GraphicDesign {
                         dragContext.element = element = me.createStartNode(x, y);
                     } else if (type == "end") {
                         dragContext.element = element = me.createEndNode(x, y);
+                    } else if (type == "xor") {
+                        dragContext.element = element = me.createSplitNode(x, y);
+                    } else if (type == "join") {
+                        dragContext.element = element = me.createJoinNode(x, y);
                     }
                     me.selectElement = element;
                     me.elementDragStart(element);
@@ -712,24 +735,8 @@ class GraphicDesign {
                 Object.assign(item.style, {
                     cursor: "move"
                 });
-                if (type == "start") {
-                    // item.style.background = `url(${imgs.start}) 50% no-repeat`
-                    item.style.color = this.option.settings.themeColor;
-                    item.innerHTML = DefaultHtmlTypes["start"];
-                } else if (type == "end") {
-                    // item.style.background = `url(${imgs.end}) 50% no-repeat`
-                    item.style.color = this.option.settings.themeColor;
-                    item.innerHTML = DefaultHtmlTypes["end"];
-                } else if (type == "task") {
-                    // item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==) 50% no-repeat`
-                    // item.style.border = "2px solid " + this.option.settings.themeColor;
-                    // item.style.color = this.option.settings.themeColor;
-                    // item.style.borderRadius = "25px";
-
-                    item.style.color = this.option.settings.themeColor;
-                    item.innerHTML = DefaultHtmlTypes["user"];
-                }
-
+                item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes[type];
                 // 拖动处理
                 bindDomEvent(item, "mousedown", function (event) {
                     onDragStart(event, item);
@@ -740,6 +747,20 @@ class GraphicDesign {
                 });
             }
         });
+    };
+
+    /**
+     * 设置菜单的样式
+     *
+     * @param style
+     */
+    setMenuStyle(style) {
+        if(typeof style != 'object') {
+            style = {};
+        }
+        if (this.menu) {
+            Object.assign(this.menu.style, style || {});
+        }
     };
 
     /** 初始化input */
@@ -821,7 +842,7 @@ class GraphicDesign {
                     event: "input",
                     readonly: true,
                     key: "id",
-                    html: `<input data-key="id" placeholder="请输入元素名称"/>`,
+                    html: `<input data-key="id"/>`,
                 }
             ];
             if (type == "path") {
@@ -890,84 +911,113 @@ class GraphicDesign {
                     }
                 });
             } else {
-                if (nodeType != "Start" && nodeType != "End") {
-                    let handler = element.data("handler");
-                    if (!handler) {
-                        element.data("handler", handler = {});
+                // 节点
+                switch (nodeType) {
+                    case "Start":
+                    case "End":
+                    case "Join": {
+                        break;
                     }
-                    propertyModels.push({
-                        label: "元素名称",
-                        value: element.data("text").attr("text") || "",
-                        event: "input",
-                        key: "name",
-                        html: `<input data-key="name" placeholder="请输入元素名称"/>`,
-                        callback(value) {
-                            element.data("text").attr("text", value);
+                    case "Split": {
+                        propertyModels.push({
+                            label: "网关类型",
+                            value: element.data("gateway") || "XOR",
+                            event: "change",
+                            key: "gateway",
+                            html: `<select data-key="gateway">
+                               <option value="XOR">条件</option>
+                               <option value="OR">条件并行</option>
+                               <option value="AND">并行</option>
+                           </select>`,
+                            callback(value) {
+                                element.updateHTML(DefaultHtmlTypes[value.toLowerCase()]);
+                                element.data("gateway", value);
+                            }
+                        });
+                        break;
+                    }
+                    default: {
+                        let handler = element.data("handler");
+                        if (!handler) {
+                            element.data("handler", handler = {});
                         }
-                    }, {
-                        label: "任务类型",
-                        value: element.data("nodeType") || "Business",
-                        event: "change",
-                        key: "nodeType",
-                        html: `<select data-key="nodeType">
+                        if (element.data("text")) {
+                            propertyModels.push({
+                                label: "元素名称",
+                                value: element.data("text").attr("text") || "",
+                                event: "input",
+                                key: "name",
+                                html: `<input data-key="name" placeholder="请输入元素名称"/>`,
+                                callback(value) {
+                                    element.data("text").attr("text", value);
+                                }
+                            })
+                        }
+                        propertyModels.push({
+                            label: "任务类型",
+                            value: element.data("nodeType") || "Business",
+                            event: "change",
+                            key: "nodeType",
+                            html: `<select data-key="nodeType">
                                <option value="Business">Business</option>
                                <option value="Service">Service</option>
                                <option value="Script">Script</option>
                                <option value="Manual">Manual</option>
                            </select>`,
-                        callback(value) {
-                            element.data("nodeType", value);
-                        }
-                    }, {
-                        label: "是否异步执行",
-                        value: handler.asynchronous || false,
-                        event: "change",
-                        key: "asynchronous",
-                        checkbox: true,
-                        html: `<input data-key="asynchronous" type="checkbox">`,
-                        callback(value) {
-                            handler.asynchronous = value;
-                        }
-                    }, {
-                        label: "超时设置",
-                        value: handler.timeout || 0,
-                        event: "input",
-                        key: "timeout",
-                        html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
-                        callback(value) {
-                            handler.timeout = !value ? 0 : Number(value);
-                        }
-                    }, {
-                        label: "延迟设置",
-                        value: handler.delay || 0,
-                        event: "input",
-                        key: "delay",
-                        html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
-                        callback(value) {
-                            handler.delay = !value ? 0 : Number(value);
-                        }
-                    }, {
-                        label: "循环迭代次数",
-                        value: handler.iterate || 0,
-                        event: "input",
-                        key: "iterate",
-                        html: `<input data-key="iterate" type="number"/>`,
-                        callback(value) {
-                            handler.iterate = !value ? 0 : Number(value);
-                        }
-                    }, {
-                        label: "失败策略",
-                        value: handler.policy || "Stop",
-                        event: "change",
-                        key: "policy",
-                        html: `<select data-key="policy">
-                           <option value="Stop">终止</option>
-                           <option value="Continue">继续</option>
-                       </select>`,
-                        callback(value) {
-                            handler.policy = value;
-                        }
-                    });
+                            callback(value) {
+                                element.data("nodeType", value);
+                            }
+                        }, {
+                            label: "是否异步执行",
+                            value: handler.asynchronous || false,
+                            event: "change",
+                            key: "asynchronous",
+                            checkbox: true,
+                            html: `<input data-key="asynchronous" type="checkbox">`,
+                            callback(value) {
+                                handler.asynchronous = value;
+                            }
+                        }, {
+                            label: "超时设置",
+                            value: handler.timeout || 0,
+                            event: "input",
+                            key: "timeout",
+                            html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
+                            callback(value) {
+                                handler.timeout = !value ? 0 : Number(value);
+                            }
+                        }, {
+                            label: "延迟设置",
+                            value: handler.delay || 0,
+                            event: "input",
+                            key: "delay",
+                            html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
+                            callback(value) {
+                                handler.delay = !value ? 0 : Number(value);
+                            }
+                        }, {
+                            label: "循环迭代次数",
+                            value: handler.iterate || 0,
+                            event: "input",
+                            key: "iterate",
+                            html: `<input data-key="iterate" type="number"/>`,
+                            callback(value) {
+                                handler.iterate = !value ? 0 : Number(value);
+                            }
+                        }, {
+                            label: "失败策略",
+                            value: handler.policy || "Stop",
+                            event: "change",
+                            key: "policy",
+                            html: `<select data-key="policy">
+                                       <option value="Stop">终止</option>
+                                       <option value="Continue">继续</option>
+                                   </select>`,
+                            callback(value) {
+                                handler.policy = value;
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -1798,9 +1848,9 @@ class GraphicDesign {
         });
 
         // update HtmlNodes
-        for(let elementId in this.elements) {
+        for (let elementId in this.elements) {
             let element = this.elements[elementId];
-            if(element.type == "html") {
+            if (element.type == "html") {
                 Object.assign(element.node.style, {
                     transform: `translate(${x}px, ${y}px)`
                 });
@@ -1978,7 +2028,6 @@ class GraphicDesign {
 
     /**
      * 创建开始节点
-     * note: 使用rect代替circle方便统一事件处理
      *
      * @param x
      * @param y
@@ -1993,11 +2042,29 @@ class GraphicDesign {
     };
 
     /**
-     * 创建结束节点(使用图片)
+     * 创建结束节点(使用svg)
      */
     createEndNode(x, y) {
         // return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
         return this.createHTMLNode("end", x || 100, y || 150, 48, 48, "End").attr({
+            color: this.option.settings.themeColor
+        });
+    };
+
+    /**
+     * 创建分支节点(默认类型为xor)
+     */
+    createSplitNode(x, y) {
+        return this.createHTMLNode("xor", x || 100, y || 150, 64, 64, "Split").attr({
+            color: this.option.settings.themeColor
+        });
+    };
+
+    /**
+     * 创建分支节点
+     */
+    createJoinNode(x, y) {
+        return this.createHTMLNode("join", x || 100, y || 150, 64, 64, "Join").attr({
             color: this.option.settings.themeColor
         });
     };
@@ -2726,7 +2793,6 @@ class GraphicDesign {
         // move 修改鼠标
         let mx = x + dx;
         let my = y + dy;
-        console.log(mx, my);
         // 创建一个透明的点
         let dropEndRect = linkTool.data("dropEndRect");
         let element = linkTool.data("from");
@@ -3862,7 +3928,7 @@ class GraphicDesign {
         // 重构数据结构
         let maxId = 0;
         for (let node of nodes) {
-            let {id, type, component} = node;
+            let {id, type, gateway, component} = node;
             if (!isNaN(id)) {
                 maxId = Math.max(maxId, id);
             }
@@ -3876,6 +3942,16 @@ class GraphicDesign {
                 case "End": {
                     // element = this.loadImageElement(id, imgs.end, component, "End");
                     element = this.loadHTMLElement(id, "end", component, "End").attr({color: this.option.settings.themeColor});
+                    break;
+                }
+                case "Split": {
+                    // 网关类型gateway： xor, or, and
+                    let splitType = gateway.toLowerCase();
+                    element = this.loadHTMLElement(id, splitType, component, "Split").attr({color: this.option.settings.themeColor});
+                    break;
+                }
+                case "Join": {
+                    element = this.loadHTMLElement(id, "join", component, "Join").attr({color: this.option.settings.themeColor});
                     break;
                 }
                 default: {
