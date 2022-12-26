@@ -755,7 +755,7 @@ class GraphicDesign {
      * @param style
      */
     setMenuStyle(style) {
-        if(typeof style != 'object') {
+        if (typeof style != 'object') {
             style = {};
         }
         if (this.menu) {
@@ -920,6 +920,7 @@ class GraphicDesign {
                         break;
                     }
                     case "Split": {
+                        console.log(element.data("gateway"));
                         propertyModels.push({
                             label: "网关类型",
                             value: element.data("gateway") || "XOR",
@@ -3949,6 +3950,7 @@ class GraphicDesign {
                     // 网关类型gateway： xor, or, and
                     let splitType = gateway.toLowerCase();
                     element = this.loadHTMLElement(id, splitType, component, "Split").attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "Join": {
@@ -4040,8 +4042,6 @@ class GraphicDesign {
             let element = elements[id];
             // 组件类型
             let componentType = element.type;
-            // 数据类型
-            let dataType = element.data("type");
             // 节点类型
             if (componentType != "path") {
                 let nodeType = element.data("nodeType");
@@ -4075,11 +4075,15 @@ class GraphicDesign {
                         this.setSelectElement(element);
                         return `节点[id=${id},name=${name}]没有定义出口`
                     }
-
                     nodeElements.push(element);
                 }
             }
         }
+
+        // 网关（分支）
+        let splitElements = [];
+        // 网关（聚合）
+        let joinElements = [];
 
         // 检查节点闭环
         for (let nodeElement of nodeElements) {
@@ -4090,6 +4094,16 @@ class GraphicDesign {
             if (this.checkClosedLoop(nodeElement)) {
                 this.setSelectElement(nodeElement);
                 return `从节点[id=${id},name=${name}]开始存在闭环`
+            }
+            // 节点类型
+            let nodeType = nodeElement.data("nodeType");
+            // 网关类型
+            let gateway = nodeElement.data("gateway");
+            if (nodeType == "Split" && gateway != "xor") {
+                splitElements.push(nodeElement);
+            }
+            if (nodeType == "Join") {
+                joinElements.push(nodeElement);
             }
         }
 
@@ -4103,7 +4117,90 @@ class GraphicDesign {
             return "流程没有找到结束节点"
         }
 
+        // 配对网关校验
+        for (let splitElement of splitElements) {
+            let joinElement = this.matchJoinElement(splitElement, joinElements);
+            let {id} = splitElement;
+            if (!joinElement) {
+                this.setSelectElement(splitElement);
+                return `并行分支节点[id=${id}]没有匹配到相对应的聚合网关。`
+            }
+            // 从joinElements中移除joinElement
+            let joinIndex = joinElements.indexOf(joinElement);
+            joinElements.splice(joinIndex, 1);
+        }
+
         return null;
+    };
+
+    // 匹配聚合节点
+    matchJoinElement(splitElement, joinElements) {
+        if (!joinElements || joinElements.length == 0) return null;
+        let exitPaths = this.getExitPaths(splitElement);
+
+        let matchedElements = [];
+        for (let joinElement of joinElements) {
+            // 检查splitElement和joinElement是否配对
+            // 检查从splitElement开始的所有出口路径中是否存在一条路径不经过joinElement；
+            // 如果所有的路径都经过joinElement，说明配对成功，否则配对失败；
+            // 如果匹配到多个joinElement说明路径存在包含关系，取离分支元素最近的一个聚合网关作为配对网关
+            let joinElementId = joinElement.id;
+            let continueLoop = false;
+            let maxIndex = 0;
+            for(let exitPath of exitPaths) {
+                let joinIndex = exitPath.indexOf(joinElementId);
+                if(joinIndex == -1) {
+                    continueLoop = true;
+                    break;
+                }
+                maxIndex = Math.max(maxIndex, joinIndex);
+            }
+            if(continueLoop) continue;
+            matchedElements.push({
+                maxIndex, joinElement
+            });
+        }
+        if(matchedElements.length == 0) return null;
+        // 返回maxIndex最小的网关
+        matchedElements.sort((m1, m2) => {
+            return m1.maxIndex > m2.maxIndex ? -1 : 1;
+        })
+        return matchedElements[0].joinElement;
+    };
+
+    /**
+     * 获取节点元素的所有出口路径(递归实现)
+     *
+     * @param element
+     * @param excludeKeys
+     * @return 二维数组
+     */
+    getExitPaths(nodeElement, excludeKeys) {
+        if (!nodeElement) return null;
+        let nodeType = nodeElement.data("nodeType");
+        if (nodeType == "End" || nodeType == "Termination") {
+            // 出口
+            return [[nodeElement.id]];
+        }
+        let outLines = nodeElement.data("out");
+        if (!outLines || Object.keys(outLines).length == 0) {
+            // 理论上代码不可达，没有出口的节点视为出口
+            return [[nodeElement.id]];
+        }
+        if(!excludeKeys) excludeKeys = [];
+        let exitPaths = [];
+        for (let lineId in outLines) {
+            let toElement = outLines[lineId].data("to");
+            if(!excludeKeys.includes(lineId)) {
+                let keys = [...excludeKeys, lineId];
+                let outExitPaths = this.getExitPaths(toElement, keys);
+                for (let outExitPath of outExitPaths) {
+                    outExitPath.unshift(nodeElement.id);
+                    exitPaths.push(outExitPath);
+                }
+            }
+        }
+        return exitPaths;
     };
 
     /**
