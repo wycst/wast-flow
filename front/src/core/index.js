@@ -183,25 +183,31 @@ const defaultOption = {
  */
 const extensionTemplate = `
     <div class="flow-menu" style="display:none;z-index: 100;">
-        <div class="menu-item" data-type="start" draggable="true"></div>
-        <div>开始</div>
-        <div class="menu-item" data-type="task" draggable="true"></div>
-        <div>任务</div>
-        <div class="menu-item" data-type="end" draggable="true"></div>
-        <div>结束</div>
-        <div class="menu-item" data-type="xor" draggable="true"></div>
-        <div>分支</div>
-        <div class="menu-item" data-type="join" draggable="true"></div>
-        <div>聚合</div>
+        <div class="menu-item" data-type="start" draggable="true" title="开始"></div>
+<!--        <div>开始</div>-->
+        <div class="menu-item" data-type="task" draggable="true" title="任务节点"></div>
+<!--        <div>任务</div>-->
+        <div class="menu-item" data-type="end" draggable="true" title="结束"></div>
+        <!--        <div>结束</div>-->
+        <div style="border: 1px dashed #dcdfe6; width: 40%;margin: 8px;opacity: .7;"></div>
+        <div class="menu-item" data-type="xor" draggable="true" title="有且仅有一个满足条件的分支通过"></div>
+<!--        <div>分支</div>-->
+        <div class="menu-item" data-type="or" draggable="true" title="至少一个满足条件的分支通过,与汇聚网关组合使用"></div>
+<!--        <div>分支</div>-->
+        <div class="menu-item" data-type="and" draggable="true" title="所有分支强制通过,与汇聚网关组合使用"></div>
+<!--        <div>分支</div>-->
+        <div class="menu-item" data-type="join" draggable="true" title="汇聚网关"></div>
+        <div style="border: 1px dashed #dcdfe6; width: 40%;margin: 8px;opacity: .7;"></div>
+<!--        <div>聚合</div>-->
 <!--        <div class="menu-item" data-type="selection"></div>-->
 <!--        <div>圈选</div>-->
-        <div class="menu-item" data-type="reset"></div>
-        <div>重置</div>
-        <div class="menu-item" data-type="imp"></div>
-        <div>导入</div>
-        <div class="menu-item" data-type="exp"></div>
-        <div>导出</div>
-<!--        <div class="menu-item" data-type="picture"></div>-->
+        <div class="menu-item" data-type="reset" title="重置"></div>
+<!--        <div>重置</div>-->
+        <div class="menu-item" data-type="imp" title="导入"></div>
+<!--        <div>导入</div>-->
+        <div class="menu-item" data-type="exp" title="导出"></div>
+<!--        <div>导出</div>-->
+<!--        <div class="menu-item" data-type="picture" title="导出图片"></div>-->
 <!--        <div>图片</div>-->
     </div>
     <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
@@ -542,14 +548,14 @@ class GraphicDesign {
             position: "absolute",
             left: "10px",
             top: "10px",
-            width: "72px",
+            width: "64px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             fontSize: "14px",
             color: "#676768",
             padding: "5px 5px 20px",
-            background: "hsla(0,0%,100%,.8)",
+            background: "hsla(0,0%,100%,.9)",
             boxShadow: "0 1px 4px rgba(0,0,0,.3)",
             userSelect: "none",
         });
@@ -622,6 +628,14 @@ class GraphicDesign {
                         dragContext.element = element = me.createEndNode(x, y);
                     } else if (type == "xor") {
                         dragContext.element = element = me.createSplitNode(x, y);
+                    } else if(type == "or") {
+                        dragContext.element = element = me.createSplitNode(x, y);
+                        dragContext.element.updateHTML(DefaultHtmlTypes["or"]);
+                        dragContext.element.data("gateway", "OR");
+                    } else if(type == "and") {
+                        dragContext.element = element = me.createSplitNode(x, y);
+                        dragContext.element.updateHTML(DefaultHtmlTypes["and"]);
+                        dragContext.element.data("gateway", "AND");
                     } else if (type == "join") {
                         dragContext.element = element = me.createJoinNode(x, y);
                     }
@@ -666,9 +680,14 @@ class GraphicDesign {
         // 设置item背景图片
         menuDom.querySelectorAll(".menu-item").forEach(item => {
             let type = item.dataset.type;
+            let width = 36, height = 36;
+            if(type == "or" || type == "xor" || type == "and" || type == "join") {
+                width = 45;
+                height = 45;
+            }
             Object.assign(item.style, {
-                width: "36px",
-                height: "36px",
+                width: `${width}px`,
+                height: `${height}px`,
                 margin: "10px 0 4px 0"
             });
             if (type == "selection") {
@@ -719,18 +738,19 @@ class GraphicDesign {
                     event.preventDefault();
                 });
             } else if (type == "picture") {
-                // item.style.cursor = `pointer`;
-                // item.style.background = `url(${imgs.picture}) 50% no-repeat`;
-                // bindDomEvent(item, "mousedown", function (event) {
-                //     event.stopPropagation();
-                //     event.preventDefault();
-                // });
-                // // 点击处理
-                // bindDomEvent(item, "click", function (event) {
-                //     me.exportImage();
-                //     event.stopPropagation();
-                //     event.preventDefault();
-                // });
+                item.style.cursor = `pointer`;
+                item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes["picture"];
+                bindDomEvent(item, "mousedown", function (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+                // 点击处理
+                bindDomEvent(item, "click", function (event) {
+                    me.exportImage();
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
             } else {
                 Object.assign(item.style, {
                     cursor: "move"
@@ -4147,20 +4167,20 @@ class GraphicDesign {
             let joinElementId = joinElement.id;
             let continueLoop = false;
             let maxIndex = 0;
-            for(let exitPath of exitPaths) {
+            for (let exitPath of exitPaths) {
                 let joinIndex = exitPath.indexOf(joinElementId);
-                if(joinIndex == -1) {
+                if (joinIndex == -1) {
                     continueLoop = true;
                     break;
                 }
                 maxIndex = Math.max(maxIndex, joinIndex);
             }
-            if(continueLoop) continue;
+            if (continueLoop) continue;
             matchedElements.push({
                 maxIndex, joinElement
             });
         }
-        if(matchedElements.length == 0) return null;
+        if (matchedElements.length == 0) return null;
         // 返回maxIndex最小的网关
         matchedElements.sort((m1, m2) => {
             return m1.maxIndex > m2.maxIndex ? -1 : 1;
@@ -4187,11 +4207,11 @@ class GraphicDesign {
             // 理论上代码不可达，没有出口的节点视为出口
             return [[nodeElement.id]];
         }
-        if(!excludeKeys) excludeKeys = [];
+        if (!excludeKeys) excludeKeys = [];
         let exitPaths = [];
         for (let lineId in outLines) {
             let toElement = outLines[lineId].data("to");
-            if(!excludeKeys.includes(lineId)) {
+            if (!excludeKeys.includes(lineId)) {
                 let keys = [...excludeKeys, lineId];
                 let outExitPaths = this.getExitPaths(toElement, keys);
                 for (let outExitPath of outExitPaths) {
@@ -4385,7 +4405,7 @@ class GraphicDesign {
 
     /** 导出图片 */
     exportImage() {
-        const svg = this.paper.canvas;
+        const svg = this.dom;
         const content = new XMLSerializer().serializeToString(svg);// svg.outerHTML;
         const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(content)))}`;
         console.log(src);
