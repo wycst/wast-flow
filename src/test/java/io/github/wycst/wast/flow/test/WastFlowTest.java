@@ -163,10 +163,10 @@ public class WastFlowTest {
 
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("num", 111);
-        vars.put("a", 8);
+        vars.put("a", 11);
 
         // 流程标识
-        String processId = "sample";
+        String processId = "a";
         System.out.println("processID " + processId);
 
         //6 启动流程

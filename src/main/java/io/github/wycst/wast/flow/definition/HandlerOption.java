@@ -38,6 +38,16 @@ public class HandlerOption {
     private boolean asynchronous;
 
     /**
+     * 错误时重试
+     */
+    private boolean retryOnError;
+
+    /**
+     * 重试次数
+     */
+    private boolean retryCount;
+
+    /**
      * 失败策略(捕获异常).默认终止
      */
     private FailurePolicy policy = FailurePolicy.Stop;
@@ -96,5 +106,21 @@ public class HandlerOption {
 
     public void setPolicy(FailurePolicy policy) {
         this.policy = policy;
+    }
+
+    public boolean isRetryOnError() {
+        return retryOnError;
+    }
+
+    public void setRetryOnError(boolean retryOnError) {
+        this.retryOnError = retryOnError;
+    }
+
+    public boolean isRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(boolean retryCount) {
+        this.retryCount = retryCount;
     }
 }

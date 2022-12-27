@@ -67,7 +67,7 @@ public class RuntimeConnect extends Connect {
                     try {
                         result = scriptEL.evaluate(processInstance.getContext());
                     } catch (RuntimeException runtimeException) {
-                        throw new FlowRuntimeException(String.format("Script[%s] execute error: %s", getScript(), runtimeException.getMessage()), runtimeException);
+                        throw new FlowRuntimeException(String.format("ScriptEl: '%s' execute error: %s", getScript(), runtimeException.getMessage()), runtimeException);
                     }
                     if (result instanceof Boolean) {
                         return result != null && (Boolean) result;
@@ -92,5 +92,9 @@ public class RuntimeConnect extends Connect {
                 }
             }
         }
+    }
+
+    public boolean passedIfOnlyOne() {
+        return conditionType == ConditionType.Script || conditionType == ConditionType.Always;
     }
 }

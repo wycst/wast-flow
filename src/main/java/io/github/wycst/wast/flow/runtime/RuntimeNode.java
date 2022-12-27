@@ -122,6 +122,13 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     final void run(ProcessInstance processInstance, NodeInstance prev) throws Exception {
+
+        // access
+        boolean access = beforeRun(processInstance);
+        if(!access) {
+            return;
+        }
+
         // create instance
         NodeInstance nodeInstance = new NodeInstance(this, prev, processInstance);
         try {
@@ -170,6 +177,7 @@ public class RuntimeNode extends Node {
                 // continue throw up
                 throw exception;
             } else {
+                exception.printStackTrace();
                 // stop
                 return;
             }
@@ -177,6 +185,10 @@ public class RuntimeNode extends Node {
             // save connect
             processInstance.getExecuteEngine().persistenceConnectInstances(nodeInstance);
         }
+    }
+
+    protected boolean beforeRun(ProcessInstance processInstance) {
+        return true;
     }
 
     // on Leave if manualNode please override this method
@@ -267,7 +279,7 @@ public class RuntimeNode extends Node {
         if (onlyOneNext != null) {
             ConnectInstance connectInstance = new ConnectInstance(onlyOneOut);
             nodeInstance.addConnectInstance(connectInstance);
-            boolean result = onlyOneOut.run(processInstance, nodeInstance);
+            boolean result = onlyOneOut.passedIfOnlyOne() || onlyOneOut.run(processInstance, nodeInstance);
             connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
             connectInstance.setExecuteTime(new Date());
             if (result) {

@@ -4111,7 +4111,7 @@ class GraphicDesign {
         if (startCount == 0) {
             return "流程没有找到开始节点"
         } else if (startCount > 1) {
-            return "流程开始节点有且只有能一个"
+            return "流程开始节点有且只能有一个"
         }
         if (endNodeIds.length == 0) {
             return "流程没有找到结束节点"

@@ -49,6 +49,9 @@ public class ProcessInstance {
     // If the process instance loaded from the database is initialized to the value with the largest ID in the node instance list
     private long nextId;
 
+    // 网关聚合信息
+    private Map<String, JoinCountContext> joinCountContextMap = new HashMap<String, JoinCountContext>();
+
     ProcessInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         this.id = IdGenerator.hex();
         this.ruleProcess = ruleProcess.self();
@@ -177,5 +180,17 @@ public class ProcessInstance {
 
     public String serializeVariables() {
         return JSON.toJsonString(context);
+    }
+
+    void setJoinCountContext(String joinNodeId, JoinCountContext joinCountContext) {
+        joinCountContextMap.put(joinNodeId, joinCountContext);
+    }
+
+    JoinCountContext getJoinCountContext(String joinNodeId) {
+        return joinCountContextMap.get(joinNodeId);
+    }
+
+    void removeJoinCountContext(String joinNodeId) {
+        joinCountContextMap.remove(joinNodeId);
     }
 }
