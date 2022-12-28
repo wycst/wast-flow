@@ -1194,16 +1194,27 @@ class GraphicDesign {
 
         this.handleDocumentKeyDown = (e) => {
             if (e.keyCode == 46) {
+                // delete
                 me.delSelectElement();
             } else if (e.keyCode == 8) {
+                // backspace
                 let active = document.activeElement;
                 if (active.getAttribute && active.getAttribute("readonly") == "readonly") {
                     return false;
                 }
+            } else if(e.keyCode == 17){
+                // Control
+                me.controlMode = true;
             }
         }
+
+        this.handleDocumentKeyUp = (event) => {
+            me.controlMode = false;
+        }
+
         // 键盘事件(在销毁时需要移除)
         document.addEventListener("keydown", this.handleDocumentKeyDown);
+        document.addEventListener("keyup", this.handleDocumentKeyUp);
         if (this.option.panable) {
             const canvasDragContext = {};
             const onCanvasDragStart = (event) => {
@@ -4531,6 +4542,7 @@ class GraphicDesign {
         this.clearElements();
         this.initData();
         document.removeEventListener("keydown", this.handleDocumentKeyDown);
+        document.removeEventListener("keyup", this.handleDocumentKeyUp);
     }
 }
 
