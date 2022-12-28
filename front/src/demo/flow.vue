@@ -30,6 +30,7 @@ export default {
       },
       // background: "lightblue",
       panable: true,
+      generateUUID: true
     })
     // 绘制矩形
     // let node = this.graphicDesign.createNode(100, 100, 100, 90, 8);

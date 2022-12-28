@@ -17,6 +17,8 @@ public class Data {
     private String name;
     // 元数据信息
     protected Map<String, Object> meta = new HashMap<String, Object>();
+    // 唯一标识
+    protected String uuid;
 
     public String getId() {
         return id;
@@ -42,4 +44,11 @@ public class Data {
         this.meta = meta;
     }
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 }

@@ -146,6 +146,11 @@ const defaultOption = {
     editable: true,
 
     /**
+     * 是否生成UUID
+     */
+    generateUUID: false,
+
+    /**
      * 单击事件（可覆盖）
      * @param element
      * @param evt
@@ -276,9 +281,15 @@ class GraphicDesign {
         // id池
         this.idPool = [];
         // 节点绑定在element中的属性集合
+
+        let me = this;
+        let setElementUUID = (element) => {
+            return me.setElementUUID(element);
+        }
         this.nodeDatas = {
             "gateway": "XOR",
             "handler": {},
+            "uuid": setElementUUID,
             "meta": {}
         };
         // 连线绑定在element中的属性集合
@@ -286,6 +297,7 @@ class GraphicDesign {
             "priority": 0,
             "conditionType": "Script",
             "script": "",
+            "uuid": setElementUUID,
             "meta": {},
             "pathStyle": "broken"
         };
@@ -553,7 +565,8 @@ class GraphicDesign {
             flexDirection: "column",
             alignItems: "center",
             fontSize: "14px",
-            color: "#676768",
+            // color: "#676768",
+            color: this.option.settings.themeColor,
             padding: "5px 5px 20px",
             background: "hsla(0,0%,100%,.9)",
             boxShadow: "0 1px 4px rgba(0,0,0,.3)",
@@ -696,7 +709,7 @@ class GraphicDesign {
                 // 绑定全选事件
             } else if (type == "reset") {
                 item.style.cursor = `pointer`;
-                item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["reset"];
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
@@ -710,7 +723,7 @@ class GraphicDesign {
                 });
             } else if (type == "exp") {
                 item.style.cursor = `pointer`;
-                item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["exp"];
                 // 点击处理
                 bindDomEvent(item, "mousedown", function (event) {
@@ -725,7 +738,7 @@ class GraphicDesign {
                 });
             } else if (type == "imp") {
                 item.style.cursor = `pointer`;
-                item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["imp"];
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
@@ -739,7 +752,7 @@ class GraphicDesign {
                 });
             } else if (type == "picture") {
                 item.style.cursor = `pointer`;
-                item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["picture"];
                 bindDomEvent(item, "mousedown", function (event) {
                     event.stopPropagation();
@@ -755,7 +768,7 @@ class GraphicDesign {
                 Object.assign(item.style, {
                     cursor: "move"
                 });
-                item.style.color = this.option.settings.themeColor;
+                // item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes[type];
                 // 拖动处理
                 bindDomEvent(item, "mousedown", function (event) {
@@ -1278,6 +1291,22 @@ class GraphicDesign {
     };
 
     /**
+     * 生成UUID
+     */
+    uuid() {
+        let s = [];
+        let hexDigits = "0123456789abcdef";
+        for (var i = 0; i < 36; i++) {
+            s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+        }
+        s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+        s[8] = s[13] = s[18] = s[23] = "-";
+        let uuid = s.join("");
+        return uuid;
+    };
+
+    /**
      * 根据html创建节点（以div作为容器）
      */
     renderHTML(type, x, y, width, height) {
@@ -1300,6 +1329,20 @@ class GraphicDesign {
         });
         // this.initElement(element);
         return element;
+    };
+
+    /**
+     * 绑定uuid（data属性）
+     *
+     * @param element
+     */
+    setElementUUID(element) {
+        if(element && this.option.generateUUID) {
+            let uuid = this.uuid();
+            element.data("uuid", uuid);
+            return uuid;
+        }
+        return null;
     };
 
     /**
@@ -2105,6 +2148,7 @@ class GraphicDesign {
     createHTMLNode(type, x, y, w, h, nodeType) {
         let htmlElement = this.renderHTML(type, x, y, w, h);
         if (!htmlElement) return null;
+        this.setElementUUID(htmlElement);
         htmlElement.data("type", "node");
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr("title", nodeType + ":" + htmlElement.id);
@@ -2125,6 +2169,7 @@ class GraphicDesign {
     createNode(x, y, width, height) {
         // let rect = this.renderRect(x, y, width, height, 4);
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
+        this.setElementUUID(rect);
         // rect.id = this.createElementId();
         rect.attr({
             stroke: this.option.settings.nodeStrokeColor,
@@ -2231,7 +2276,6 @@ class GraphicDesign {
         let nodeText = this.paper.text("").attr(textAttrs);
         // nodeText.id = this.getUUID();
         nodeElement.data("text", nodeText);
-        this.setElementDatas(nodeElement, this.nodeDatas, node);
         nodeElement.attr("title", "id:" + id);
         this.textEditing(nodeText);
         this.initElement(nodeElement);
@@ -2304,9 +2348,6 @@ class GraphicDesign {
         let pathText = this.paper.text("").attr(textAttrs);
         connect.data("text", pathText);
 
-        // set or init
-        this.setElementDatas(connect, this.connectDatas, connectData);
-
         // 绑定数据关系
         connect.data("from", fromElement);
         connect.data("to", toElement);
@@ -2377,6 +2418,7 @@ class GraphicDesign {
             "stroke": this.option.settings.connectStrokeColor,
             "stroke-width": 2
         });
+        this.setElementUUID(linkPath);
         let pathStyle = this.option.pathStyle || "broken";
         linkPath.data("pathStyle", pathStyle);
         // 同步容器
@@ -3820,7 +3862,19 @@ class GraphicDesign {
     getElementDatas(element, datas) {
         let elementDatas = {};
         for (let i in datas) {
-            elementDatas[i] = element.data(i) || (typeof datas[i] == 'object' ? {} : datas[i]);
+            let value = element.data(i);
+            if(!value) {
+                let defaultValue = datas[i];
+                let defaultType = typeof defaultValue;
+                if(defaultType == "object") {
+                    value = {};
+                } else if(defaultType == "function") {
+                    value = defaultValue(element);
+                } else {
+                    value = defaultValue;
+                }
+            }
+            elementDatas[i] = value;
         }
         return elementDatas;
     };
@@ -3833,7 +3887,20 @@ class GraphicDesign {
      */
     setElementDatas(element, datas, node) {
         for (let i in datas) {
-            element.data(i, node[i] || (typeof datas[i] == 'object' ? {} : datas[i]));
+            let value = node[i];
+            if(!value) {
+                let defaultValue = datas[i];
+                let defaultType = typeof defaultValue;
+                if(defaultType == "object") {
+                    value = {};
+                } else if(defaultType == "function") {
+                    value = defaultValue(element);
+                    console.log("i", value);
+                } else {
+                    value = defaultValue;
+                }
+            }
+            element.data(i, value);
         }
     };
 
@@ -3959,11 +4026,13 @@ class GraphicDesign {
                 case "Start": {
                     // element = this.loadImageElement(id, imgs.start, component, "Start");
                     element = this.loadHTMLElement(id, "start", component, "Start").attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "End": {
                     // element = this.loadImageElement(id, imgs.end, component, "End");
                     element = this.loadHTMLElement(id, "end", component, "End").attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "Split": {
@@ -3975,10 +4044,12 @@ class GraphicDesign {
                 }
                 case "Join": {
                     element = this.loadHTMLElement(id, "join", component, "Join").attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 default: {
                     element = this.createNodeElement(node);
+                    this.setElementDatas(element, this.nodeDatas, node);
                     element.data("nodeType", type);
                 }
             }
@@ -4036,7 +4107,7 @@ class GraphicDesign {
             let toElement = this.elements[toId];
             let connectElement = this.createConnectElement(connectData, fromElement,
                 toElement);
-            connectElement.data("meta", connectData.meta);
+            this.setElementDatas(connectElement, this.connectDatas, connectData);
             this.elements[connectElement.id] = connectElement;
         }
     };
