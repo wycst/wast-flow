@@ -1,6 +1,6 @@
 {
   "name": "wastflow",
-  "version": "1.0.0-beta4",
+  "version": "1.0.0-beta5",
   "scripts": {
     "dev": "vite",
     "build": "vite build"

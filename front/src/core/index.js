@@ -148,7 +148,7 @@ const defaultOption = {
     /**
      * 是否生成UUID
      */
-    generateUUID: false,
+    uuid: false,
 
     /**
      * 单击事件（可覆盖）
@@ -1337,7 +1337,7 @@ class GraphicDesign {
      * @param element
      */
     setElementUUID(element) {
-        if(element && this.option.generateUUID) {
+        if(element && this.option.uuid) {
             let uuid = this.uuid();
             element.data("uuid", uuid);
             return uuid;
