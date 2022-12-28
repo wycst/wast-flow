@@ -148,7 +148,7 @@ const defaultOption = {
     /**
      * 是否生成UUID
      */
-    uuid: false,
+    uuid: true,
 
     /**
      * 单击事件（可覆盖）
