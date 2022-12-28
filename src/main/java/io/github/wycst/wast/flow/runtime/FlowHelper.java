@@ -330,6 +330,7 @@ public class FlowHelper {
 
         RuntimeConnect runtimeConnect = new RuntimeConnect(deploymentConnect.getId(), deploymentConnect.getName(), fromNode, toNode);
         runtimeConnect.setMeta(deploymentConnect.getMeta());
+        runtimeConnect.setUuid(deploymentConnect.getUuid());
         runtimeConnect.setConditionType(deploymentConnect.getConditionType());
         runtimeConnect.setScript(deploymentConnect.getScript());
         runtimeConnect.setPriority(deploymentConnect.getPriority());
@@ -389,6 +390,7 @@ public class FlowHelper {
         runtimeNode.setMeta(deploymentNode.getMeta());
         runtimeNode.setType(type);
         runtimeNode.setHandlerOption(deploymentNode.getHandler());
+        runtimeNode.setUuid(deploymentNode.getUuid());
 
         return runtimeNode;
     }

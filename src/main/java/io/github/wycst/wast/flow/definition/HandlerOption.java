@@ -45,7 +45,7 @@ public class HandlerOption {
     /**
      * 重试次数
      */
-    private boolean retryCount;
+    private int retryCount;
 
     /**
      * 失败策略(捕获异常).默认终止
@@ -116,11 +116,11 @@ public class HandlerOption {
         this.retryOnError = retryOnError;
     }
 
-    public boolean isRetryCount() {
+    public int getRetryCount() {
         return retryCount;
     }
 
-    public void setRetryCount(boolean retryCount) {
+    public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
 }

@@ -3895,7 +3895,6 @@ class GraphicDesign {
                     value = {};
                 } else if(defaultType == "function") {
                     value = defaultValue(element);
-                    console.log("i", value);
                 } else {
                     value = defaultValue;
                 }

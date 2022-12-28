@@ -125,7 +125,7 @@ public class RuntimeNode extends Node {
 
         // access
         boolean access = beforeRun(processInstance);
-        if(!access) {
+        if (!access) {
             return;
         }
 
@@ -236,7 +236,37 @@ public class RuntimeNode extends Node {
     protected void callHandler(NodeHandler nodeHandler, NodeRuntimeContext nodeContext) throws Exception {
         int iterate = handlerOption.getIterate();
         if (iterate <= 1) {
-            nodeHandler.handle(nodeContext);
+            int count = 1;
+            int retryCount = handlerOption.getRetryCount();
+            if (handlerOption.isRetryOnError() && retryCount > 1) {
+                count = Math.min(retryCount, 10);
+                log.info("enable retry, retryCount {}", retryCount);
+            }
+            int actualRetryCount = 0;
+            boolean successFlag = false;
+            Exception exception = null;
+            // 重试处理
+            while (count-- > 0 && !successFlag) {
+                if (++actualRetryCount > 1) {
+                    log.info(String.format("Error: 正在进行第%d次重试", actualRetryCount));
+                    long delay = handlerOption.getDelay();
+                    if (delay > 0) {
+                        log.debug("{}, about to sleep for {} ms", nodeToString, delay);
+                        Thread.sleep(delay);
+                    }
+                }
+                exception = null;
+                try {
+                    nodeHandler.handle(nodeContext);
+                    successFlag = true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    exception = e;
+                }
+            }
+            if (exception != null) {
+                throw exception;
+            }
         } else {
             log.debug("{}, begin loop, count {}", nodeToString, iterate);
             nodeContext.setLoop(true);
