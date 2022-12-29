@@ -168,6 +168,22 @@ const defaultOption = {
     },
 
     /**
+     * 点击空白
+     * @param evt
+     */
+    clickBlank(evt) {
+
+    },
+
+    /**
+     * 双击空白
+     * @param evt
+     */
+    dblclickBlank(evt) {
+
+    },
+
+    /**
      * 右键事件
      *
      * @param evt
@@ -641,11 +657,11 @@ class GraphicDesign {
                         dragContext.element = element = me.createEndNode(x, y);
                     } else if (type == "xor") {
                         dragContext.element = element = me.createSplitNode(x, y);
-                    } else if(type == "or") {
+                    } else if (type == "or") {
                         dragContext.element = element = me.createSplitNode(x, y);
                         dragContext.element.updateHTML(DefaultHtmlTypes["or"]);
                         dragContext.element.data("gateway", "OR");
-                    } else if(type == "and") {
+                    } else if (type == "and") {
                         dragContext.element = element = me.createSplitNode(x, y);
                         dragContext.element.updateHTML(DefaultHtmlTypes["and"]);
                         dragContext.element.data("gateway", "AND");
@@ -694,7 +710,7 @@ class GraphicDesign {
         menuDom.querySelectorAll(".menu-item").forEach(item => {
             let type = item.dataset.type;
             let width = 36, height = 36;
-            if(type == "or" || type == "xor" || type == "and" || type == "join") {
+            if (type == "or" || type == "xor" || type == "and" || type == "join") {
                 width = 45;
                 height = 45;
             }
@@ -888,7 +904,7 @@ class GraphicDesign {
                     key: "name",
                     html: `<input data-key="name" placeholder="请输入元素名称"/>`,
                     callback(value) {
-                        element.data("text").attr("text", value);
+                        me.setElementName(element, value);
                     }
                 }, {
                     label: "连线样式",
@@ -1202,7 +1218,7 @@ class GraphicDesign {
                 if (active.getAttribute && active.getAttribute("readonly") == "readonly") {
                     return false;
                 }
-            } else if(e.keyCode == 17){
+            } else if (e.keyCode == 17) {
                 // Control
                 me.controlMode = true;
             }
@@ -1348,7 +1364,7 @@ class GraphicDesign {
      * @param element
      */
     setElementUUID(element) {
-        if(element && this.option.uuid) {
+        if (element && this.option.uuid) {
             let uuid = this.uuid();
             element.data("uuid", uuid);
             return uuid;
@@ -2160,7 +2176,7 @@ class GraphicDesign {
         let htmlElement = this.renderHTML(type, x, y, w, h);
         if (!htmlElement) return null;
         this.setElementUUID(htmlElement);
-        htmlElement.data("type", "node");
+        htmlElement.data("handler", {});
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr("title", nodeType + ":" + htmlElement.id);
         this.autoContainerSelect(htmlElement);
@@ -2188,7 +2204,7 @@ class GraphicDesign {
             title: "id:" + rect.id,
             fill: this.option.settings.nodeBackgroundColor
         });
-        rect.data("type", "node");
+        rect.data("handler", {});
 
         // create text
         let text = this.paper.text(0, 0).attr({
@@ -2221,7 +2237,7 @@ class GraphicDesign {
         let image = this.renderImage(src, x, y, w, h);
         // id需要第一时间修改
         // image.id = this.createElementId();
-        image.data("type", "node");
+        // image.data("type", "node");
         image.data("nodeType", nodeType);
         image.attr("title", nodeType + ":" + image.id);
         this.autoContainerSelect(image);
@@ -2306,7 +2322,7 @@ class GraphicDesign {
         let {attrs} = component;
         let htmlElement = this.renderHTML(type, 0, 0, 0, 0);
         htmlElement.id = id;
-        htmlElement.data("type", "node");
+        // htmlElement.data("type", "node");
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr(attrs);
         htmlElement.attr("title", "id:" + htmlElement.id);
@@ -2328,7 +2344,7 @@ class GraphicDesign {
         attrs.src = src;
         let image = this.renderImage("", 0, 0, 0, 0);
         image.id = id;
-        image.data("type", "node");
+        // image.data("type", "node");
         image.data("nodeType", nodeType);
         image.attr(attrs);
         image.attr("title", "id:" + image.id);
@@ -3874,12 +3890,12 @@ class GraphicDesign {
         let elementDatas = {};
         for (let i in datas) {
             let value = element.data(i);
-            if(!value) {
+            if (!value) {
                 let defaultValue = datas[i];
                 let defaultType = typeof defaultValue;
-                if(defaultType == "object") {
+                if (defaultType == "object") {
                     value = {};
-                } else if(defaultType == "function") {
+                } else if (defaultType == "function") {
                     value = defaultValue(element);
                 } else {
                     value = defaultValue;
@@ -3899,18 +3915,56 @@ class GraphicDesign {
     setElementDatas(element, datas, node) {
         for (let i in datas) {
             let value = node[i];
-            if(!value) {
+            if (!value) {
                 let defaultValue = datas[i];
                 let defaultType = typeof defaultValue;
-                if(defaultType == "object") {
+                if (defaultType == "object") {
                     value = {};
-                } else if(defaultType == "function") {
+                } else if (defaultType == "function") {
                     value = defaultValue(element);
                 } else {
                     value = defaultValue;
                 }
             }
             element.data(i, value);
+        }
+    };
+
+    /**
+     * 判断连线是否为单独的连线，源节点只有一个分支
+     * */
+    isAloneConnect(connect) {
+        let type = connect.type;
+        if(type != "path") return null;
+        let source = connect.data("from");
+        return source && Object.keys(source.data("out")).length == 1;
+    };
+
+    /**
+     * 判断连线是否来源于网关（split）
+     * */
+    getSourceGatewayType(connect) {
+        let type = connect.type;
+        if(type != "path") return null;
+        let source = connect.data("from");
+        let nodeType = source.data("nodeType");
+        if (nodeType != "Split") {
+            return null;
+        } else {
+            return source.data("gateway");
+        }
+    };
+
+    /**
+     * 设置元素名称
+     *
+     * @param element
+     * @param name
+     */
+    setElementName(element, name) {
+        let textEle = null;
+        if (element && (textEle = element.data("text"))) {
+            textEle.attr("text", name);
         }
     };
 
