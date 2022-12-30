@@ -53,6 +53,16 @@ const DefaultHtmlTypes = {
               </svg>`,
 };
 
+
+const defs = `
+    <marker id="connect-arrow-marker" viewBox="0 0 20 20" refX="11" refY="10" markerWidth="10" markerHeight="10" orient="auto">
+        <path d="M 1 5 L 11 10 L 1 15 Z" style="fill: rgb(34, 36, 42); stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke: rgb(34, 36, 42);"></path>
+    </marker>
+    <marker id="conditional-connect-marker" viewBox="0 0 20 20" refX="-1" refY="10" markerWidth="10" markerHeight="10" orient="auto">
+        <path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" style="fill: white; stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke: rgb(34, 36, 42);"></path>
+    </marker>
+`
+
 /** 全局映射html块 */
 const GlobalHTMLTypes = {...DefaultHtmlTypes};
 
@@ -1422,25 +1432,24 @@ class GraphicDesign {
     /**
      * 获取直线的路径数据
      *
-     * @param raphaelElementStart
-     * @param raphaelElementEnd
+     * @param elementStart
+     * @param elementEnd
      * @param arrow
      * @returns {{}}
      */
-    getLinePathData(raphaelElementStart, raphaelElementEnd, arrow) {
-
+    getLinePathData(elementStart, elementEnd, arrow) {
         let pathData = {};
         let pathD = "";
 
-        let startX = raphaelElementStart.attr("x") - 5;
-        let startY = raphaelElementStart.attr("y") - 5;
-        let startWidth = raphaelElementStart.attr("width") + 10;
-        let startHeight = raphaelElementStart.attr("height") + 10;
+        let startX = elementStart.attr("x") - 5;
+        let startY = elementStart.attr("y") - 5;
+        let startWidth = elementStart.attr("width") + 10;
+        let startHeight = elementStart.attr("height") + 10;
 
-        let endX = raphaelElementEnd.attr("x") - 5;
-        let endY = raphaelElementEnd.attr("y") - 5;
-        let endWidth = raphaelElementEnd.attr("width") + 10;
-        let endHeight = raphaelElementEnd.attr("height") + 10;
+        let endX = elementEnd.attr("x") - 5;
+        let endY = elementEnd.attr("y") - 5;
+        let endWidth = elementEnd.attr("width") + 10;
+        let endHeight = elementEnd.attr("height") + 10;
 
         // 计算2个重心连接与2个元素的交点 一共4个交点（分8中情况，8个方位）
         let startCenterX = startX + startWidth / 2;
@@ -3966,6 +3975,15 @@ class GraphicDesign {
         if (element && (textEle = element.data("text"))) {
             textEle.attr("text", name);
         }
+    };
+
+    /**
+     * 针对单分支连线设置连线类型（默认类型/条件类型）
+     *
+     * @param connect
+     */
+    setConnectType(connect) {
+        
     };
 
     /**
