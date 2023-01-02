@@ -53,15 +53,56 @@ const DefaultHtmlTypes = {
               </svg>`,
 };
 
-
 const defs = `
-    <marker id="connect-arrow-marker" viewBox="0 0 20 20" refX="11" refY="10" markerWidth="10" markerHeight="10" orient="auto">
-        <path d="M 1 5 L 11 10 L 1 15 Z" style="fill: rgb(34, 36, 42); stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke: rgb(34, 36, 42);"></path>
-    </marker>
-    <marker id="conditional-connect-marker" viewBox="0 0 20 20" refX="-1" refY="10" markerWidth="10" markerHeight="10" orient="auto">
-        <path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" style="fill: white; stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke: rgb(34, 36, 42);"></path>
-    </marker>
+    <path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="connect-arrow-path" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
 `
+
+// 创建指定颜色的marker
+const createColorMarker = (svgDom, color) => {
+    if (!color) return;
+
+    // 箭头
+    let id = `connect-arrow-${color}`;
+    let marker = svgDom.querySelector("marker[id='" + id + "']");
+    if (!marker) {
+        marker = document.createElement("marker");
+        marker.setAttribute("id", id);
+        svgDom.querySelector("defs").appendChild(marker);
+        marker = svgDom.querySelector("marker[id='" + id + "']");
+        // marker.outerHTML = `
+        //                     <marker id="${id}" fill="${color}" viewBox="0 0 20 20" refX="11" refY="10" markerWidth="10" markerHeight="10" orient="auto">
+        //                         <path d="M 1 5 L 11 10 L 1 15 Z" stroke-width="1"></path>
+        //                     </marker>
+        //                 `;
+
+        /**
+         <marker id="raphael-marker-endclassic55-objt3f02" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><use xlink:href="#raphael-marker-classic" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1.0000" fill="#409eff" stroke="none" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use>
+         </marker>
+         * @type {string}
+         */
+        marker.outerHTML = `
+                             <marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
+                                <use xlink:href="#connect-arrow-path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1.0000" stroke="none" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use>
+                             </marker>
+                        `;
+    }
+
+    // 条件连线样式
+    id = `connect-condition-${color}`;
+    marker = svgDom.querySelector("marker[id='" + id + "']");
+    if (!marker) {
+        marker = document.createElement("marker");
+        marker.setAttribute("id", id);
+        svgDom.querySelector("defs").appendChild(marker);
+        marker = svgDom.querySelector("marker[id='" + id + "']");
+        marker.outerHTML = `
+                            <marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto">
+                                <path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" fill="#fff" stroke="${color}"  stroke-width="1"></path>
+                            </marker>
+                        `;
+    }
+
+}
 
 /** 全局映射html块 */
 const GlobalHTMLTypes = {...DefaultHtmlTypes};
@@ -90,12 +131,7 @@ const DefaultSettings = {
     linkName: "",
     nodeName: "节点名称",
     nodeBackgroundColor: "#fff",
-    nodeStrokeColor: "#409eff",
     nodeStrokeWith: "3",
-    connectFillColor: "#409eff",
-    connectStrokeColor: "#409eff",
-    startStrokeColor: "",
-    endStrokeColor: "#f56c6c",
     themeColor: "#409eff",
 
     // 完成api样式配置
@@ -201,6 +237,24 @@ const defaultOption = {
     contextMenu(evt) {
     },
 
+    /**
+     * 连线创建时触发
+     *
+     * @param connect
+     */
+    onConnectCreated(connect) {
+
+    },
+
+    /**
+     * 节点创建时触发
+     *
+     * @param node
+     */
+    onNodeCreated(node) {
+
+    },
+
     /***
      * 配置项
      */
@@ -253,6 +307,20 @@ const extensionTemplate = `
     <input class="flow-import-input" type="file" accept=".json" style="position: absolute;display:none;opacity: 0; width: 0; height: 0; border: unset;"/>
 `
 
+// 连接创建时触发钩子
+const onConnectCreated = (connect, instance) => {
+    if (typeof instance.option.onConnectCreated == "function") {
+        instance.option.onConnectCreated.call(instance, connect, instance);
+    }
+}
+
+// 节点创建时触发钩子
+const onNodeCreated = (node, instance) => {
+    if (typeof instance.option.onNodeCreated == "function") {
+        instance.option.onNodeCreated.call(instance, node, instance);
+    }
+}
+
 /**
  * 定义流程设计类
  *
@@ -289,6 +357,10 @@ class GraphicDesign {
         Object.assign(this.paper.canvas.style, {
             userSelect: `none`
         });
+        // 连线颜色作为箭头的颜色
+        this.connectColors = [this.option.settings.themeColor];
+        // 初始化paper
+        this.initPaper();
         this.dom = dom;
         // 初始化
         this.init();
@@ -350,7 +422,7 @@ class GraphicDesign {
 
         let attr = {
             fill: "#ffffff",
-            stroke: this.option.settings.nodeStrokeColor
+            stroke: this.option.settings.themeColor
         }
         // 控制点信息
         let nw = this.nw = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
@@ -939,7 +1011,7 @@ class GraphicDesign {
                     label: "分支策略",
                     value: element.data("conditionType") || "Script",
                     event: "change",
-                    readonly: uniqueConnect,
+                    // readonly: uniqueConnect,
                     key: "conditionType",
                     html: `<select data-key="conditionType">
                            <option value="Always">Always</option>
@@ -947,7 +1019,7 @@ class GraphicDesign {
                            <option value="HandlerCall">HandlerCall</option>
                        </select>`,
                     callback(value) {
-                        element.data("conditionType", value);
+                        me.setConnectType(element, value);
                     }
                 }, {
                     label: "脚本表达式",
@@ -1205,6 +1277,13 @@ class GraphicDesign {
         this.idPool = [];
     };
 
+    initPaper() {
+        this.paper.canvas.querySelector("defs").innerHTML = defs;
+        for (let color of (this.connectColors || [])) {
+            createColorMarker(this.paper.canvas, color);
+        }
+    };
+
     /**
      *
      */
@@ -1434,10 +1513,10 @@ class GraphicDesign {
      *
      * @param elementStart
      * @param elementEnd
-     * @param arrow
+     // * @param arrow
      * @returns {{}}
      */
-    getLinePathData(elementStart, elementEnd, arrow) {
+    getLinePathData(elementStart, elementEnd/*, arrow*/) {
         let pathData = {};
         let pathD = "";
 
@@ -1621,19 +1700,19 @@ class GraphicDesign {
         pathD += "M" + pathStart.x + "," + pathStart.y;
         pathD += "L" + pathEnd.x + "," + pathEnd.y;
 
-        // 箭头处理
-        if (arrow) {
-            let x3 = pathEnd.x, y3 = pathEnd.y, Par = 10.0, slopy = Math.atan2((pathStart.y - pathEnd.y),
-                (pathStart.x - pathEnd.x)), cosy = Math.cos(slopy), siny = Math.sin(slopy);
-
-            pathD += " L" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
-                + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
-
-            pathD += " L"
-                + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
-                    / 2.0 * cosy - Par * siny)));
-            pathD += " L" + x3 + "," + y3;
-        }
+        // // 箭头处理
+        // if (arrow) {
+        //     let x3 = pathEnd.x, y3 = pathEnd.y, Par = 10.0, slopy = Math.atan2((pathStart.y - pathEnd.y),
+        //         (pathStart.x - pathEnd.x)), cosy = Math.cos(slopy), siny = Math.sin(slopy);
+        //
+        //     pathD += " L" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
+        //         + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
+        //
+        //     pathD += " L"
+        //         + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
+        //             / 2.0 * cosy - Par * siny)));
+        //     pathD += " L" + x3 + "," + y3;
+        // }
         pathData.data = pathD;
         pathData.start = pathStart;
         pathData.end = pathEnd;
@@ -1719,7 +1798,7 @@ class GraphicDesign {
                 delete inLines[targetElement.id];
             }
             this.removePathRelationRects(targetElement);
-            targetElement.data("arrow").remove();
+            // targetElement.data("arrow").remove();
             targetElement.data("text").remove();
 
             let elementId = targetElement.id;
@@ -2185,6 +2264,7 @@ class GraphicDesign {
         let htmlElement = this.renderHTML(type, x, y, w, h);
         if (!htmlElement) return null;
         this.setElementUUID(htmlElement);
+        onNodeCreated(htmlElement, this);
         htmlElement.data("handler", {});
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr("title", nodeType + ":" + htmlElement.id);
@@ -2208,7 +2288,7 @@ class GraphicDesign {
         this.setElementUUID(rect);
         // rect.id = this.createElementId();
         rect.attr({
-            stroke: this.option.settings.nodeStrokeColor,
+            stroke: this.option.settings.themeColor,
             "stroke-width": this.option.settings.nodeStrokeWith,
             title: "id:" + rect.id,
             fill: this.option.settings.nodeBackgroundColor
@@ -2225,6 +2305,7 @@ class GraphicDesign {
         });
         // text.id = me.getUUID();
         rect.data("text", text);
+        onNodeCreated(rect, this);
 
         this.autoContainerSelect(rect);
         this.initElement(rect);
@@ -2371,14 +2452,16 @@ class GraphicDesign {
      */
     createConnectElement(connectData, fromElement, toElement) {
         let {id, component} = connectData;
-        let {attrs, arrowAttrs, textAttrs} = component;
+        // let {attrs, arrowAttrs, textAttrs} = component;
+        let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
         connect.id = id;
+        this.setConnectArrow(connect);
 
-        // 箭头
-        let arrow = this.paper.path("").attr(arrowAttrs);
-        connect.data("arrow", arrow);
+        // // 箭头
+        // let arrow = this.paper.path("").attr(arrowAttrs);
+        // connect.data("arrow", arrow);
 
         // 文本 
         let pathText = this.paper.text("").attr(textAttrs);
@@ -2450,10 +2533,12 @@ class GraphicDesign {
 
     // 创建连线路径
     createPath(fromNode, toNode) {
+        let stroke = this.option.settings.themeColor;
         let linkPath = this.paper.path("").attr({
-            "stroke": this.option.settings.connectStrokeColor,
+            "stroke": stroke,
             "stroke-width": 2
         });
+        this.setConnectArrow(linkPath, stroke);
         this.setElementUUID(linkPath);
         let pathStyle = this.option.pathStyle || "broken";
         linkPath.data("pathStyle", pathStyle);
@@ -2467,6 +2552,13 @@ class GraphicDesign {
         let outLines = fromNode.data("out") || {};
         outLines[linkPath.id] = linkPath;
         fromNode.data("out", outLines);
+
+        if (Object.keys(outLines).length == 1) {
+            this.setConnectType(linkPath, "Always");
+        } else {
+            this.setConnectType(linkPath, "Script");
+        }
+        onConnectCreated(linkPath, this);
 
         let inLines = toNode.data("in") || {};
         inLines[linkPath.id] = linkPath;
@@ -2571,25 +2663,25 @@ class GraphicDesign {
         }
 
         // 创建箭头
-        let arrowPathData = this.getArrowPathData(startX, startY, endX, endY);
-        let arrowPath = pathElement.data("arrow");
-        if (!arrowPath) {
-            arrowPath = this.paper.path(arrowPathData).attr({
-                "stroke": this.option.settings.connectStrokeColor,
-                "stroke-width": 2,
-                "fill": this.option.settings.connectFillColor
-            });
-            pathElement.data("arrow", arrowPath);
-        } else {
-            arrowPath.attr("path", arrowPathData);
-        }
+        // let arrowPathData = this.getArrowPathData(startX, startY, endX, endY);
+        // let arrowPath = pathElement.data("arrow");
+        // if (!arrowPath) {
+        //     arrowPath = this.paper.path(arrowPathData).attr({
+        //         "stroke": this.option.settings.themeColor,
+        //         "stroke-width": 2,
+        //         "fill": this.option.settings.themeColor
+        //     });
+        //     pathElement.data("arrow", arrowPath);
+        // } else {
+        //     arrowPath.attr("path", arrowPathData);
+        // }
     };
 
     createControlDragRect(x, y, pathElement) {
         let controlDragRect = this.renderRect(x - 2.5, y - 2.5, 5,
             5, 2.5, 2.5).attr({
             fill: "#ffffff",
-            stroke: this.option.settings.nodeStrokeColor,
+            stroke: this.option.settings.themeColor,
             cursor: 'move'
         });
         // controlDragRect.id = this.getUUID();
@@ -2914,9 +3006,9 @@ class GraphicDesign {
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
-                "stroke": this.option.settings.connectFillColor,
+                "stroke": this.option.settings.themeColor,
                 "stroke-width": 2,
-                "fill": this.option.settings.connectFillColor
+                "fill": this.option.settings.themeColor
             });
             if (virtualPath.node) {
                 virtualPath.node.setAttribute("stroke-dasharray", "2 2");
@@ -3361,8 +3453,8 @@ class GraphicDesign {
                     y: startRightRect.attr("y") - 10
                 });
                 let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
-                let arrowPathEnd = pathElement.data("end");
-                let arrowPathStart = startElement;
+                // let arrowPathEnd = pathElement.data("end");
+                // let arrowPathStart = startElement;
                 let nextElement = startElement.data("right");
                 while (nextElement) {
                     let temp = nextElement;
@@ -3386,17 +3478,17 @@ class GraphicDesign {
                     // }
                     pathData += " L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5) + " ";
                     nextElement = nextElement.data("right");
-                    if (nextElement != null) {
-                        arrowPathStart = temp;
-                    }
+                    // if (nextElement != null) {
+                    //     arrowPathStart = temp;
+                    // }
                 }
                 //console.log(pathData);
                 pathElement.attr("path", pathData);
 
-                // 绘制箭头
-                let arrowPath = pathElement.data("arrow");
-                let arrowPathData = this.getArrowPathData(arrowPathStart.attr("x") + 2.5, arrowPathStart.attr("y") + 2.5, arrowPathEnd.attr("x") + 2.5, arrowPathEnd.attr("y") + 2.5);
-                arrowPath.attr("path", arrowPathData);
+                // // 绘制箭头
+                // let arrowPath = pathElement.data("arrow");
+                // let arrowPathData = this.getArrowPathData(arrowPathStart.attr("x") + 2.5, arrowPathStart.attr("y") + 2.5, arrowPathEnd.attr("x") + 2.5, arrowPathEnd.attr("y") + 2.5);
+                // arrowPath.attr("path", arrowPathData);
                 break;
             }
             case "straight": {
@@ -3795,7 +3887,7 @@ class GraphicDesign {
         } else if (target.type == "path") {
             // 解决连线不好选中的问题
             target.hover(function () {
-                this.attr("stroke-width", 5);
+                this.attr("stroke-width", 4);
             }, function () {
                 this.attr("stroke-width", 2);
             });
@@ -3944,7 +4036,7 @@ class GraphicDesign {
      * */
     isAloneConnect(connect) {
         let type = connect.type;
-        if(type != "path") return null;
+        if (type != "path") return null;
         let source = connect.data("from");
         return source && Object.keys(source.data("out")).length == 1;
     };
@@ -3954,7 +4046,7 @@ class GraphicDesign {
      * */
     getSourceGatewayType(connect) {
         let type = connect.type;
-        if(type != "path") return null;
+        if (type != "path") return null;
         let source = connect.data("from");
         let nodeType = source.data("nodeType");
         if (nodeType != "Split") {
@@ -3977,13 +4069,59 @@ class GraphicDesign {
         }
     };
 
+    // 设置箭头
+    setConnectArrow(connect, stroke) {
+        if (connect.node) {
+            if (!stroke) {
+                stroke = connect.attr("stroke");
+                createColorMarker(this.paper.canvas, stroke);
+            }
+            connect.node.style.markerEnd = `url(#connect-arrow-${stroke})`;
+        }
+    };
+
+    /**
+     * 设置连线颜色
+     *
+     * @param connect
+     * @param color
+     */
+    setConnectColor(connect, color) {
+        connect.attr("stroke", color);
+        this.setConnectArrow(connect, color);
+        this.setConnectType(connect);
+    };
+
     /**
      * 针对单分支连线设置连线类型（默认类型/条件类型）
      *
      * @param connect
+     * @param type(Always,Script,HandlerCall)
      */
-    setConnectType(connect) {
-        
+    setConnectType(connect, type) {
+        if (connect.node) {
+            let stroke = connect.attr("stroke");
+            createColorMarker(this.paper.canvas, stroke);
+            if (!type) {
+                type = connect.data("conditionType") || "Always";
+            }
+            switch (type) {
+                case "Always": {
+                    connect.data("conditionType", "Always");
+                    connect.node.style.markerStart = null;
+                    break;
+                }
+                case "Script":
+                case "HandlerCall": {
+                    connect.data("conditionType", type);
+                    connect.node.style.markerStart = `url(#connect-condition-${stroke})`;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
     };
 
     /**
@@ -4050,7 +4188,7 @@ class GraphicDesign {
                         // 线段(broken)/直线（line）/水平-垂直（h2v）/垂直-水平(v2h)/贝塞尔曲线（curve）
                         attrs: element.attrs,
                         textAttrs: pathText.attrs,
-                        arrowAttrs: element.data("arrow").attrs,
+                        // arrowAttrs: element.data("arrow").attrs,
                     }
                 }
                 connects.push(connect);
@@ -4107,25 +4245,25 @@ class GraphicDesign {
             switch (type) {
                 case "Start": {
                     // element = this.loadImageElement(id, imgs.start, component, "Start");
-                    element = this.loadHTMLElement(id, "start", component, "Start").attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "start", component, "Start"); //.attr({color: this.option.settings.themeColor});
                     this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "End": {
                     // element = this.loadImageElement(id, imgs.end, component, "End");
-                    element = this.loadHTMLElement(id, "end", component, "End").attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "end", component, "End"); //.attr({color: this.option.settings.themeColor});
                     this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "Split": {
                     // 网关类型gateway： xor, or, and
                     let splitType = gateway.toLowerCase();
-                    element = this.loadHTMLElement(id, splitType, component, "Split").attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.option.settings.themeColor});
                     this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
                 case "Join": {
-                    element = this.loadHTMLElement(id, "join", component, "Join").attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.option.settings.themeColor});
                     this.setElementDatas(element, this.nodeDatas, node);
                     break;
                 }
@@ -4190,8 +4328,11 @@ class GraphicDesign {
             let connectElement = this.createConnectElement(connectData, fromElement,
                 toElement);
             this.setElementDatas(connectElement, this.connectDatas, connectData);
+            this.setConnectType(connectElement, connectData.conditionType);
             this.elements[connectElement.id] = connectElement;
         }
+
+        // this.setThemeColor(this.option.settings.themeColor);
     };
 
     /**
@@ -4430,6 +4571,44 @@ class GraphicDesign {
         return this.elements[id];
     };
 
+    setThemeColor(color) {
+        // 更新主题色
+        this.option.settings.themeColor = color;
+        if(!this.connectColors.includes(color)) {
+            this.connectColors.push(color);
+            createColorMarker(this.dom, color);
+        }
+
+        // 更新元素的颜色
+        for(let elementId in this.elements) {
+            let element = this.elements[elementId];
+            let type = element.type;
+            if(type == "path") {
+                this.setConnectColor(element, color);
+            } else if(type == "html"){
+                element.attr("color", color);
+            } else {
+                element.attr("stroke", color);
+            }
+        }
+
+        // 更新其他元素的颜色
+        let {nw, w, sw, n, s, ne, e, se, dashOuterPath} = this;
+        nw.attr("stroke", color);
+        w.attr("stroke", color);
+        sw.attr("stroke", color);
+        n.attr("stroke", color);
+        s.attr("stroke", color);
+        ne.attr("stroke", color);
+        e.attr("stroke", color);
+        se.attr("stroke", color);
+        dashOuterPath.attr("stroke", color);
+
+        // this.setMenuStyle({
+        //     color
+        // });
+    };
+
     /**
      * 完成一条路径
      *
@@ -4483,7 +4662,8 @@ class GraphicDesign {
             stroke: completeColor
         }
         // 路径
-        connect.attr(pathAttr).data("arrow").attr(pathAttr);
+        connect.attr(pathAttr); //.data("arrow").attr(pathAttr);
+        this.setConnectArrow(connect);
     };
 
     /**
@@ -4605,6 +4785,7 @@ class GraphicDesign {
         this.clearElements();
         this.initData();
         this.initDragControlElements();
+        this.initPaper();
     };
 
     /**
