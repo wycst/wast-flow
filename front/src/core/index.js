@@ -355,7 +355,8 @@ class GraphicDesign {
         this.initFileInput(dom.querySelector(".flow-import-input"));
         this.paper = new Raphael(dom, width, height);
         Object.assign(this.paper.canvas.style, {
-            userSelect: `none`
+            userSelect: "none",
+            cursor: "grab"
         });
         // 连线颜色作为箭头的颜色
         this.connectColors = [this.option.settings.themeColor];
@@ -370,6 +371,8 @@ class GraphicDesign {
         this.elements = {};
         // 容器
         this.containers = {};
+        // 圈选记录
+        this.selections = [];
         // 设计模式
         this.designMode = 'Simple'
         // 当前选择元素
@@ -400,14 +403,14 @@ class GraphicDesign {
             "pathStyle": "broken"
         };
 
-        this.initDragControlElements();
+        this.initControlElements();
 
         this.translateX = 0;
         this.translateY = 0;
     };
 
     // 初始化及事件处理
-    initDragControlElements() {
+    initControlElements() {
         let me = this;
         let resizeOnMove = function (dx, dy, x, y) {
             me.resizeOnMove(this, dx, dy, x, y);
@@ -476,8 +479,18 @@ class GraphicDesign {
         this.dropSw = this.paper.path("").attr({...attr}).hide();
         this.dropSe = this.paper.path("").attr({...attr}).hide();
 
+        // 虚线激活状态
         this.dashOuterPath = this.paper.path("").hide();
         this.dashOuterPath.node.setAttribute("stroke-dasharray", "2 2");
+
+        // 圈选操作
+        this.groupSelection = this.renderRect(0, 0, 0, 0, 4).attr({
+            fill: "transparent",
+            cursor: "move",
+            "stroke-width": 2
+        }).hide();
+        this.groupSelection.node.setAttribute("stroke-dasharray", "8 8");
+        this.dragableGroupSelection();
 
         // 工具栏
         // 连线工具（图片）
@@ -559,6 +572,51 @@ class GraphicDesign {
             // create next task
             console.log(evt);
             me.nextEnd();
+        });
+    };
+
+    /**
+     * 圈选拖动处理
+     */
+    dragableGroupSelection() {
+        let me = this;
+        let target = this.groupSelection;
+        let dragContext = {ox: 0,oy: 0,dx: 0,dy: 0};
+        target.drag((dx, dy) => {
+            if (!me.option.editable) return;
+            let location = {
+                x: dragContext.ox + dx,
+                y: dragContext.oy + dy
+            };
+            if (location.x < 0 || location.y < 0) {
+                return;
+            }
+            target.attr(location);
+            let panX = dx - dragContext.dx;
+            let panY = dy - dragContext.dy;
+            dragContext.dx = dx;
+            dragContext.dy = dy;
+            // update select elements position
+            me.elementsPanTo(this.selections,  panX, panY);
+        }, (event) => {
+            if (!me.option.editable) return;
+            me.dragingElement = target;
+
+            // storing original coordinates
+            dragContext.ox = target.attr("x");
+            dragContext.oy = target.attr("y");
+            target.attr({
+                opacity: .8
+            });
+            target.attr("cursor", "move");
+            me.hideEditElements(me.selectElement);
+            return false;
+        }, () => {
+            if (!me.option.editable) return;
+            me.dragingElement = null;
+            target.attr({opacity: 1});
+            dragContext = {ox: 0,oy: 0,dx: 0,dy: 0};
+            // this.selections = [];
         });
     };
 
@@ -1275,6 +1333,7 @@ class GraphicDesign {
         this.elements = {};
         this.containers = {};
         this.idPool = [];
+        this.selections = [];
     };
 
     initPaper() {
@@ -1310,45 +1369,92 @@ class GraphicDesign {
             } else if (e.keyCode == 17) {
                 // Control
                 me.controlMode = true;
+                me.paper.canvas.style.cursor = "crosshair";
+                me.resetGroupSelection();
             }
         }
 
         this.handleDocumentKeyUp = (event) => {
             me.controlMode = false;
+            me.paper.canvas.style.cursor = "grab";
         }
 
         // 键盘事件(在销毁时需要移除)
         document.addEventListener("keydown", this.handleDocumentKeyDown);
         document.addEventListener("keyup", this.handleDocumentKeyUp);
         if (this.option.panable) {
-            const canvasDragContext = {};
+            const canvasDragContext = {
+                moved: false
+            };
             const onCanvasDragStart = (event) => {
                 const {pageX, pageY} = event;
                 canvasDragContext.px = pageX;
                 canvasDragContext.py = pageY;
-                canvasDragContext.translateX = me.translateX;
-                canvasDragContext.translateY = me.translateY;
+                if (me.controlMode) {
+                    // 获取鼠标点击的坐标，设置为圈选的位置
+                    let {x, y, left, top} = me.dom.getBoundingClientRect()
+                    let start = {
+                        x: pageX - (x || left || 0),
+                        y: pageY - (y || top || 0)
+                    };
+                    this.groupSelection.data("start", start);
+                } else {
+                    canvasDragContext.translateX = me.translateX;
+                    canvasDragContext.translateY = me.translateY;
+                }
             }
             const onCanvasDragMove = (event) => {
+                canvasDragContext.moved = true;
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
-                // if (Object.keys(me.elements).length < 256) {
-                //     canvasDragContext.px = pageX;
-                //     canvasDragContext.py = pageY;
-                //     me.panTo(dx, dy);
-                // } else {
-                //
-                // }
-                me.translateX = canvasDragContext.translateX + dx;
-                me.translateY = canvasDragContext.translateY + dy;
-
-                me.hideEditElements(this.selectElement);
-                me.translateTo(me.translateX, me.translateY);
+                if (me.controlMode) {
+                    let {x, y} = this.groupSelection.data("start");
+                    let width = dx, height = dy;
+                    if (dx < 0) {
+                        x += dx;
+                        width = -dx;
+                    }
+                    if (dy < 0) {
+                        y += dy;
+                        height = -dy;
+                    }
+                    // update selection rect
+                    this.groupSelection.attr({
+                        x,
+                        y,
+                        width,
+                        height,
+                        stroke: this.option.settings.themeColor
+                    }).show();
+                    // 设置圈选模式
+                    me.groupSelectionMode = true;
+                } else {
+                    me.groupSelectionMode = false;
+                    me.translateX = canvasDragContext.translateX + dx;
+                    me.translateY = canvasDragContext.translateY + dy;
+                    me.hideEditElements(this.selectElement);
+                    me.translateTo(me.translateX, me.translateY);
+                }
             }
             const onCanvasDragUp = (event) => {
                 // panto and remove transform
-                me.panTo(me.translateX, me.translateY);
+                if (me.controlMode) {
+                    // compute selections
+                    me.selectionElements();
+                } else {
+                    if(this.groupSelectionMode) {
+                        me.resetGroupSelection();
+                        // me.groupSelectionMode = false;
+                    }
+                    me.panTo(me.translateX, me.translateY);
+                }
+
+                if(!canvasDragContext.moved) {
+                    // only click
+                    me.resetGroupSelection();
+                }
+                canvasDragContext.moved = false;
                 document.removeEventListener("mousemove", onCanvasDragMove);
                 document.removeEventListener("mouseup", onCanvasDragUp);
             }
@@ -1357,7 +1463,7 @@ class GraphicDesign {
                 if (!me.dragingElement && !me.disablePan) {
                     onCanvasDragStart(event);
                     me.endInputEdit();
-                    me.paper.canvas.style.cursor = "grabbing";
+                    // me.resetGroupSelection();
                     document.addEventListener("mousemove", onCanvasDragMove);
                     document.addEventListener("mouseup", onCanvasDragUp);
                     // event.stopPropagation();
@@ -1365,6 +1471,55 @@ class GraphicDesign {
                 }
             });
         }
+    };
+
+    /**
+     * 圈选元素
+     * */
+    selectionElements() {
+        let groupSelection = this.groupSelection;
+        if(!groupSelection || !groupSelection.attrs) return;
+        let { x,y,width,height} = groupSelection.attrs;
+        if(!x || !y || !width || !height) return;
+
+        let selections = this.selections = [];
+        let elements = this.elements;
+        let connectSets = [];
+        for(let elementId in elements) {
+            let element = elements[elementId];
+            let type = element.type;
+            if(type != "path") {
+                let dropFlag = this.isDropContainer(element, groupSelection);
+                if(dropFlag) {
+                    selections.push(element);
+                    let outLines = element.data("out");
+                    for(let lineId in outLines || {}) {
+                        if(!connectSets.includes(lineId)) {
+                            connectSets.push(lineId);
+                            selections.push(outLines[lineId]);
+                        }
+                    }
+                    let inLines = element.data("in");
+                    for(let lineId in inLines || {}) {
+                        if(!connectSets.includes(lineId)) {
+                            connectSets.push(lineId);
+                            selections.push(inLines[lineId]);
+                        }
+                    }
+                }
+            }
+        }
+
+        if(this.selections.length == 0) {
+            this.groupSelection.hide();
+        }
+    };
+
+    /** 重置圈选 */
+    resetGroupSelection() {
+        this.groupSelection.hide();
+        this.selections = [];
+        this.groupSelectionMode = false;
     };
 
     // 单击事件
@@ -1378,6 +1533,12 @@ class GraphicDesign {
         if (this.activeFromElement) {
             this.activeFromElement = null;
         }
+        // if(!this.selectionMode) {
+        //     // 关闭圈选
+        //     this.groupSelection.hide();
+        //     this.selections = [];
+        // }
+        console.log("handleClickBlank ");
         this.closePopwin();
     };
 
@@ -2038,6 +2199,30 @@ class GraphicDesign {
         }
     };
 
+    /**
+     * 指定元素平移
+     *
+     * @param elements
+     * @param dx
+     * @param dy
+     */
+    elementsPanTo(elements, dx, dy) {
+        for (let elementId in elements) {
+            let element = elements[elementId];
+            this.moveTo(element, dx, dy);
+        }
+
+        // update
+        for (let elementId in elements) {
+            let element = elements[elementId];
+            if (element.type == "path") {
+                this.updateLine(element);
+            } else {
+                // this.updateElements(element);
+            }
+        }
+    };
+
     /***
      * 整体平移
      *
@@ -2048,20 +2233,8 @@ class GraphicDesign {
     panTo(dx, dy) {
         this.hideEditElements(null);
         this.translateTo(0, 0);
-        for (let elementId in this.elements) {
-            let element = this.elements[elementId];
-            this.moveTo(element, dx, dy);
-        }
-
-        // update
-        for (let elementId in this.elements) {
-            let element = this.elements[elementId];
-            if (element.type == "path") {
-                this.updateLine(element);
-            } else {
-                // this.updateElements(element);
-            }
-        }
+        this.elementsPanTo(this.elements, dx, dy);
+        this.moveTo(this.groupSelection, dx, dy);
     };
 
     /***/
@@ -2849,7 +3022,12 @@ class GraphicDesign {
     blurTextEditing() {
     };
 
-    initElement(target) {
+    /**
+     * 设置元素可以拖动
+     *
+     * @param target
+     */
+    dragableElement(target) {
         let me = this;
         // 支持拖拽
         target.drag((dx, dy) => {
@@ -2865,6 +3043,10 @@ class GraphicDesign {
             me.dragingElement = null;
             target.attr({opacity: 1});
         });
+    };
+
+    initElement(target) {
+        this.dragableElement(target);
         this.updateElements(target, true);
         this.hideEditElements(target);
         // 绑定事件
@@ -3359,7 +3541,7 @@ class GraphicDesign {
         }
     };
 
-    updateElements(targetElement, isNew) {
+    updateElements(targetElement) {
         let me = this;
         let text = targetElement.data("text");
         if (text) {
@@ -3726,6 +3908,24 @@ class GraphicDesign {
             boundaryX: boundaryX,
             boundaryY: boundaryY
         };
+    };
+
+    /**
+     * 检测元素是否在容器范围（圈选）
+     *
+     * @param element
+     * @param container
+     */
+    isDropContainer(element, container) {
+        if(!element || !container) return;
+        let {x, y} = element.attrs;
+        // 暂时根据x,y落点判断是否在容器内
+        let {x: containerX, y: containerY, width: containerW, height: containerH} = container.attrs;
+        if (x >= containerX && x <= (containerX + containerW)
+            && y >= containerY && y <= (containerY + containerH)) {
+            return true;
+        }
+        return false;
     };
 
     autoContainerSelect(targetElement) {
@@ -4332,7 +4532,7 @@ class GraphicDesign {
             this.elements[connectElement.id] = connectElement;
         }
 
-        // this.setThemeColor(this.option.settings.themeColor);
+        this.setElementsColor(this.option.settings.themeColor);
     };
 
     /**
@@ -4571,21 +4771,22 @@ class GraphicDesign {
         return this.elements[id];
     };
 
-    setThemeColor(color) {
-        // 更新主题色
-        this.option.settings.themeColor = color;
-        if(!this.connectColors.includes(color)) {
+    /**
+     * 重置所有元素的颜色
+     */
+    setElementsColor(color) {
+        if (!this.connectColors.includes(color)) {
             this.connectColors.push(color);
             createColorMarker(this.dom, color);
         }
 
         // 更新元素的颜色
-        for(let elementId in this.elements) {
+        for (let elementId in this.elements) {
             let element = this.elements[elementId];
             let type = element.type;
-            if(type == "path") {
+            if (type == "path") {
                 this.setConnectColor(element, color);
-            } else if(type == "html"){
+            } else if (type == "html") {
                 element.attr("color", color);
             } else {
                 element.attr("stroke", color);
@@ -4603,10 +4804,22 @@ class GraphicDesign {
         e.attr("stroke", color);
         se.attr("stroke", color);
         dashOuterPath.attr("stroke", color);
+    };
 
-        // this.setMenuStyle({
-        //     color
-        // });
+    /**
+     * 修改主题颜色
+     *
+     * @param color
+     */
+    setThemeColor(color) {
+        // 更新主题颜色
+        this.option.settings.themeColor = color;
+        // 重置元素颜色
+        this.setElementsColor(color);
+        // 菜单颜色
+        this.setMenuStyle({
+            color
+        });
     };
 
     /**
@@ -4784,7 +4997,7 @@ class GraphicDesign {
     reset() {
         this.clearElements();
         this.initData();
-        this.initDragControlElements();
+        this.initControlElements();
         this.initPaper();
     };
 
