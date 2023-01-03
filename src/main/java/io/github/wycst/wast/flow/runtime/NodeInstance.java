@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.runtime;
 
+import io.github.wycst.wast.flow.definition.HandlerStatus;
 import io.github.wycst.wast.flow.definition.Status;
 
 import java.sql.Timestamp;
@@ -51,6 +52,9 @@ public class NodeInstance {
 
     // 当前状态
     private Status status;
+
+    // handler状态
+    private HandlerStatus handlerStatus = HandlerStatus.Undo;
 
     public long getId() {
         return id;
@@ -110,6 +114,14 @@ public class NodeInstance {
 
     List<ConnectInstance> getConnectInstances() {
         return outConnectInstances;
+    }
+
+    public HandlerStatus getHandlerStatus() {
+        return handlerStatus;
+    }
+
+    void setHandlerStatus(HandlerStatus handlerStatus) {
+        this.handlerStatus = handlerStatus;
     }
 
     @Override

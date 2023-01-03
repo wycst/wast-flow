@@ -134,15 +134,20 @@ public class RuntimeNode extends Node {
         try {
             // in
             runIn(nodeInstance, processInstance);
-            long delay = handlerOption.getDelay();
-            // sleep
-            if (delay > 0) {
-                log.debug("{}, about to sleep for {} ms", nodeToString, delay);
-                Thread.sleep(delay);
+
+            if(handlerOption.isSkip()) {
+                nodeInstance.setHandlerStatus(HandlerStatus.Skip);
+            } else {
+                long delay = handlerOption.getDelay();
+                // sleep
+                if (delay > 0) {
+                    log.debug("{}, about to sleep for {} ms", nodeToString, delay);
+                    Thread.sleep(delay);
+                }
+                // 获取handler执行
+                NodeHandler nodeHandler = getHandler(processInstance);
+                executeHandler(nodeHandler, nodeInstance);
             }
-            // 获取handler执行
-            NodeHandler nodeHandler = getHandler(processInstance);
-            executeHandler(nodeHandler, nodeInstance);
 
             // processInstance.addNodeInstance();
             nodeInstance.setOutDate(new Timestamp(System.currentTimeMillis()));
@@ -205,6 +210,9 @@ public class RuntimeNode extends Node {
         boolean asynchronous = handlerOption.isAsynchronous();
         long timeout = handlerOption.getTimeout();
         FailurePolicy policy = handlerOption.getPolicy();
+
+        // init success
+        nodeInstance.setHandlerStatus(HandlerStatus.Success);
         try {
             if (asynchronous || timeout > 0) {
                 Future future = defaultFlowEngine.submitRunnable(new Callable() {
@@ -224,6 +232,7 @@ public class RuntimeNode extends Node {
             if (exception instanceof TimeoutException) {
                 log.error("timeout {}", timeout);
             }
+            nodeInstance.setHandlerStatus(HandlerStatus.Failure);
             if (policy == FailurePolicy.Stop) {
                 throw exception;
             } else {

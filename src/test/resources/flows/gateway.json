@@ -44,7 +44,9 @@
             "id": "lc1kzjo8",
             "type": "Start",
             "gateway": "XOR",
-            "handler": {},
+            "handler": {
+                "skip": true
+            },
             "uuid": "a6abf248-5a2a-419a-972c-44a196be2bfa",
             "meta": {},
             "component": {

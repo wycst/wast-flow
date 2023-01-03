@@ -52,6 +52,11 @@ public class HandlerOption {
      */
     private FailurePolicy policy = FailurePolicy.Stop;
 
+    /**
+     * 是否跳过
+     * */
+    private boolean skip;
+
     public long getDelay() {
         return delay;
     }
@@ -122,5 +127,13 @@ public class HandlerOption {
 
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    public boolean isSkip() {
+        return skip;
+    }
+
+    public void setSkip(boolean skip) {
+        this.skip = skip;
     }
 }

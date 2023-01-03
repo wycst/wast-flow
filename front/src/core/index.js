@@ -127,6 +127,19 @@ export const getHTML = (type) => {
     return GlobalHTMLTypes[type];
 }
 
+/**
+ * 拓展html节点的方法
+ * @param type
+ */
+ElementData.prototype.setHtmlType = function (type) {
+    let html = GlobalHTMLTypes[type];
+    if(html) {
+        this.updateHTML(html);
+    } else {
+        console.error(`html type ['${type}'] is not register`);
+    }
+}
+
 const DefaultSettings = {
     linkName: "",
     nodeName: "节点名称",
@@ -195,6 +208,11 @@ const defaultOption = {
      * 是否生成UUID
      */
     uuid: true,
+
+    /**
+     * 默认条件类型
+     */
+    defaultConditionType: "Script",
 
     /**
      * 单击事件（可覆盖）
@@ -588,9 +606,9 @@ class GraphicDesign {
                 x: dragContext.ox + dx,
                 y: dragContext.oy + dy
             };
-            if (location.x < 0 || location.y < 0) {
-                return;
-            }
+            // if (location.x < 0 || location.y < 0) {
+            //     return;
+            // }
             target.attr(location);
             let panX = dx - dragContext.dx;
             let panY = dy - dragContext.dy;
@@ -797,6 +815,7 @@ class GraphicDesign {
                         dragContext.element = element = me.createEndNode(x, y);
                     } else if (type == "xor") {
                         dragContext.element = element = me.createSplitNode(x, y);
+                        dragContext.element.data("gateway", "XOR");
                     } else if (type == "or") {
                         dragContext.element = element = me.createSplitNode(x, y);
                         dragContext.element.updateHTML(DefaultHtmlTypes["or"]);
@@ -1109,7 +1128,6 @@ class GraphicDesign {
                         break;
                     }
                     case "Split": {
-                        console.log(element.data("gateway"));
                         propertyModels.push({
                             label: "网关类型",
                             value: element.data("gateway") || "XOR",
@@ -2729,7 +2747,7 @@ class GraphicDesign {
         if (Object.keys(outLines).length == 1) {
             this.setConnectType(linkPath, "Always");
         } else {
-            this.setConnectType(linkPath, "Script");
+            this.setConnectType(linkPath, this.option.defaultConditionType || "Script");
         }
         onConnectCreated(linkPath, this);
 
@@ -3062,9 +3080,10 @@ class GraphicDesign {
             x: element.ox + dx,
             y: element.oy + dy
         };
-        if (location.x < 0 || location.y < 0) {
-            return;
-        }
+        // if (location.x < 0 || location.y < 0) {
+        //     return;
+        // }
+
         // // 判断元素是否在容器内，如果在容器内的元素禁止拖到容器外
         // let container = element.data("container");
         // if (container) {
@@ -4804,6 +4823,7 @@ class GraphicDesign {
         e.attr("stroke", color);
         se.attr("stroke", color);
         dashOuterPath.attr("stroke", color);
+        this.groupSelection.attr("stroke", color);
     };
 
     /**

@@ -4,6 +4,9 @@
     <el-switch v-model="editable" active-text="可编辑" inactive-text="不可编辑" style="margin-left: 10px;"></el-switch>
     <div ref="flow" class="wast-flow" style="width: 100%; height: 680px; overflow: hidden;">
     </div>
+
+    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>
+
   </div>
 </template>
 
@@ -12,11 +15,17 @@
 import {wf} from "../core/index"
 // import wf from "wastflow"
 console.log(wf);
+
+import propertyDrawer from "./propertyDrawer.vue"
+
 export default {
   name: "flow.vue",
+  components: {propertyDrawer},
   data() {
     return {
-      editable: true
+      editable: true,
+      propertyVisible: false,
+      selectElement: null
     }
   },
   mounted() {
@@ -31,11 +40,14 @@ export default {
       // background: "lightblue",
       panable: true,
 
+      /** 默认条件类型 */
+      defaultConditionType: "HandlerCall",
+
       onConnectCreated(connect) {
+      },
 
-
-
-      }
+      // 元素双击事件
+      dblclickElement: this.dblclickElement,
 
     })
     // 绘制矩形
@@ -54,6 +66,10 @@ export default {
       this.tmpData = this.graphicDesign.getData();
       console.log(this.tmpData);
       console.log(JSON.stringify(this.tmpData, null, 4));
+    },
+    dblclickElement(element, evt) {
+      this.selectElement = element;
+      this.propertyVisible = true;
     },
     validateProcess() {
       let error = this.graphicDesign.validate();

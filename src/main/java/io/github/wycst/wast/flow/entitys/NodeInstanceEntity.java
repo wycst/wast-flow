@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.entitys;
 
+import io.github.wycst.wast.flow.definition.HandlerStatus;
 import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.definition.Status;
 import io.github.wycst.wast.jdbc.annotations.Id;
@@ -57,6 +58,9 @@ public class NodeInstanceEntity implements IEntity, Comparable<NodeInstanceEntit
 
     // 当前状态
     private Status instanceStatus;
+
+    // handler状态
+    private HandlerStatus handlerStatus;
 
     public String getId() {
         return id;
@@ -160,6 +164,14 @@ public class NodeInstanceEntity implements IEntity, Comparable<NodeInstanceEntit
 
     public void setPrevNodeInstanceId(long prevNodeInstanceId) {
         this.prevNodeInstanceId = prevNodeInstanceId;
+    }
+
+    public HandlerStatus getHandlerStatus() {
+        return handlerStatus;
+    }
+
+    public void setHandlerStatus(HandlerStatus handlerStatus) {
+        this.handlerStatus = handlerStatus;
     }
 
     @Override

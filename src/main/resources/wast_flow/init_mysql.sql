@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS `wrf_node_instance`
     `in_date`               datetime    DEFAULT NULL,
     `out_date`              datetime    DEFAULT NULL,
     `instance_status`       varchar(16) DEFAULT NULL,
+    `handler_status`        varchar(16) DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
