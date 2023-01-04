@@ -133,7 +133,7 @@ export const getHTML = (type) => {
  */
 ElementData.prototype.setHtmlType = function (type) {
     let html = GlobalHTMLTypes[type];
-    if(html) {
+    if (html) {
         this.updateHTML(html);
     } else {
         console.error(`html type ['${type}'] is not register`);
@@ -210,9 +210,23 @@ const defaultOption = {
     uuid: true,
 
     /**
+     * 禁用辅助对齐线
+     */
+    disableAlignLine: false,
+
+    /**
      * 默认条件类型
      */
     defaultConditionType: "Script",
+
+    /**
+     * 提示信息，默认使用window.alert
+     *
+     * @param message
+     */
+    alertMessage(message) {
+        alert(message);
+    },
 
     /**
      * 单击事件（可覆盖）
@@ -236,7 +250,6 @@ const defaultOption = {
      * @param evt
      */
     clickBlank(evt) {
-
     },
 
     /**
@@ -244,7 +257,6 @@ const defaultOption = {
      * @param evt
      */
     dblclickBlank(evt) {
-
     },
 
     /**
@@ -261,7 +273,6 @@ const defaultOption = {
      * @param connect
      */
     onConnectCreated(connect) {
-
     },
 
     /**
@@ -270,7 +281,6 @@ const defaultOption = {
      * @param node
      */
     onNodeCreated(node) {
-
     },
 
     /***
@@ -395,8 +405,6 @@ class GraphicDesign {
         this.designMode = 'Simple'
         // 当前选择元素
         this.selectElement = null;
-        // 当前激活元素
-        this.activeFromElement = null;
         // id池
         this.idPool = [];
         // 节点绑定在element中的属性集合
@@ -510,6 +518,22 @@ class GraphicDesign {
         this.groupSelection.node.setAttribute("stroke-dasharray", "8 8");
         this.dragableGroupSelection();
 
+        // 水平对齐线使用rect替代，只需要更新y即可
+        this.horizontalLine = this.renderRect(0, 0, 0, 0.0001).attr({
+            stroke: this.option.settings.themeColor,
+            "stroke-width": 2,
+            opacity: .5
+        }).hide();
+        this.horizontalLine.node.setAttribute("stroke-dasharray", "12 12");
+
+        // 垂直对齐线使用rect替代，只需要更新x即可
+        this.verticalLine = this.renderRect(0, 0, 0.0001, 0).attr({
+            stroke: this.option.settings.themeColor,
+            "stroke-width": 2,
+            opacity: .5
+        }).hide();
+        this.verticalLine.node.setAttribute("stroke-dasharray", "12 12");
+
         // 工具栏
         // 连线工具（图片）
         this.linkTool = this.paper.image(imgs.sequenceflow, 0, 0, 16, 16).hide();
@@ -574,6 +598,9 @@ class GraphicDesign {
         });
 
         // 快速追加结束任务
+        if (this.nextEndTool) {
+            this.nextEndTool.remove();
+        }
         // this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
         this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
             opacity: .5,
@@ -599,7 +626,7 @@ class GraphicDesign {
     dragableGroupSelection() {
         let me = this;
         let target = this.groupSelection;
-        let dragContext = {ox: 0,oy: 0,dx: 0,dy: 0};
+        let dragContext = {ox: 0, oy: 0, dx: 0, dy: 0};
         target.drag((dx, dy) => {
             if (!me.option.editable) return;
             let location = {
@@ -610,12 +637,15 @@ class GraphicDesign {
             //     return;
             // }
             target.attr(location);
+
+            // me.handleAlignLines(target);
+
             let panX = dx - dragContext.dx;
             let panY = dy - dragContext.dy;
             dragContext.dx = dx;
             dragContext.dy = dy;
             // update select elements position
-            me.elementsPanTo(this.selections,  panX, panY);
+            me.elementsPanTo(this.selections, panX, panY);
         }, (event) => {
             if (!me.option.editable) return;
             me.dragingElement = target;
@@ -633,8 +663,9 @@ class GraphicDesign {
             if (!me.option.editable) return;
             me.dragingElement = null;
             target.attr({opacity: 1});
-            dragContext = {ox: 0,oy: 0,dx: 0,dy: 0};
+            dragContext = {ox: 0, oy: 0, dx: 0, dy: 0};
             // this.selections = [];
+            // me.hideAlignLines();
         });
     };
 
@@ -846,6 +877,7 @@ class GraphicDesign {
             delete dragContext.type;
             delete dragContext.element;
             delete dragContext.dragmenu;
+            me.hideAlignLines();
             document.removeEventListener("mousemove", onDragMove);
             document.removeEventListener("mouseup", onDragUp);
         }
@@ -1461,14 +1493,14 @@ class GraphicDesign {
                     // compute selections
                     me.selectionElements();
                 } else {
-                    if(this.groupSelectionMode) {
+                    if (this.groupSelectionMode) {
                         me.resetGroupSelection();
                         // me.groupSelectionMode = false;
                     }
                     me.panTo(me.translateX, me.translateY);
                 }
 
-                if(!canvasDragContext.moved) {
+                if (!canvasDragContext.moved) {
                     // only click
                     me.resetGroupSelection();
                 }
@@ -1496,30 +1528,30 @@ class GraphicDesign {
      * */
     selectionElements() {
         let groupSelection = this.groupSelection;
-        if(!groupSelection || !groupSelection.attrs) return;
-        let { x,y,width,height} = groupSelection.attrs;
-        if(!x || !y || !width || !height) return;
+        if (!groupSelection || !groupSelection.attrs) return;
+        let {x, y, width, height} = groupSelection.attrs;
+        if (!x || !y || !width || !height) return;
 
         let selections = this.selections = [];
         let elements = this.elements;
         let connectSets = [];
-        for(let elementId in elements) {
+        for (let elementId in elements) {
             let element = elements[elementId];
             let type = element.type;
-            if(type != "path") {
+            if (type != "path") {
                 let dropFlag = this.isDropContainer(element, groupSelection);
-                if(dropFlag) {
+                if (dropFlag) {
                     selections.push(element);
                     let outLines = element.data("out");
-                    for(let lineId in outLines || {}) {
-                        if(!connectSets.includes(lineId)) {
+                    for (let lineId in outLines || {}) {
+                        if (!connectSets.includes(lineId)) {
                             connectSets.push(lineId);
                             selections.push(outLines[lineId]);
                         }
                     }
                     let inLines = element.data("in");
-                    for(let lineId in inLines || {}) {
-                        if(!connectSets.includes(lineId)) {
+                    for (let lineId in inLines || {}) {
+                        if (!connectSets.includes(lineId)) {
                             connectSets.push(lineId);
                             selections.push(inLines[lineId]);
                         }
@@ -1528,7 +1560,7 @@ class GraphicDesign {
             }
         }
 
-        if(this.selections.length == 0) {
+        if (this.selections.length == 0) {
             this.groupSelection.hide();
         }
     };
@@ -1547,9 +1579,6 @@ class GraphicDesign {
         if (selectElement) {
             this.hideEditElements(selectElement);
             this.selectElement = null;
-        }
-        if (this.activeFromElement) {
-            this.activeFromElement = null;
         }
         // if(!this.selectionMode) {
         //     // 关闭圈选
@@ -2016,7 +2045,6 @@ class GraphicDesign {
         // 添加单击事件
         let me = this;
         targetElement.click(function (e) {
-            let elementType = targetElement.type;
             let selectElement = me.selectElement;
             if (selectElement) {
                 me.hideEditElements(selectElement);
@@ -2024,15 +2052,6 @@ class GraphicDesign {
             me.showEditElements(me.selectElement = targetElement);
             // 阻止冒泡
             e.stopPropagation();
-            if (elementType != "path") {
-                let activeFromElement = me.activeFromElement;
-                if (activeFromElement && activeFromElement != targetElement) {
-                    // 创建activeFromElement-->targetElement的连线
-                    me.createLink(activeFromElement, targetElement);
-                    me.activeFromElement = null;
-                    return;
-                }
-            }
             me.option.clickElement && me.option.clickElement(targetElement, e);
         });
 
@@ -2052,6 +2071,16 @@ class GraphicDesign {
             e.stopPropagation();
             me.handleDblclickElement(targetElement, e);
         });
+
+        // 连线选中问题
+        if(targetElement.type == "path") {
+            // 解决连线不好选中的问题
+            targetElement.hover(function () {
+                this.attr("stroke-width", 4);
+            }, function () {
+                this.attr("stroke-width", 2);
+            });
+        }
     };
 
     /**
@@ -2114,77 +2143,74 @@ class GraphicDesign {
         dropSe.hide();
     };
 
-    beginCreateLink(targetElement) {
-        if (this.selectElement && this.selectElement != targetElement) {
-            this.hideEditElements(this.selectElement);
-        }
-        this.showEditElements(this.selectElement = targetElement);
-        // 设置激活状态
-        this.activeFromElement = targetElement;
-        this.showFadeOutText("点击节点完成连线,空白区域取消！");
-    };
-
-    showFadeOutText(text, color) {
-        alert(text);
-    };
-
-    createLink(activeFromElement, targetElement) {
-
-        if (activeFromElement == targetElement) {
-            this.showFadeOutText("不能自连接", "red");
-            return;
-        }
-        // 校验
-        let sameContainer = activeFromElement.data("container") == targetElement.data("container");
-        if (!sameContainer) {
-            this.showFadeOutText("不在同一个容器不能相连", "red");
-            return;
-        }
-        let fromDateType = activeFromElement.data("type");
-        let toDateType = targetElement.data("type");
-        // 开始节点只能单出
-        if (toDateType == "start") {
-            this.showFadeOutText("开始节点不能作为目的节点", "red");
-            return;
-        }
-        // 判断from和to2个点之间是否已经存在了连线
-        // 遍历from的out即可
-        let outLines = activeFromElement.data("out");
-        if (outLines) {
-            for (var i in outLines) {
-                let outLine = outLines[i];
-                let tempToElement = outLine.data("to");
-                if (tempToElement == targetElement) {
-                    // 已存在
-                    this.showFadeOutText("连线已存在", "red");
-                    return;
-                }
-            }
-        }
-        let standardMode = this.designMode != "Simple";
-        // 标准模式校验分支及单进单出
-        if (standardMode) {
-            // 除去分支节点外，其他节点只能单出
-            if (fromDateType != "diverage") {
-                let outLines = activeFromElement.data("out");
-                let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
-                if (len > 0) {
-                    this.showFadeOutText("非分支节点只能单出", "red");
-                    return;
-                }
-            }
-            if (toDateType != "converge") {
-                let inLines = targetElement.data("in");
-                let len = 0 || (inLines && Object.getOwnPropertyNames(inLines).length);
-                if (len > 0) {
-                    this.showFadeOutText("非聚合节点只能单进", "red");
-                    return;
-                }
-            }
-        }
-        this.createPath(activeFromElement, targetElement);
-        return true;
-    };
+    // beginCreateLink(targetElement) {
+    //     if (this.selectElement && this.selectElement != targetElement) {
+    //         this.hideEditElements(this.selectElement);
+    //     }
+    //     this.showEditElements(this.selectElement = targetElement);
+    //     // 设置激活状态
+    //     this.activeFromElement = targetElement;
+    //     this.alertMessage("点击节点完成连线,空白区域取消！", 3);
+    // };
+    //
+    // createLink(activeFromElement, targetElement) {
+    //
+    //     if (activeFromElement == targetElement) {
+    //         this.alertMessage("不能自连接",  3);
+    //         return;
+    //     }
+    //     // 校验
+    //     let sameContainer = activeFromElement.data("container") == targetElement.data("container");
+    //     if (!sameContainer) {
+    //         this.alertMessage("不在同一个容器不能相连", 3);
+    //         return;
+    //     }
+    //     let fromDateType = activeFromElement.data("type");
+    //     let toDateType = targetElement.data("type");
+    //     // 开始节点只能单出
+    //     if (toDateType == "start") {
+    //         this.alertMessage("开始节点不能作为目的节点", 3);
+    //         return;
+    //     }
+    //     // 判断from和to2个点之间是否已经存在了连线
+    //     // 遍历from的out即可
+    //     let outLines = activeFromElement.data("out");
+    //     if (outLines) {
+    //         for (var i in outLines) {
+    //             let outLine = outLines[i];
+    //             let tempToElement = outLine.data("to");
+    //             if (tempToElement == targetElement) {
+    //                 // 已存在
+    //                 this.alertMessage("连线已存在", 3);
+    //                 return;
+    //             }
+    //         }
+    //     }
+    //     console.log("createLink ");
+    //     // let standardMode = this.designMode != "Simple";
+    //     // // 标准模式校验分支及单进单出
+    //     // if (standardMode) {
+    //     //     // 除去分支节点外，其他节点只能单出
+    //     //     if (fromDateType != "diverage") {
+    //     //         let outLines = activeFromElement.data("out");
+    //     //         let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
+    //     //         if (len > 0) {
+    //     //             this.alertMessage("非分支节点只能单出", 3);
+    //     //             return;
+    //     //         }
+    //     //     }
+    //     //     if (toDateType != "converge") {
+    //     //         let inLines = targetElement.data("in");
+    //     //         let len = 0 || (inLines && Object.getOwnPropertyNames(inLines).length);
+    //     //         if (len > 0) {
+    //     //             this.alertMessage("非聚合节点只能单进", "red");
+    //     //             return;
+    //     //         }
+    //     //     }
+    //     // }
+    //     this.createPath(activeFromElement, targetElement);
+    //     return true;
+    // };
 
     /**
      * 通过translate平移
@@ -3049,18 +3075,111 @@ class GraphicDesign {
         let me = this;
         // 支持拖拽
         target.drag((dx, dy) => {
+            // drag move
             if (!me.option.editable) return;
             me.elementDragMove(target, dx, dy);
         }, (event) => {
+            // drag start
             if (!me.option.editable) return;
             me.elementDragStart(target);
             me.dragingElement = target;
             return false;
         }, () => {
+            // drag up
             if (!me.option.editable) return;
             me.dragingElement = null;
             target.attr({opacity: 1});
+            me.hideAlignLines();
         });
+    };
+
+    /**
+     * 获取可视的节点数量
+     */
+    getVisibleNodes() {
+        let elements = this.elements;
+        let nodes = [];
+        for (let element of Object.values(elements)) {
+            if (element.type == "path") continue;
+            nodes.push(element);
+        }
+        return nodes;
+    };
+
+    /**
+     *
+     */
+    handleAlignLines(target) {
+        if (this.option.disableAlignLine || !target) {
+            return;
+        }
+        try {
+            let {x: x0, y: y0, width: w0, height: h0} = target.attrs;
+            let c0 = {
+                x: x0 + w0 / 2,
+                y: y0 + h0 / 2
+            }
+            // 检查所有的
+            let nodeElements = this.getVisibleNodes();
+
+            // 声明显示标志
+            let horizontalVisible = false, verticalVisible = false;
+            let cx = 0, cy = 0;
+            for (let nodeElement of nodeElements) {
+                if (nodeElement == target) continue;
+                let {x: x1, y: y1, width: w1, height: h1} = nodeElement.attrs;
+                let c1 = {
+                    x: x1 + w1 / 2,
+                    y: y1 + h1 / 2
+                }
+                let dx = c0.x - c1.x, dy = c0.y - c1.y;
+                if (!verticalVisible && dx * dx < 25) {
+                    verticalVisible = true;
+                    cx = c1.x;
+                }
+                if (!horizontalVisible && dy * dy < 25) {
+                    horizontalVisible = true;
+                    cy = c1.y;
+                }
+            }
+
+            if (horizontalVisible) {
+                this.horizontalLine.attr({
+                    width: "100%",
+                    y: cy
+                }).show();
+                // 矫正target位置
+                target.attr({
+                    y: cy - h0 / 2
+                });
+            } else {
+                this.horizontalLine.hide();
+            }
+
+            if (verticalVisible) {
+                this.verticalLine.attr({
+                    x: cx,
+                    height: "100%"
+                }).show();
+                // 矫正target位置
+                target.attr({
+                    x: cx - w0 / 2
+                });
+            } else {
+                this.verticalLine.hide();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // 隐藏lines
+    hideAlignLines() {
+        if (this.option.disableAlignLine) {
+            return;
+        }
+        this.horizontalLine.hide();
+        this.verticalLine.hide();
     };
 
     initElement(target) {
@@ -3101,7 +3220,13 @@ class GraphicDesign {
         // } else {
         //     // 非容器里面的节点暂时不进行碰撞校验
         // }
+
+        // set position
         element.attr(location);
+
+        // 处理对齐线的显示和隐藏
+        this.handleAlignLines(element);
+
         this.updateElements(element);
         this.showEditElements(element);
     };
@@ -3936,7 +4061,7 @@ class GraphicDesign {
      * @param container
      */
     isDropContainer(element, container) {
-        if(!element || !container) return;
+        if (!element || !container) return;
         let {x, y} = element.attrs;
         // 暂时根据x,y落点判断是否在容器内
         let {x: containerX, y: containerY, width: containerW, height: containerH} = container.attrs;
@@ -4094,26 +4219,10 @@ class GraphicDesign {
     registerElement(target) {
         let id = target.id;
         if (!id) {
-            alert(" error，register id is null !");
+            this.alertMessage("register error: id is null!");
             return;
         }
         this.elements[id] = target;
-        // 如果目标节点是容器节点，注册容器
-        if (target.data("type") == "mutiSubProcess") {
-            this.registerContainer(target);
-        } else if (target.data("type") == "serviceGroup") {
-            this.registerContainer(target);
-        } else if (target.type == "path") {
-            // 解决连线不好选中的问题
-            target.hover(function () {
-                this.attr("stroke-width", 4);
-            }, function () {
-                this.attr("stroke-width", 2);
-            });
-        }
-
-        // init meta
-        target.data('meta', target.data('meta') || {});
     };
 
     /** 注册容器*/
@@ -4843,6 +4952,19 @@ class GraphicDesign {
     };
 
     /**
+     * 提示信息
+     *
+     * @param message
+     */
+    alertMessage(message, level) {
+        if (typeof this.option.alertMessage == "function") {
+            this.option.alertMessage(message, level);
+        } else {
+            console.info(message, level);
+        }
+    };
+
+    /**
      * 完成一条路径
      *
      * @param fromElementId 开始环节的id
@@ -4855,7 +4977,7 @@ class GraphicDesign {
 
         let fromElement = this.getElementById(fromElementId);
         if (!fromElement) {
-            alert("开始节点[id=" + fromElementId + "]不存在");
+            this.alertMessage("开始节点[id=" + fromElementId + "]不存在", 5);
             return;
         }
         let toElement = null, connect = null;
@@ -4873,7 +4995,7 @@ class GraphicDesign {
         }
 
         if (!toElement) {
-            alert("结束节点[id=" + toElementId + "]不存在或无效");
+            this.alertMessage("结束节点[id=" + toElementId + "]不存在或无效", 5);
             return;
         }
         if (fromElement.type == "html") {
@@ -4905,7 +5027,7 @@ class GraphicDesign {
      * */
     completeQueue(elementIds) {
         if (!Array.isArray(elementIds) || elementIds.length < 2) {
-            alert("参数错误");
+            this.alertMessage("参数错误", 5);
             return;
         }
         let elementId = elementIds[0];
@@ -4932,7 +5054,7 @@ class GraphicDesign {
     exportJSON() {
         let errorMessage = this.validate();
         if (errorMessage) {
-            alert("流程图错误：" + errorMessage);
+            this.alertMessage("流程图错误：" + errorMessage, 5);
             return;
         }
         let data = this.getData();
@@ -4948,7 +5070,7 @@ class GraphicDesign {
             let name = file.name;
             console.log(name);
             if (!name.toLowerCase().endsWith(".json")) {
-                alert("只支持JSON格式文件");
+                this.alertMessage("只支持JSON格式文件", 5);
                 return;
             }
             console.log(file);
@@ -5007,6 +5129,7 @@ class GraphicDesign {
             element.remove();
             this.elements[elementId] = null;
         }
+
         // 清除svg画板
         this.paper.clear();
     };

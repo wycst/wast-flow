@@ -175,6 +175,38 @@ export default {
     },
 
     /**
+     * 连线源名称
+     *
+     * @returns {string|null|*}
+     */
+    sourceName() {
+      if(!this.isConnect) return null;
+      let sourceNode = this.element.data("from");
+      if(sourceNode) {
+        let textEle = sourceNode.data("text");
+        return textEle ? textEle.attr("text") : sourceNode.data("nodeType");
+      } else {
+        return "";
+      }
+    },
+
+    /**
+     * 连线目的节点名称
+     *
+     * @returns {string|null|*}
+     */
+    targetName() {
+      if(!this.isConnect) return null;
+      let toNode = this.element.data("to");
+      if(toNode) {
+        let textEle = toNode.data("text");
+        return textEle ? textEle.attr("text") : toNode.data("nodeType");
+      } else {
+        return "";
+      }
+    },
+
+    /**
      * 判断是否为网关
      * @returns {*|null}
      */

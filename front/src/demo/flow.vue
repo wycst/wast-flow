@@ -43,6 +43,10 @@ export default {
       /** 默认条件类型 */
       defaultConditionType: "HandlerCall",
 
+      alertMessage: (message, level) => {
+        this.$message.error(message);
+      },
+
       onConnectCreated(connect) {
       },
 
