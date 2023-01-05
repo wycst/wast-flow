@@ -88,6 +88,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             }
             throw new FlowRuntimeException(throwable.getMessage(), throwable);
         } finally {
+            clearCustomContext();
             endTransaction();
         }
     }

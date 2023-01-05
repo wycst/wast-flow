@@ -1440,7 +1440,7 @@ class GraphicDesign {
                 const {pageX, pageY} = event;
                 canvasDragContext.px = pageX;
                 canvasDragContext.py = pageY;
-                if (me.controlMode) {
+                if (me.enableGroupSelection()) {
                     // 获取鼠标点击的坐标，设置为圈选的位置
                     let {x, y, left, top} = me.dom.getBoundingClientRect()
                     let start = {
@@ -1458,7 +1458,7 @@ class GraphicDesign {
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
-                if (me.controlMode) {
+                if (me.enableGroupSelection()) {
                     let {x, y} = this.groupSelection.data("start");
                     let width = dx, height = dy;
                     if (dx < 0) {
@@ -1489,7 +1489,7 @@ class GraphicDesign {
             }
             const onCanvasDragUp = (event) => {
                 // panto and remove transform
-                if (me.controlMode) {
+                if (me.enableGroupSelection()) {
                     // compute selections
                     me.selectionElements();
                 } else {
@@ -1521,6 +1521,15 @@ class GraphicDesign {
                 }
             });
         }
+    };
+
+    /**
+     * 是否支持圈选
+     *
+     * @returns {boolean|*}
+     */
+    enableGroupSelection() {
+        return this.option.editable && this.controlMode;
     };
 
     /**
@@ -2458,7 +2467,7 @@ class GraphicDesign {
     };
 
     /**
-     * 创建分支节点
+     * 创建聚合节点
      */
     createJoinNode(x, y) {
         return this.createHTMLNode("join", x || 100, y || 150, 64, 64, "Join").attr({
@@ -2467,7 +2476,7 @@ class GraphicDesign {
     };
 
     /**
-     * 创建图片节点
+     * 创建html节点
      *
      * @param src
      * @param x
@@ -2491,7 +2500,7 @@ class GraphicDesign {
     };
 
     /**
-     * 创建节点
+     * 创建矩形节点
      *
      * @param x
      * @param y
@@ -2611,7 +2620,6 @@ class GraphicDesign {
         // nodeText.id = this.getUUID();
         nodeElement.data("text", nodeText);
         nodeElement.attr("title", "id:" + id);
-        this.textEditing(nodeText);
         this.initElement(nodeElement);
         return nodeElement;
     };
@@ -2894,6 +2902,75 @@ class GraphicDesign {
         // }
     };
 
+    /**
+     * 获取连线的矩形信息（x,y,w,h）
+     *
+     * @param connect
+     */
+    getConnectBoundRect(connect) {
+        let type = connect.type;
+        if(type != "path") {
+            return null;
+        }
+        let pathDatas = connect.attr("path");
+
+        let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
+        let lastX = 0, lastY = 0;
+        for(let pathData of pathDatas) {
+            let code = pathData[0];
+            let x, y;
+            let breakFlag = false;
+            switch (code) {
+                case "M":
+                case "L": {
+                    x = pathData[1];
+                    y = pathData[2];
+                    break;
+                }
+                case "H": {
+                    x = pathData[1];
+                    y = lastY;
+                    break;
+                }
+                case "V": {
+                    x = lastX;
+                    y = pathData[1];
+                    break;
+                }
+                case "h": {
+                    x = lastX + pathData[1];
+                    y = lastY;
+                    break;
+                }
+                case "v": {
+                    x = lastX;
+                    y = lastY + pathData[1];
+                    break;
+                }
+                default: {
+                    breakFlag = true;
+                }
+            }
+
+            if(breakFlag) {
+                break;
+            }
+            if(minX === undefined) {
+                minX = maxX = x;
+                minY = maxY = y;
+            } else {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, x);
+            }
+            lastX = x;
+            lastY = y;
+        }
+
+    };
+
     createControlDragRect(x, y, pathElement) {
         let controlDragRect = this.renderRect(x - 2.5, y - 2.5, 5,
             5, 2.5, 2.5).attr({
@@ -3044,27 +3121,21 @@ class GraphicDesign {
         this.dragingLine = null;
     };
 
-    getArrowPathData(x1, y1, x3, y3) {
-
-        let Par = 10.0;
-        let slopy = Math.atan2((y1 - y3),
-            (x1 - x3));
-        let cosy = Math.cos(slopy);
-        let siny = Math.sin(slopy);
-        let pathD = "M" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
-            + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
-        pathD += " L"
-            + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
-                / 2.0 * cosy - Par * siny)));
-        pathD += " L" + x3 + "," + y3;
-        return pathD;
-    };
-
-    textEditing(text) {
-    };
-
-    blurTextEditing() {
-    };
+    // getArrowPathData(x1, y1, x3, y3) {
+    //
+    //     let Par = 10.0;
+    //     let slopy = Math.atan2((y1 - y3),
+    //         (x1 - x3));
+    //     let cosy = Math.cos(slopy);
+    //     let siny = Math.sin(slopy);
+    //     let pathD = "M" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
+    //         + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
+    //     pathD += " L"
+    //         + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
+    //             / 2.0 * cosy - Par * siny)));
+    //     pathD += " L" + x3 + "," + y3;
+    //     return pathD;
+    // };
 
     /**
      * 设置元素可以拖动
@@ -4073,42 +4144,6 @@ class GraphicDesign {
     };
 
     autoContainerSelect(targetElement) {
-        // // 设置节点id
-        // targetElement.data("nodeId", this.getNumberBy(targetElement.id) + "");
-        // let dataType = targetElement.data("type");
-        // if (dataType == "rule") {
-        //     // 规则节点暂时不支持嵌套，直接return
-        //     return;
-        // }
-        // let containers = this.containers;
-        // if (containers) {
-        //     let x = targetElement.attr("x");
-        //     let y = targetElement.attr("y");
-        //     for (let i in containers) {
-        //         let container = containers[i];
-        //         let containerTargetElement = container.target;
-        //
-        //         let containerX = containerTargetElement.attr("x");
-        //         let containerY = containerTargetElement.attr("y");
-        //         let containerW = containerTargetElement.attr("width");
-        //         let containerH = containerTargetElement.attr("height");
-        //
-        //         if (x > containerX && x < (containerX + containerW)
-        //             && y > containerY && y < (containerY + containerH)) {
-        //             // 绑定关系
-        //             targetElement.data("container", containerTargetElement);
-        //             // 重置nodeId
-        //             let nodeId = this.getNumberBy(containerTargetElement.id) + ":" + this.getNumberBy(targetElement.id);
-        //             targetElement.data("nodeId", nodeId);
-        //
-        //             // 在容器中注册
-        //             container.elements[targetElement.id] = targetElement;
-        //             // 设置相对位置
-        //             this.relativePosition(targetElement, containerTargetElement);
-        //             break;
-        //         }
-        //     }
-        // }
     };
 
     isOutContainerBoundary(x, y, w, h, containerElement) {
@@ -4268,45 +4303,6 @@ class GraphicDesign {
 
         return false;
     };
-
-    // /** 获取连线的数据*/
-    // getConnectData(linkElement) {
-    //     let link = {
-    //         id: linkElement.id,
-    //         type: 'link'
-    //     };
-    //     let linkMeta = linkElement.data("meta");
-    //     link.meta = linkMeta || {};
-    //
-    //     let attrs = linkElement.attrs;
-    //     link.attrs = attrs;
-    //
-    //     let from = linkElement.data("from");
-    //     let to = linkElement.data("to");
-    //
-    //     // 如果从xor分支过来的link需要指定expressionRequired = true，即使不配置也需要指定
-    //     if (from.type == "image") {
-    //         let dataType = from.data("type");
-    //         let fromDataOptions = from.data("meta");
-    //         let optionType = fromDataOptions && fromDataOptions.type;
-    //         if (dataType == "diverage" && (optionType == "xor" || optionType == "or")) {
-    //             link.meta.orContraint = true;
-    //         } else {
-    //             delete link.meta.orContraint;
-    //         }
-    //     }
-    //     link.from = this.getNumberBy(from.id);
-    //     link.to = this.getNumberBy(to.id);
-    //     let arrow = linkElement.data("arrow");
-    //     link.arrowAttrs = arrow.attrs;
-    //
-    //     let pathText = linkElement.data("text");
-    //     link.textAttrs = pathText.attrs;
-    //     // 获取link的控制点集合
-    //     link.meta.linkName = pathText.attr("text");
-    //
-    //     return link;
-    // };
 
     /**
      * 获取节点上绑定的数据
@@ -4523,22 +4519,6 @@ class GraphicDesign {
             }
         }
 
-        // for (let containerId in containers) {
-        //     let container = containers[containerId];
-        //     let childElements = container.elements;
-        //
-        //     // 容器集合根属性
-        //     data.containers = data.containers || [];
-        //     let dataContainer = {};
-        //     // 容器id
-        //     dataContainer.containerId = this.getNumberBy(containerId);
-        //     dataContainer.elements = [];
-        //     for (let childElementId in childElements) {
-        //         dataContainer.elements.push(this.getNumberBy(childElementId));
-        //     }
-        //     data.containers.push(dataContainer);
-        // }
-
         data.startNodeId = startNodeId;
 
         return data;
@@ -4606,46 +4586,6 @@ class GraphicDesign {
         // 初始化 idPool
         this.idPool = [];
         this.initIdPond(maxId + 1, maxId + 100);
-
-        // 如果存在子容器（子流程），在所有元素初始化完毕后开始绑定容器与元素的关系
-        // if (editable && data.containers) {
-        //     let containers = data.containers;
-        //     this.containers = {};
-        //     for (let i = 0; i < containers.length; i++) {
-        //         let container = containers[i];
-        //         let containerId = container.containerId;
-        //         // 容器元素
-        //         let containerElement = tempElementMap[Number(containerId)];
-        //         let containerObj = {
-        //             target: containerElement,
-        //             elements: []
-        //         };
-        //         this.containers[containerElement.id] = containerObj;
-        //         let childElementIds = container.elements;
-        //
-        //         for (var j = 0; j < childElementIds.length; j++) {
-        //             let childElementId = childElementIds[j];
-        //             let childElement = tempElementMap[Number(childElementId)];
-        //
-        //             // 离线转在线从bpmn解析出来的id如果是子流程中的元素 childElement.id会被重置，此时 != childElementId
-        //             // tempElementMap中的key存储的初始的id（重置前的id）
-        //             // 用新的id绑定到containerObj.elements中
-        //             containerObj.elements[childElement.id] = childElement;
-        //             // nodeId
-        //             // if (!childElement.data("nodeId") || childElement.data("nodeId").indexOf(":") == -1) {
-        //             //     childElement.data("nodeId", containerElement.data("nodeId") + ":" + childElement.data("nodeId"));
-        //             // }
-        //
-        //             //}
-        //             childElement.data("container", containerElement);
-        //             childElement.data("relativePosition", {
-        //                 x: childElement.attr("x") - containerElement.attr("x"),
-        //                 y: childElement.attr("y") - containerElement.attr("y")
-        //             });
-        //
-        //         }
-        //     }
-        // }
 
         // 最后初始化连线
         for (let i = 0; i < connects.length; i++) {

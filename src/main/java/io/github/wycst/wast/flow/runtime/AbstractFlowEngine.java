@@ -5,7 +5,6 @@ import io.github.wycst.wast.flow.defaults.DefaultFlowEntityManager;
 import io.github.wycst.wast.flow.defaults.DefaultProcessHook;
 import io.github.wycst.wast.flow.definition.*;
 import io.github.wycst.wast.flow.entitys.ProcessDeployEntity;
-import io.github.wycst.wast.flow.handler.ConnectPassHandler;
 import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
@@ -50,10 +49,25 @@ class AbstractFlowEngine implements NodeEngine {
     // 静态资源
     protected String staticResources = "";
 
+    // 支持设置自定义的业务上下文（生命周期为流程实例调用结束）
+    protected final static ThreadLocal<Object> customContextLocal = new ThreadLocal<Object>();
+
     public void setProcessHook(ProcessHook processHook) {
         if (processHook != null) {
             this.processHook = processHook;
         }
+    }
+
+    public static void setCustomContext(Object context) {
+        customContextLocal.set(context);
+    }
+
+    public static Object getCustomContext() {
+        return customContextLocal.get();
+    }
+
+    public static void clearCustomContext() {
+        customContextLocal.remove();
     }
 
     /**
@@ -112,25 +126,25 @@ class AbstractFlowEngine implements NodeEngine {
     }
 
     protected void endTransaction() {
-        if(flowEntityManager != null) {
+        if (flowEntityManager != null) {
             flowEntityManager.endTransaction();
         }
     }
 
     protected void rollbackTransaction() {
-        if(flowEntityManager != null) {
+        if (flowEntityManager != null) {
             flowEntityManager.rollbackTransaction();
         }
     }
 
     protected void commitTransaction() {
-        if(flowEntityManager != null) {
+        if (flowEntityManager != null) {
             flowEntityManager.commitTransaction();
         }
     }
 
     protected void beginTransaction() {
-        if(flowEntityManager != null) {
+        if (flowEntityManager != null) {
             flowEntityManager.beginTransaction();
         }
     }
@@ -165,7 +179,7 @@ class AbstractFlowEngine implements NodeEngine {
     // static
     private void loadStaticResources() {
         try {
-            if(staticResources == null) return;
+            if (staticResources == null) return;
             // 约定:注意路径首字母不能是/,否则为空
             Enumeration<URL> urls = this.getClass().getClassLoader().getResources(staticResources);
             while (urls.hasMoreElements()) {

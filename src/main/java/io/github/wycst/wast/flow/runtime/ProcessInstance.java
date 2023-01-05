@@ -52,6 +52,9 @@ public class ProcessInstance {
     // 网关聚合信息
     private Map<String, JoinCountContext> joinCountContextMap = new HashMap<String, JoinCountContext>();
 
+    // 自定义对象
+    private Object customContext;
+
     ProcessInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         this.id = IdGenerator.hex();
         this.ruleProcess = ruleProcess.self();
@@ -192,5 +195,13 @@ public class ProcessInstance {
 
     void removeJoinCountContext(String joinNodeId) {
         joinCountContextMap.remove(joinNodeId);
+    }
+
+    public Object getCustomContext() {
+        return customContext;
+    }
+
+    public void setCustomContext(Object customContext) {
+        this.customContext = customContext;
     }
 }
