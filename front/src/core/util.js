@@ -72,3 +72,15 @@ export const exportBlob = (blob, filename) => {
         URL.revokeObjectURL(url);
     }
 }
+
+/**
+ * 阻止事件冒泡
+ *
+ * @param evt
+ */
+export const preventDefault = (evt) => {
+    // 阻止默认行为
+    evt.preventDefault();
+    // 阻止冒泡
+    evt.stopPropagation();
+}

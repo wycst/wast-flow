@@ -2,12 +2,15 @@
 import Raphael from 'raphael'
 // 图标库
 import imgs from "./img"
-import {bindDomEvent, exportBlob, exportTextFile} from "./util"
+import {bindDomEvent, exportBlob, exportTextFile, preventDefault} from "./util"
 
 import {ElementData} from "./element"
 
 // 内置html块
 const DefaultHtmlTypes = {
+    select: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+               <path d="M736.21333333 638.08l69.76-54.08c5.22666667-4.05333333 8-10.45333333 7.46666667-17.06666667-0.53333333-6.61333333-4.37333333-12.48-10.24-15.57333333L450.02666666 361.38666666c-6.82666667-3.62666667-15.04-2.98666667-21.12 1.70666667-6.08 4.69333333-8.85333333 12.58666667-7.04 20.05333333l95.57333334 389.54666667c1.6 6.4 6.29333333 11.62666667 12.48 13.76 6.18666667 2.13333333 13.12 1.06666667 18.34666666-2.98666667l69.86666667-54.08L769.06666666 924.37333333c3.2 4.05333333 7.78666667 6.72 12.90666667 7.36 0.85333333 0.10666667 1.6 0.10666667 2.45333333 0.10666667 4.26666667 0 8.53333333-1.38666667 11.94666667-4.05333334l87.25333333-67.52c8.53333333-6.61333333 10.02666667-18.88 3.52-27.30666666L736.21333333 638.08zM178.24 282.02666666l-31.25333334-21.01333333c-14.61333333 21.76-27.30666667 44.90666667-37.86666666 68.90666667l34.56 15.14666666c9.6-21.86666667 21.22666667-43.09333333 34.56-63.04zM549.54666666 103.89333333l3.2-37.54666667c-26.02666667-2.24-52.69333333-2.13333333-78.50666666 0.21333334l3.41333333 37.54666666c23.57333333-2.13333333 48-2.24 71.89333333-0.21333333zM120.74666666 413.22666666l-36.69333333-8.74666666c-6.08 25.38666667-9.92 51.52-11.30666667 77.76l37.65333334 2.13333333c1.38666667-24 4.8-47.89333333 10.34666666-71.14666667zM112.64 556.26666666l-37.44 4.48c3.09333333 26.02666667 8.64 51.94666667 16.32 76.90666667l36.05333333-11.09333333c-7.04-22.82666667-12.05333333-46.50666667-14.93333333-70.29333334zM919.36 327.46666666c-10.66666667-23.89333333-23.46666667-46.93333333-38.29333334-68.58666666l-31.14666666 21.22666666c13.44 19.84 25.28 40.96 34.98666666 62.82666667l34.45333334-15.46666667zM831.36 197.97333333c-18.34666667-18.77333333-38.4-35.94666667-59.62666667-51.09333333L749.86666666 177.6c19.52 13.86666667 37.86666667 29.65333333 54.61333334 46.82666666l26.88-26.45333333zM703.89333333 107.09333333c-23.68-11.2-48.53333333-20.37333333-73.81333333-27.09333333l-9.81333334 36.37333333c23.14666667 6.18666667 45.86666667 14.61333333 67.52 24.85333333l16.10666667-34.13333333zM277.76 178.98666666l-22.08-30.50666666c-21.22666667 15.36-41.17333333 32.64-59.41333334 51.52l27.09333334 26.13333333c16.74666667-17.28 35.09333333-33.06666667 54.4-47.14666667zM348.90666666 918.08c24.32 9.81333333 49.6 17.49333333 75.2 22.82666666l7.68-36.90666666c-23.46666667-4.90666667-46.61333333-11.94666667-68.8-20.90666667l-14.08 34.98666667zM503.25333333 912.42666666l-1.06666667 37.65333334c4.16 0.10666667 8.42666667 0.21333333 12.58666667 0.21333333 21.97333333 0 44.16-1.6 65.81333333-4.90666667l-5.54666666-37.22666666c-23.57333333 3.52-47.89333333 4.90666667-71.78666667 4.26666666zM944.85333333 401.81333333l-36.58666667 8.96c5.65333333 23.14666667 9.28 47.14666667 10.77333334 71.04l37.65333333-2.34666667c-1.70666667-26.13333333-5.65333333-52.26666667-11.84-77.65333333zM396.8 80.64c-25.28 6.93333333-50.02666667 16.21333333-73.6 27.62666666l16.32 33.92c21.54666667-10.34666667 44.26666667-18.88 67.30666666-25.17333333L396.8 80.64zM121.17333333 710.4c11.94666667 23.25333333 26.13333333 45.54666667 42.13333333 66.34666666l29.86666667-22.93333333c-14.61333333-18.98666667-27.52-39.46666667-38.50666667-60.69333333L121.17333333 710.4zM216.42666666 834.66666666c19.30666667 17.70666667 40.42666667 33.70666667 62.50666667 47.68l20.05333333-31.89333333c-20.26666667-12.8-39.46666667-27.41333333-57.17333333-43.62666667l-25.38666667 27.84z"></path>
+            </svg>`,
     start: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                <path d="M400.43759 732.273456a71.33239 71.33239 0 0 0 34.157473 8.810938 75.556813 75.556813 0 0 0 41.157944-12.069778l219.790665-144.837341a85.574729 85.574729 0 0 0 38.502593-72.418671 83.402169 83.402169 0 0 0-37.295615-70.608203l-221.842527-144.837341a72.41867 72.41867 0 0 0-74.591231-3.741631 84.488449 84.488449 0 0 0-41.761433 75.436115v289.674681a84.488449 84.488449 0 0 0 41.882131 74.591231z m42.002829-82.315889V374.163131l207.600188 135.664309v0.965582a13.156058 13.156058 0 0 1 0 2.293258z"></path>
                <path d="M149.989688 874.093352a509.948138 509.948138 0 1 0-109.714286-162.700613 513.206978 513.206978 0 0 0 109.714286 162.700613zM84.571489 512a428.11504 428.11504 0 1 1 427.511551 428.11504A428.597831 428.597831 0 0 1 84.571489 512z" ></path>
@@ -296,6 +299,7 @@ const defaultOption = {
  */
 const extensionTemplate = `
     <div class="flow-menu" style="display:none;z-index: 100;">
+        <div class="menu-item" data-type="select" draggable="true" title="圈选，可使用快捷键按住ctrl替代"></div>
         <div class="menu-item" data-type="start" draggable="true" title="开始"></div>
 <!--        <div>开始</div>-->
         <div class="menu-item" data-type="task" draggable="true" title="任务节点"></div>
@@ -384,7 +388,7 @@ class GraphicDesign {
         this.paper = new Raphael(dom, width, height);
         Object.assign(this.paper.canvas.style, {
             userSelect: "none",
-            cursor: "grab"
+            cursor: "default"
         });
         // 连线颜色作为箭头的颜色
         this.connectColors = [this.option.settings.themeColor];
@@ -534,6 +538,30 @@ class GraphicDesign {
         }).hide();
         this.verticalLine.node.setAttribute("stroke-dasharray", "12 12");
 
+        // 连线矩形（解决连线选择难问题）
+        this.connectRect = this.renderRect(0, 0, 0, 0).attr({
+            // stroke: this.option.settings.themeColor,
+            fill: "transparent",
+            "stroke-width": 1,
+            opacity: .5
+        }).hide();
+        this.connectRect.node.setAttribute("stroke-dasharray", "2 2");
+        this.connectRect.hover(() => {}, function() {
+            this.hide();
+        }).click(function(e) {
+            preventDefault(e);
+            let target = this.data("target");
+            if(target) {
+                me.handleClickElement(target, e);
+            }
+        }).dblclick(function (e) {
+            preventDefault(e);
+            let target = this.data("target");
+            if(target) {
+                me.handleDblclickElement(target, e);
+            }
+        })
+
         // 工具栏
         // 连线工具（图片）
         this.linkTool = this.paper.image(imgs.sequenceflow, 0, 0, 16, 16).hide();
@@ -575,7 +603,6 @@ class GraphicDesign {
         }).hide();
         this.nextTaskTool.click(function (evt) {
             // create next task
-            console.log(evt);
             me.nextNode();
         });
 
@@ -593,7 +620,6 @@ class GraphicDesign {
         }).hide();
         this.nextSplitTool.click(function (evt) {
             // create next task
-            console.log(evt);
             me.nextSplit();
         });
 
@@ -615,7 +641,6 @@ class GraphicDesign {
         }).hide();
         this.nextEndTool.click(function (evt) {
             // create next task
-            console.log(evt);
             me.nextEnd();
         });
     };
@@ -892,8 +917,7 @@ class GraphicDesign {
                 onDragStart(event, menuDom);
                 document.addEventListener("mousemove", onDragMove);
                 document.addEventListener("mouseup", onDragUp);
-                event.stopPropagation();
-                event.preventDefault();
+                preventDefault(event);
             });
         }
 
@@ -910,23 +934,26 @@ class GraphicDesign {
                 height: `${height}px`,
                 margin: "10px 0 4px 0"
             });
-            if (type == "selection") {
-                // item.style.cursor = `pointer`;
-                // item.style.background = `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=) 50% no-repeat`
+            if (type == "select") {
                 // 绑定全选事件
+                item.style.cursor = `pointer`;
+                item.innerHTML = DefaultHtmlTypes["select"];
+                // 点击处理
+                bindDomEvent(item, "click", function (event) {
+                    me.groupSelectionMode = true;
+                    preventDefault(event);
+                });
+
             } else if (type == "reset") {
                 item.style.cursor = `pointer`;
-                //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["reset"];
                 bindDomEvent(item, "mousedown", function (event) {
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
                     me.reset();
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
             } else if (type == "exp") {
                 item.style.cursor = `pointer`;
@@ -934,42 +961,36 @@ class GraphicDesign {
                 item.innerHTML = DefaultHtmlTypes["exp"];
                 // 点击处理
                 bindDomEvent(item, "mousedown", function (event) {
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
                     me.exportJSON();
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
             } else if (type == "imp") {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["imp"];
                 bindDomEvent(item, "mousedown", function (event) {
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
                     me.importJSON();
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
             } else if (type == "picture") {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes["picture"];
                 bindDomEvent(item, "mousedown", function (event) {
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
                     me.exportImage();
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
             } else {
                 Object.assign(item.style, {
@@ -982,8 +1003,7 @@ class GraphicDesign {
                     onDragStart(event, item);
                     document.addEventListener("mousemove", onDragMove);
                     document.addEventListener("mouseup", onDragUp);
-                    event.stopPropagation();
-                    event.preventDefault();
+                    preventDefault(event);
                 });
             }
         });
@@ -1426,7 +1446,7 @@ class GraphicDesign {
 
         this.handleDocumentKeyUp = (event) => {
             me.controlMode = false;
-            me.paper.canvas.style.cursor = "grab";
+            me.paper.canvas.style.cursor = "default";
         }
 
         // 键盘事件(在销毁时需要移除)
@@ -1449,11 +1469,13 @@ class GraphicDesign {
                     };
                     this.groupSelection.data("start", start);
                 } else {
+                    me.paper.canvas.style.cursor = "grab";
                     canvasDragContext.translateX = me.translateX;
                     canvasDragContext.translateY = me.translateY;
                 }
             }
             const onCanvasDragMove = (event) => {
+                console.log(" onCanvasDragMove ", canvasDragContext);
                 canvasDragContext.moved = true;
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
@@ -1503,8 +1525,12 @@ class GraphicDesign {
                 if (!canvasDragContext.moved) {
                     // only click
                     me.resetGroupSelection();
+                } else {
+                    me.connectRect.hide();
                 }
                 canvasDragContext.moved = false;
+                me.paper.canvas.style.cursor = "default";
+
                 document.removeEventListener("mousemove", onCanvasDragMove);
                 document.removeEventListener("mouseup", onCanvasDragUp);
             }
@@ -1513,11 +1539,9 @@ class GraphicDesign {
                 if (!me.dragingElement && !me.disablePan) {
                     onCanvasDragStart(event);
                     me.endInputEdit();
-                    // me.resetGroupSelection();
                     document.addEventListener("mousemove", onCanvasDragMove);
                     document.addEventListener("mouseup", onCanvasDragUp);
-                    // event.stopPropagation();
-                    // event.preventDefault();
+                    preventDefault(event);
                 }
             });
         }
@@ -1594,7 +1618,6 @@ class GraphicDesign {
         //     this.groupSelection.hide();
         //     this.selections = [];
         // }
-        console.log("handleClickBlank ");
         this.closePopwin();
     };
 
@@ -1610,8 +1633,7 @@ class GraphicDesign {
     // 右键事件
     handleContextmenu(evt) {
         this.option.onContextMenu && this.option.onContextMenu(evt);
-        evt.preventDefault();
-        evt.stopPropagation();
+        preventDefault(evt);
         return false;
     };
 
@@ -2054,30 +2076,26 @@ class GraphicDesign {
         // 添加单击事件
         let me = this;
         targetElement.click(function (e) {
-            let selectElement = me.selectElement;
-            if (selectElement) {
-                me.hideEditElements(selectElement);
-            }
-            me.showEditElements(me.selectElement = targetElement);
             // 阻止冒泡
-            e.stopPropagation();
-            me.option.clickElement && me.option.clickElement(targetElement, e);
+            preventDefault(e);
+            me.handleClickElement(targetElement, e);
         });
 
         if (targetElement.data('text')) {
             targetElement.data('text').click(function (e) {
                 me.beginInputEdit(targetElement);
+                preventDefault(e);
             });
             targetElement.data('text').dblclick(function (e) {
                 // 点击文本直接修改文本，不再触发双击事件
                 // me.option.dblclickElement && me.option.dblclickElement(targetElement, e);
                 me.beginInputEdit(targetElement);
-                e.stopPropagation();
+                preventDefault(e);
             });
         }
 
         targetElement.dblclick(function (e) {
-            e.stopPropagation();
+            preventDefault(e);
             me.handleDblclickElement(targetElement, e);
         });
 
@@ -2085,11 +2103,31 @@ class GraphicDesign {
         if(targetElement.type == "path") {
             // 解决连线不好选中的问题
             targetElement.hover(function () {
-                this.attr("stroke-width", 4);
+                let connectAttrs = me.getConnectBoundRect(targetElement);
+                me.connectRect.attr(connectAttrs).show();
+                me.connectRect.data("target", targetElement);
+                // this.attr("stroke-width", 4);
             }, function () {
-                this.attr("stroke-width", 2);
+                // this.attr("stroke-width", 2);
+                // me.connectRect.attr("stroke-width", 0);
             });
         }
+    };
+
+    /**
+     * 响应单击事件
+     *
+     * @param element
+     * @param evt
+     */
+    handleClickElement(element, evt) {
+        let me = this;
+        let selectElement = me.selectElement;
+        if (selectElement) {
+            me.hideEditElements(selectElement);
+        }
+        me.showEditElements(me.selectElement = element);
+        me.option.clickElement && me.option.clickElement(element, evt);
     };
 
     /**
@@ -2101,7 +2139,6 @@ class GraphicDesign {
         this.option.dblclickElement && this.option.dblclickElement(element, evt);
         // 文本编辑
         this.beginInputEdit(element);
-        // 内部编辑
         if (this.option.enablePropertyPop) {
             this.openElementPropertyPop(element);
         }
@@ -2963,12 +3000,18 @@ class GraphicDesign {
                 minY = Math.min(minY, y);
 
                 maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, x);
+                maxY = Math.max(maxY, y);
             }
             lastX = x;
             lastY = y;
         }
 
+        return {
+            x: minX - 5,
+            y: minY - 5,
+            width: maxX - minX + 10,
+            height: maxY - minY + 10
+        }
     };
 
     createControlDragRect(x, y, pathElement) {
