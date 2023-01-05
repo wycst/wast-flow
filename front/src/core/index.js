@@ -940,7 +940,8 @@ class GraphicDesign {
                 item.innerHTML = DefaultHtmlTypes["select"];
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
-                    me.groupSelectionMode = true;
+                    me.controlMode = true;
+                    me.paper.canvas.style.cursor = "crosshair";
                     preventDefault(event);
                 });
 
@@ -1437,10 +1438,10 @@ class GraphicDesign {
                     return false;
                 }
             } else if (e.keyCode == 17) {
+                me.resetGroupSelection();
                 // Control
                 me.controlMode = true;
                 me.paper.canvas.style.cursor = "crosshair";
-                me.resetGroupSelection();
             }
         }
 
@@ -1475,11 +1476,14 @@ class GraphicDesign {
                 }
             }
             const onCanvasDragMove = (event) => {
-                console.log(" onCanvasDragMove ", canvasDragContext);
-                canvasDragContext.moved = true;
                 const {pageX, pageY} = event;
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
+
+                if(dx * dx + dy * dy > 0) {
+                    canvasDragContext.moved = true;
+                }
+
                 if (me.enableGroupSelection()) {
                     let {x, y} = this.groupSelection.data("start");
                     let width = dx, height = dy;
@@ -1528,6 +1532,7 @@ class GraphicDesign {
                 } else {
                     me.connectRect.hide();
                 }
+                me.controlMode = false;
                 canvasDragContext.moved = false;
                 me.paper.canvas.style.cursor = "default";
 

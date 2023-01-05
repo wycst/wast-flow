@@ -73,7 +73,7 @@ export default {
     },
     dblclickElement(element, evt) {
       this.selectElement = element;
-      this.propertyVisible = true;
+      // this.propertyVisible = true;
     },
     validateProcess() {
       let error = this.graphicDesign.validate();
