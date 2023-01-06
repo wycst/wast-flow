@@ -278,7 +278,7 @@ class ElementData {
                 setterMode = true;
             }
         }
-        let result = getOrSetValue(this.attrs, arguments);
+        let result = getOrSetValue(this.attrs || (this.attrs = {}), arguments);
         return setterMode ? this : result;
     };
 
@@ -289,7 +289,7 @@ class ElementData {
         let len = arguments.length;
         let p1 = arguments[0];
         let setterMode = len > 1 || (p1 && typeof p1 == "object");
-        let result = getOrSetValue(this.datas, arguments);
+        let result = getOrSetValue(this.datas || (this.datas = {}), arguments);
         return setterMode ? this : result;
     };
 

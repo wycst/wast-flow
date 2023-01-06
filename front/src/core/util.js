@@ -30,7 +30,7 @@ export const unbindDomEvent = (dom, eventName, eventFn) => {
     } else if (dom.deachEvent) {
         dom.deachEvent(onEventName, eventFn);
     } else {
-        dom[onEventName] = eventFn;
+        dom[onEventName] = null;
     }
 }
 

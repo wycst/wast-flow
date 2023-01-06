@@ -5,6 +5,7 @@ import imgs from "./img"
 import {bindDomEvent, exportBlob, exportTextFile, preventDefault} from "./util"
 
 import {ElementData} from "./element"
+import historyActions from "./modules/history"
 
 // 内置html块
 const DefaultHtmlTypes = {
@@ -216,6 +217,11 @@ const defaultOption = {
      * 禁用辅助对齐线
      */
     disableAlignLine: false,
+
+    /**
+     * 启用历史记录
+     */
+    enableHistory: true,
 
     /**
      * 默认条件类型
@@ -546,18 +552,19 @@ class GraphicDesign {
             opacity: .5
         }).hide();
         this.connectRect.node.setAttribute("stroke-dasharray", "2 2");
-        this.connectRect.hover(() => {}, function() {
+        this.connectRect.hover(() => {
+        }, function () {
             this.hide();
-        }).click(function(e) {
+        }).click(function (e) {
             preventDefault(e);
             let target = this.data("target");
-            if(target) {
+            if (target) {
                 me.handleClickElement(target, e);
             }
         }).dblclick(function (e) {
             preventDefault(e);
             let target = this.data("target");
-            if(target) {
+            if (target) {
                 me.handleDblclickElement(target, e);
             }
         })
@@ -653,18 +660,13 @@ class GraphicDesign {
         let target = this.groupSelection;
         let dragContext = {ox: 0, oy: 0, dx: 0, dy: 0};
         target.drag((dx, dy) => {
+            // move
             if (!me.option.editable) return;
             let location = {
                 x: dragContext.ox + dx,
                 y: dragContext.oy + dy
             };
-            // if (location.x < 0 || location.y < 0) {
-            //     return;
-            // }
             target.attr(location);
-
-            // me.handleAlignLines(target);
-
             let panX = dx - dragContext.dx;
             let panY = dy - dragContext.dy;
             dragContext.dx = dx;
@@ -672,9 +674,9 @@ class GraphicDesign {
             // update select elements position
             me.elementsPanTo(this.selections, panX, panY);
         }, (event) => {
+            // start down
             if (!me.option.editable) return;
             me.dragingElement = target;
-
             // storing original coordinates
             dragContext.ox = target.attr("x");
             dragContext.oy = target.attr("y");
@@ -683,14 +685,22 @@ class GraphicDesign {
             });
             target.attr("cursor", "move");
             me.hideEditElements(me.selectElement);
+            // 记录undo快照
+            if (me.enableHistory()) {
+                dragContext.undoData = JSON.stringify(me.getData());
+            }
             return false;
         }, () => {
+            //end up
             if (!me.option.editable) return;
             me.dragingElement = null;
             target.attr({opacity: 1});
+            if (me.enableHistory()) {
+                let data = JSON.stringify(me.getData());
+                let undoData = dragContext.undoData;
+                me.addAction({undo: () => me.setData(undoData), redo: () => me.setData(data)});
+            }
             dragContext = {ox: 0, oy: 0, dx: 0, dy: 0};
-            // this.selections = [];
-            // me.hideAlignLines();
         });
     };
 
@@ -897,7 +907,20 @@ class GraphicDesign {
          */
         const onDragUp = (event) => {
             if (dragContext.element) {
-                dragContext.element.attr({opacity: 1});
+                let element = dragContext.element;
+                element.attr({opacity: 1});
+                // 支持撤销
+                if (me.enableHistory()) {
+                    let elementData = me.toElementData(element);
+                    me.addAction({
+                        undo: function () {
+                            me.removeElement(element);
+                        },
+                        redo: function () {
+                            me.fromElementData(elementData);
+                        }
+                    });
+                }
             }
             delete dragContext.type;
             delete dragContext.element;
@@ -940,7 +963,7 @@ class GraphicDesign {
                 item.innerHTML = DefaultHtmlTypes["select"];
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
-                    me.controlMode = true;
+                    me.groupSelectionMode = true;
                     me.paper.canvas.style.cursor = "crosshair";
                     preventDefault(event);
                 });
@@ -1438,16 +1461,30 @@ class GraphicDesign {
                     return false;
                 }
             } else if (e.keyCode == 17) {
-                me.resetGroupSelection();
                 // Control
-                me.controlMode = true;
+                me.resetGroupSelection();
+                me.groupSelectionMode = true;
                 me.paper.canvas.style.cursor = "crosshair";
+            } else if (e.keyCode == 89) {
+                if (e.ctrlKey) {
+                    // ctrl+Y(前进)
+                    me.redo();
+                }
+            } else if (e.keyCode == 90) {
+                if (e.ctrlKey) {
+                    // ctrl+z（后退）
+                    me.undo();
+                }
             }
+            console.log(e);
         }
 
         this.handleDocumentKeyUp = (event) => {
-            me.controlMode = false;
-            me.paper.canvas.style.cursor = "default";
+            // Control up
+            if (event.keyCode == 17) {
+                me.groupSelectionMode = false;
+                me.paper.canvas.style.cursor = "default";
+            }
         }
 
         // 键盘事件(在销毁时需要移除)
@@ -1480,7 +1517,7 @@ class GraphicDesign {
                 let dx = pageX - canvasDragContext.px;
                 let dy = pageY - canvasDragContext.py;
 
-                if(dx * dx + dy * dy > 0) {
+                if (dx * dx + dy * dy > 0) {
                     canvasDragContext.moved = true;
                 }
 
@@ -1503,10 +1540,7 @@ class GraphicDesign {
                         height,
                         stroke: this.option.settings.themeColor
                     }).show();
-                    // 设置圈选模式
-                    me.groupSelectionMode = true;
                 } else {
-                    me.groupSelectionMode = false;
                     me.translateX = canvasDragContext.translateX + dx;
                     me.translateY = canvasDragContext.translateY + dy;
                     me.hideEditElements(this.selectElement);
@@ -1519,10 +1553,6 @@ class GraphicDesign {
                     // compute selections
                     me.selectionElements();
                 } else {
-                    if (this.groupSelectionMode) {
-                        me.resetGroupSelection();
-                        // me.groupSelectionMode = false;
-                    }
                     me.panTo(me.translateX, me.translateY);
                 }
 
@@ -1532,7 +1562,7 @@ class GraphicDesign {
                 } else {
                     me.connectRect.hide();
                 }
-                me.controlMode = false;
+                me.groupSelectionMode = false;
                 canvasDragContext.moved = false;
                 me.paper.canvas.style.cursor = "default";
 
@@ -1558,7 +1588,14 @@ class GraphicDesign {
      * @returns {boolean|*}
      */
     enableGroupSelection() {
-        return this.option.editable && this.controlMode;
+        return this.option.editable && this.groupSelectionMode;
+    };
+
+    /**
+     * 启用历史管理
+     */
+    enableHistory() {
+        return this.option.enableHistory;
     };
 
     /**
@@ -1607,7 +1644,6 @@ class GraphicDesign {
     resetGroupSelection() {
         this.groupSelection.hide();
         this.selections = [];
-        this.groupSelectionMode = false;
     };
 
     // 单击事件
@@ -1978,13 +2014,15 @@ class GraphicDesign {
 
     delSelectElement() {
         if (this.selectElement) {
-            this.hideEditElements(this.selectElement);
             this.removeElement(this.selectElement);
             this.selectElement = null;
         }
     };
 
     removeElement(targetElement) {
+        if (this.selectElement == targetElement) {
+            this.hideEditElements(targetElement);
+        }
         let type = targetElement.type;
         let dataObject = targetElement.data();
         if (type == "rect" || type == "image" || type == "html") {
@@ -2105,7 +2143,7 @@ class GraphicDesign {
         });
 
         // 连线选中问题
-        if(targetElement.type == "path") {
+        if (targetElement.type == "path") {
             // 解决连线不好选中的问题
             targetElement.hover(function () {
                 let connectAttrs = me.getConnectBoundRect(targetElement);
@@ -2951,14 +2989,14 @@ class GraphicDesign {
      */
     getConnectBoundRect(connect) {
         let type = connect.type;
-        if(type != "path") {
+        if (type != "path") {
             return null;
         }
         let pathDatas = connect.attr("path");
 
         let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
         let lastX = 0, lastY = 0;
-        for(let pathData of pathDatas) {
+        for (let pathData of pathDatas) {
             let code = pathData[0];
             let x, y;
             let breakFlag = false;
@@ -2994,10 +3032,10 @@ class GraphicDesign {
                 }
             }
 
-            if(breakFlag) {
+            if (breakFlag) {
                 break;
             }
-            if(minX === undefined) {
+            if (minX === undefined) {
                 minX = maxX = x;
                 minY = maxY = y;
             } else {
@@ -3192,16 +3230,28 @@ class GraphicDesign {
      */
     dragableElement(target) {
         let me = this;
+        let context = {
+            moved: false
+        };
         // 支持拖拽
         target.drag((dx, dy) => {
             // drag move
             if (!me.option.editable) return;
             me.elementDragMove(target, dx, dy);
+            if (!context.moved) {
+                if (dx * dx + dy * dy > 0) {
+                    context.moved = true;
+                }
+            }
         }, (event) => {
             // drag start
             if (!me.option.editable) return;
             me.elementDragStart(target);
             me.dragingElement = target;
+            // history
+            if (me.enableHistory()) {
+                context.undoData = JSON.stringify(me.getData());
+            }
             return false;
         }, () => {
             // drag up
@@ -3209,6 +3259,12 @@ class GraphicDesign {
             me.dragingElement = null;
             target.attr({opacity: 1});
             me.hideAlignLines();
+            if (me.enableHistory() && context.moved) {
+                let data = JSON.stringify(me.getData());
+                let undoData = context.undoData;
+                me.addAction({undo: () => me.setData(undoData), redo: () => me.setData(data)});
+            }
+            context = {};
         });
     };
 
@@ -4497,6 +4553,117 @@ class GraphicDesign {
     };
 
     /**
+     * 将element转化为数据(for getData)
+     *
+     * @param element
+     * @returns {{toId, component: {textAttrs, type, attrs}, name, id, fromId}|{}}
+     */
+    toElementData(element) {
+        // 组件类型
+        let componentType = element.type;
+        // 节点类型
+        if (componentType != "path") {
+            let node = {};
+            let nodeType = element.data("nodeType");
+            let textEle = element.data("text");
+            let attrs = {...element.attrs};
+            let component = {
+                type: componentType,
+                attrs,
+                textAttrs: textEle && textEle.attrs
+            };
+            // 移除无关属性，减少输出数据大小
+            delete attrs.opacity;
+            delete attrs.cursor;
+            if (componentType == 'image') {
+                delete attrs.src;
+                delete component.textAttrs;
+            }
+            // node
+            Object.assign(node, {
+                id: element.id,
+                name: textEle && textEle.attr("text"),
+                type: nodeType,
+                ...this.getElementDatas(element, this.nodeDatas),
+                component
+            });
+            return node;
+        } else {
+            let from = element.data("from");
+            let to = element.data("to");
+            let pathText = element.data("text");
+            let connect = {
+                id: element.id,
+                name: pathText.attr("text"),
+                fromId: from.id,
+                toId: to.id,
+                ...this.getElementDatas(element, this.connectDatas),
+                component: {
+                    type: componentType,
+                    // 线段(broken)/直线（line）/水平-垂直（h2v）/垂直-水平(v2h)/贝塞尔曲线（curve）
+                    attrs: element.attrs,
+                    textAttrs: pathText.attrs,
+                    // arrowAttrs: element.data("arrow").attrs,
+                }
+            }
+            return connect;
+        }
+    };
+
+    /**
+     * 将数据转化为element(for setData)
+     *
+     * @param elementData
+     */
+    fromElementData(elementData) {
+        let {id, type, gateway, component} = elementData;
+        let element = null;
+        if (component.type == "path") {
+            let {fromId, toId} = elementData;
+            let fromElement = this.elements[fromId];
+            let toElement = this.elements[toId];
+            element = this.createConnectElement(elementData, fromElement,
+                toElement);
+            this.setElementDatas(element, this.connectDatas, elementData);
+            this.setConnectType(element, elementData.conditionType);
+        } else {
+            switch (type) {
+                case "Start": {
+                    // element = this.loadImageElement(id, imgs.start, component, "Start");
+                    element = this.loadHTMLElement(id, "start", component, "Start"); //.attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, elementData);
+                    break;
+                }
+                case "End": {
+                    // element = this.loadImageElement(id, imgs.end, component, "End");
+                    element = this.loadHTMLElement(id, "end", component, "End"); //.attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, elementData);
+                    break;
+                }
+                case "Split": {
+                    // 网关类型gateway： xor, or, and
+                    let splitType = gateway.toLowerCase();
+                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, elementData);
+                    break;
+                }
+                case "Join": {
+                    element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.option.settings.themeColor});
+                    this.setElementDatas(element, this.nodeDatas, elementData);
+                    break;
+                }
+                default: {
+                    element = this.createNodeElement(elementData);
+                    this.setElementDatas(element, this.nodeDatas, elementData);
+                    element.data("nodeType", type);
+                }
+            }
+        }
+
+        this.elements[id] = element;
+    };
+
+    /**
      * 获取绘制的流程图数据
      *
      * */
@@ -4506,69 +4673,26 @@ class GraphicDesign {
             name: this.processName || ""
         };
         let startNodeId = null;
-        let {elements, containers} = this;
+        let {elements} = this;
         let nodes = (data.nodes = []), connects = (data.connects = []);
         for (let id in elements) {
             let element = elements[id];
+            let elementData = this.toElementData(element);
             // 组件类型
             let componentType = element.type;
-            // 数据类型
-            let dataType = element.data("type");
             // 节点类型
             if (componentType != "path") {
-                let node = {};
                 let nodeType = element.data("nodeType");
-                let textEle = element.data("text");
                 if (nodeType == "Start") {
                     startNodeId = id;
                 }
-                let attrs = {...element.attrs};
-                let component = {
-                    type: componentType,
-                    attrs,
-                    textAttrs: textEle && textEle.attrs
-                };
-                // 移除无关属性，减少输出数据大小
-                delete attrs.opacity;
-                delete attrs.cursor;
-                if (componentType == 'image') {
-                    delete attrs.src;
-                    delete component.textAttrs;
-                }
-
-                // node
-                Object.assign(node, {
-                    id: element.id,
-                    name: textEle && textEle.attr("text"),
-                    type: nodeType,
-                    ...this.getElementDatas(element, this.nodeDatas),
-                    component
-                });
-                nodes.push(node);
+                nodes.push(elementData);
             } else {
-                let from = element.data("from");
-                let to = element.data("to");
-                let pathText = element.data("text");
-                let connect = {
-                    id: element.id,
-                    name: pathText.attr("text"),
-                    fromId: from.id,
-                    toId: to.id,
-                    ...this.getElementDatas(element, this.connectDatas),
-                    component: {
-                        type: componentType,
-                        // 线段(broken)/直线（line）/水平-垂直（h2v）/垂直-水平(v2h)/贝塞尔曲线（curve）
-                        attrs: element.attrs,
-                        textAttrs: pathText.attrs,
-                        // arrowAttrs: element.data("arrow").attrs,
-                    }
-                }
-                connects.push(connect);
+                connects.push(elementData);
             }
         }
 
         data.startNodeId = startNodeId;
-
         return data;
     };
 
@@ -4590,62 +4714,14 @@ class GraphicDesign {
 
         this.processId = id;
         this.processName = name;
-        // 重构数据结构
-        let maxId = 0;
+
         for (let node of nodes) {
-            let {id, type, gateway, component} = node;
-            if (!isNaN(id)) {
-                maxId = Math.max(maxId, id);
-            }
-            let element = null;
-            switch (type) {
-                case "Start": {
-                    // element = this.loadImageElement(id, imgs.start, component, "Start");
-                    element = this.loadHTMLElement(id, "start", component, "Start"); //.attr({color: this.option.settings.themeColor});
-                    this.setElementDatas(element, this.nodeDatas, node);
-                    break;
-                }
-                case "End": {
-                    // element = this.loadImageElement(id, imgs.end, component, "End");
-                    element = this.loadHTMLElement(id, "end", component, "End"); //.attr({color: this.option.settings.themeColor});
-                    this.setElementDatas(element, this.nodeDatas, node);
-                    break;
-                }
-                case "Split": {
-                    // 网关类型gateway： xor, or, and
-                    let splitType = gateway.toLowerCase();
-                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.option.settings.themeColor});
-                    this.setElementDatas(element, this.nodeDatas, node);
-                    break;
-                }
-                case "Join": {
-                    element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.option.settings.themeColor});
-                    this.setElementDatas(element, this.nodeDatas, node);
-                    break;
-                }
-                default: {
-                    element = this.createNodeElement(node);
-                    this.setElementDatas(element, this.nodeDatas, node);
-                    element.data("nodeType", type);
-                }
-            }
-            this.elements[id] = element;
+            this.fromElementData(node);
         }
-        // 初始化 idPool
-        this.idPool = [];
-        this.initIdPond(maxId + 1, maxId + 100);
 
         // 最后初始化连线
-        for (let i = 0; i < connects.length; i++) {
-            let connectData = connects[i];
-            let {fromId, toId} = connectData;
-            let fromElement = this.elements[fromId];
-            let toElement = this.elements[toId];
-            let connectElement = this.createConnectElement(connectData, fromElement,
-                toElement);
-            this.setElementDatas(connectElement, this.connectDatas, connectData);
-            this.setConnectType(connectElement, connectData.conditionType);
-            this.elements[connectElement.id] = connectElement;
+        for (let connect of connects) {
+            this.fromElementData(connect);
         }
 
         this.setElementsColor(this.option.settings.themeColor);
@@ -5142,6 +5218,12 @@ class GraphicDesign {
         document.removeEventListener("keyup", this.handleDocumentKeyUp);
     }
 }
+
+// 针对流程图的指定动作做历史管理
+// 创建元素（节点/连线）, 拖拽位置变化, 删除元素， 整体平移， 属性设置等
+let {properties, methods} = historyActions;
+Object.assign(GraphicDesign.prototype, properties);
+Object.assign(GraphicDesign.prototype, methods);
 
 /**
  * 简化构建实例api
