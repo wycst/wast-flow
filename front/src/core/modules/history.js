@@ -22,7 +22,7 @@ export default {
             action.uid = ++uid;
             // 移除从currentActionIndex开始往后的记录
             this.historyActions.splice(++this.currentActionIndex, this.historyActions.length - this.currentActionIndex, action);
-            if (this.historyActions.length > 10) {
+            if (this.historyActions.length > 20) {
                 this.historyActions.shift();
                 --this.currentActionIndex;
             }

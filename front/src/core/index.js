@@ -911,10 +911,11 @@ class GraphicDesign {
                 element.attr({opacity: 1});
                 // 支持撤销
                 if (me.enableHistory()) {
+                    let elementId = element.id;
                     let elementData = me.toElementData(element);
                     me.addAction({
                         undo: function () {
-                            me.removeElement(element);
+                            me.deleteElementById(elementId);
                         },
                         redo: function () {
                             me.fromElementData(elementData);
@@ -1031,6 +1032,14 @@ class GraphicDesign {
                 });
             }
         });
+    };
+
+    /**
+     * 添加历史活动
+     *
+     * @param action
+     */
+    addAction(action) {
     };
 
     /**
@@ -1549,11 +1558,12 @@ class GraphicDesign {
             }
             const onCanvasDragUp = (event) => {
                 // panto and remove transform
+
                 if (me.enableGroupSelection()) {
                     // compute selections
                     me.selectionElements();
                 } else {
-                    me.panTo(me.translateX, me.translateY);
+                    me.panTo(me.translateX, me.translateY, true);
                 }
 
                 if (!canvasDragContext.moved) {
@@ -2014,8 +2024,56 @@ class GraphicDesign {
 
     delSelectElement() {
         if (this.selectElement) {
+            let me = this;
+            let element = this.selectElement;
+
+            let action = null;
+            let undoData = null;
+            if (this.enableHistory()) {
+                let {in: inlines, out: outLines} = element.data();
+                let type = element.type;
+                if (type == "path" || (Object.keys(inlines).length == 0 && Object.keys(outLines).length == 0)) {
+                    let elementId = element.id;
+                    let elementData = this.toElementData(element);
+                    action = {
+                        undo() {
+                            me.fromElementData(elementData);
+                        },
+                        redo() {
+                            me.deleteElementById(elementId);
+                        }
+                    };
+                    this.addAction(action);
+                } else {
+                    undoData = JSON.stringify(this.getData());
+                }
+            }
             this.removeElement(this.selectElement);
             this.selectElement = null;
+
+            if (this.enableHistory() && action == null) {
+                let data = JSON.stringify(this.getData());
+                this.addAction({
+                    undo() {
+                        me.setData(undoData);
+                    },
+                    redo() {
+                        me.setData(data);
+                    }
+                });
+            }
+        }
+    };
+
+    /**
+     * 根据id删除元素
+     *
+     * @param id
+     */
+    deleteElementById(id) {
+        let element = this.getElementById(id);
+        if (element) {
+            this.removeElement(element);
         }
     };
 
@@ -2025,7 +2083,29 @@ class GraphicDesign {
         }
         let type = targetElement.type;
         let dataObject = targetElement.data();
-        if (type == "rect" || type == "image" || type == "html") {
+        if (type == "path") {
+            // 连线，移除箭头、连线中的矩形、文本
+            // 移除元素关系
+            let fromElement = targetElement.data("from");
+            let toElement = targetElement.data("to");
+
+            if (fromElement && fromElement.data("out")) {
+                let outLines = fromElement.data("out");
+                delete outLines[targetElement.id];
+            }
+
+            if (toElement && toElement.data("in")) {
+                let inLines = toElement.data("in");
+                delete inLines[targetElement.id];
+            }
+            this.removePathRelationRects(targetElement);
+            // targetElement.data("arrow").remove();
+            targetElement.data("text").remove();
+
+            let elementId = targetElement.id;
+            targetElement.remove();
+            this.unregisterElement(elementId);
+        } else {
             // 元素，注意需要移除关联的连线
             for (let i in dataObject) {
                 let dataProp = dataObject[i];
@@ -2063,31 +2143,6 @@ class GraphicDesign {
             }
             // 最后删除元素
             targetElement.remove();
-
-        } else if (type == "path") {
-            // 连线，移除箭头、连线中的矩形、文本
-            // 移除元素关系
-            let fromElement = targetElement.data("from");
-            let toElement = targetElement.data("to");
-
-            if (fromElement && fromElement.data("out")) {
-                let outLines = fromElement.data("out");
-                delete outLines[targetElement.id];
-            }
-
-            if (toElement && toElement.data("in")) {
-                let inLines = toElement.data("in");
-                delete inLines[targetElement.id];
-            }
-            this.removePathRelationRects(targetElement);
-            // targetElement.data("arrow").remove();
-            targetElement.data("text").remove();
-
-            let elementId = targetElement.id;
-            targetElement.remove();
-            this.unregisterElement(elementId);
-        } else {
-
         }
     };
 
@@ -2361,10 +2416,21 @@ class GraphicDesign {
      *
      * @param dx x方向偏移量
      * @param dy y方向偏移量
-     * @param elements
+     * @param actionFlag
      */
-    panTo(dx, dy) {
+    panTo(dx, dy, actionFlag) {
         this.hideEditElements(null);
+        if (this.enableHistory() && actionFlag) {
+            let me = this;
+            this.addAction({
+                undo() {
+                    me.panTo(-dx, -dy, false);
+                },
+                redo() {
+                    me.panTo(dx, dy, false);
+                }
+            });
+        }
         this.translateTo(0, 0);
         this.elementsPanTo(this.elements, dx, dy);
         this.moveTo(this.groupSelection, dx, dy);
@@ -3237,12 +3303,14 @@ class GraphicDesign {
         target.drag((dx, dy) => {
             // drag move
             if (!me.option.editable) return;
-            me.elementDragMove(target, dx, dy);
             if (!context.moved) {
                 if (dx * dx + dy * dy > 0) {
                     context.moved = true;
+                } else {
+                    return;
                 }
             }
+            me.elementDragMove(target, dx, dy);
         }, (event) => {
             // drag start
             if (!me.option.editable) return;
