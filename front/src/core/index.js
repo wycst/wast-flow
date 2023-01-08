@@ -910,18 +910,7 @@ class GraphicDesign {
                 let element = dragContext.element;
                 element.attr({opacity: 1});
                 // 支持撤销
-                if (me.enableHistory()) {
-                    let elementId = element.id;
-                    let elementData = me.toElementData(element);
-                    me.addAction({
-                        undo: function () {
-                            me.deleteElementById(elementId);
-                        },
-                        redo: function () {
-                            me.fromElementData(elementData);
-                        }
-                    });
-                }
+                me.handleElementAction(element);
             }
             delete dragContext.type;
             delete dragContext.element;
@@ -2655,7 +2644,6 @@ class GraphicDesign {
      * @returns {*}
      */
     createNode(x, y, width, height) {
-        // let rect = this.renderRect(x, y, width, height, 4);
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
         this.setElementUUID(rect);
         // rect.id = this.createElementId();
@@ -2683,6 +2671,24 @@ class GraphicDesign {
         this.initElement(rect);
         return rect;
     };
+
+    handleElementAction(element) {
+      if(!element) return;
+      if(this.enableHistory()) {
+          let me = this;
+          let elementId = element.id;
+          let elementData = this.toElementData(element);
+          this.addAction({
+              undo() {
+                  me.deleteElementById(elementId);
+              },
+              redo() {
+                  me.fromElementData(elementData);
+              }
+          });
+      }
+    };
+
 
     /**
      * 创建图片节点
@@ -2945,6 +2951,8 @@ class GraphicDesign {
         this.selectElement = linkPath;
         // 注册连线
         this.registerElement(linkPath);
+        // 可撤销
+        this.handleElementAction(linkPath);
         // return
         return linkPath;
     };
@@ -3195,8 +3203,6 @@ class GraphicDesign {
         controlRect.data("dragging", true);
 
         let hostElement = controlRect.data("host");
-        hostElement.data("editing", true);
-
         let type = controlRect.data("type");
         if (type == "start" || type == "end") {
             this.dragingLine = hostElement;
@@ -3489,7 +3495,6 @@ class GraphicDesign {
         // storing original coordinates
         rect.ox = rect.attr("x");
         rect.oy = rect.attr("y");
-        rect.data("host").data("editing", true);
     };
 
     resizeOnMove(rect, dx, dy, x, y) {
