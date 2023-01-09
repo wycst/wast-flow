@@ -9,6 +9,22 @@ export default defineConfig({
         // port: 8080, // 指定服务器端口
         open: true, // 在服务器启动时自动在浏览器中打开应用程序
         https: false, // 是否开启 https
+        proxy: {
+            "/grafana": {
+                target: "http://10.1.22.120:3001/",
+                rewrite: path => path.replace(/^\/grafana/, "")
+            },
+            "/d": {
+                target: "http://10.1.22.120:3001/"
+            },
+            "/public": {
+                target: "http://10.1.22.120:3001/"
+            },
+            "/api": {
+                ws: true,
+                target: "http://10.1.22.120:3001/"
+            }
+        }
     },
     build: {
         outDir: 'dist',

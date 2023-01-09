@@ -61,6 +61,10 @@ public abstract class Connect extends Data implements Comparable<Connect> {
         this.script = script;
     }
 
+    public abstract Node from();
+
+    public abstract Node to();
+
     /**
      * priority 越大优先级越高，越靠前
      *

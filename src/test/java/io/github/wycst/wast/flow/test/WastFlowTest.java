@@ -178,6 +178,8 @@ public class WastFlowTest {
         String processId = "a";
         System.out.println("processID " + processId);
 
+        Connect connect = null;
+
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
         System.out.println("processInstanceId " + processInstance.getId());

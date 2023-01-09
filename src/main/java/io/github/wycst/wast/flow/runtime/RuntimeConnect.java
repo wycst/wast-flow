@@ -5,6 +5,7 @@ import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.definition.ConditionType;
 import io.github.wycst.wast.flow.definition.Connect;
 import io.github.wycst.wast.flow.definition.ConnectHandler;
+import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 
 /**
@@ -96,5 +97,15 @@ public class RuntimeConnect extends Connect {
 
     public boolean passedIfOnlyOne() {
         return conditionType == ConditionType.Script || conditionType == ConditionType.Always;
+    }
+
+    @Override
+    public Node from() {
+        return from;
+    }
+
+    @Override
+    public Node to() {
+        return to;
     }
 }
