@@ -85,6 +85,33 @@ public class RuntimeNode extends Node {
         return false;
     }
 
+    /**
+     * 获取前置节点列表
+     *
+     * @return
+     */
+    public List<Node> frontNodes() {
+        List<Node> nodes = new ArrayList<Node>();
+        for(RuntimeConnect connect : inConnects) {
+            nodes.add(connect.from);
+        }
+        return nodes;
+    }
+
+    /**
+     * 获取后置节点列表
+     *
+     * @return
+     */
+    @Override
+    public List<Node> nextNodes() {
+        List<Node> nodes = new ArrayList<Node>();
+        for(RuntimeConnect connect : outConnects) {
+            nodes.add(connect.to);
+        }
+        return nodes;
+    }
+
     void setHandlerOption(HandlerOption handlerOption) {
         this.handlerOption = handlerOption;
     }

@@ -129,6 +129,8 @@ public class WastFlowTest {
         flowEngine.registerHandler(Node.Type.Business, new NodeHandler() {
             @Override
             public void handle(NodeContext nodeContext) throws Exception {
+                System.out.println(nodeContext.getNode().frontNodes());
+                System.out.println(nodeContext.getNode().nextNodes());
                 String nodeId = nodeContext.getNode().getId();
                 String name = nodeContext.getNode().getName();
                 if("n1".equals(name)) {

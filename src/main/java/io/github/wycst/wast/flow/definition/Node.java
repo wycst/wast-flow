@@ -1,6 +1,7 @@
 package io.github.wycst.wast.flow.definition;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,6 +43,14 @@ public abstract class Node extends Data {
 
     public void setOutMapping(Map<String, Object> outMapping) {
         this.outMapping = outMapping;
+    }
+
+    public List<Node> frontNodes() {
+        return null;
+    }
+
+    public List<Node> nextNodes() {
+        return null;
     }
 
     /**
