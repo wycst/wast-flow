@@ -12,18 +12,23 @@ export default defineConfig({
         proxy: {
             "/grafana": {
                 target: "http://10.1.22.120:3001/",
-                rewrite: path => path.replace(/^\/grafana/, "")
+                ws: true
+                //rewrite: path => path.replace(/^\/grafana/, "")
             },
-            "/d": {
-                target: "http://10.1.22.120:3001/"
-            },
-            "/public": {
-                target: "http://10.1.22.120:3001/"
-            },
-            "/api": {
-                ws: true,
-                target: "http://10.1.22.120:3001/"
-            }
+            // "/d": {
+            //     target: "http://10.1.22.120:3001/"
+            // },
+            // "/public": {
+            //     target: "http://10.1.22.120:3001/"
+            // },
+            // "/api": {
+            //     ws: true,
+            //     target: "http://10.1.22.120:3001/"
+            // },
+            // "/goto": {
+            //     ws: true,
+            //     target: "http://10.1.22.120:3001/"
+            // }
         }
     },
     build: {

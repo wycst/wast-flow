@@ -798,14 +798,13 @@ class GraphicDesign {
         this.menu = menuDom;
         Object.assign(menuDom.style, {
             position: "absolute",
-            left: "10px",
-            top: "10px",
+            left: "0px",
+            top: "0px",
             width: "64px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             fontSize: "14px",
-            // color: "#676768",
             color: this.option.settings.themeColor,
             padding: "5px 5px 20px",
             background: "hsla(0,0%,100%,.9)",
