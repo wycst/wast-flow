@@ -2,6 +2,7 @@ package io.github.wycst.wast.flow.deployment;
 
 import io.github.wycst.wast.flow.definition.GatewayType;
 import io.github.wycst.wast.flow.definition.HandlerOption;
+import io.github.wycst.wast.flow.definition.ManualOption;
 import io.github.wycst.wast.flow.definition.Node;
 
 /**
@@ -12,13 +13,14 @@ import io.github.wycst.wast.flow.definition.Node;
  */
 public class DeploymentNode extends Node {
 
-    // 图形属性(宽度高度位置等)暂时不考虑
-
     // 除网关节点的外的节点默认网关为XOR
     private GatewayType gateway = GatewayType.XOR;
 
     // handler配置选项
     private HandlerOption handler = new HandlerOption();
+
+    // 人工节点配置项
+    private ManualOption manual = new ManualOption();
 
     public GatewayType getGateway() {
         return gateway;
@@ -34,6 +36,14 @@ public class DeploymentNode extends Node {
 
     public void setHandler(HandlerOption handler) {
         this.handler = handler;
+    }
+
+    public ManualOption getManual() {
+        return manual;
+    }
+
+    public void setManual(ManualOption manual) {
+        this.manual = manual;
     }
 
     public void setMetaAttr(String key, Object value) {

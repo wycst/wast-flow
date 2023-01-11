@@ -368,7 +368,7 @@ public class FlowHelper {
                 runtimeNode = new BusinessNode(deploymentNode.getId(), deploymentNode.getName(), process);
                 break;
             case Manual:
-                runtimeNode = new ManualNode(deploymentNode.getId(), deploymentNode.getName(), process);
+                runtimeNode = new ManualNode(deploymentNode.getId(), deploymentNode.getName(), process, deploymentNode.getManual());
                 break;
             case Message:
                 runtimeNode = new MessageNode(deploymentNode.getId(), deploymentNode.getName(), process);

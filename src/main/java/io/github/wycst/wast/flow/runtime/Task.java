@@ -3,6 +3,7 @@ package io.github.wycst.wast.flow.runtime;
 import io.github.wycst.wast.flow.definition.Status;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 待办任务
@@ -12,36 +13,61 @@ import java.util.Date;
  */
 public class Task {
 
-    // 待办id
+    // 待办id（自动生成）
     private String id;
 
-    // 节点id
-    private String nodeId;
+    // 待办关联节点实例
+    private NodeInstance nodeInstance;
 
-    // 节点名称
-    private String nodeName;
+    // 待办任务参与者
+    private List<TaskParticipant> taskParticipants;
 
-    // 流程id
-    private String processId;
+    // 待办受理人
+    private String actorOwnerId;
 
-    // 流程实例id
-    private String processInstanceId;
+    // 待办状态
+    private Status taskStatus;
 
-    // 流程名称
-    private String processName;
+    Task() {
+    }
 
-    // 到达时间
-    private Date arrivalDate;
+    public String getId() {
+        return id;
+    }
 
-    // 到达时间
-    private Date lastModifyDate;
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    // 完成时间
-    private Date completeDate;
+    public NodeInstance getNodeInstance() {
+        return nodeInstance;
+    }
 
-    // 当前状态
-    private Status status;
+    public void setNodeInstance(NodeInstance nodeInstance) {
+        this.nodeInstance = nodeInstance;
+    }
 
-    // 待办处理人
-    private String actorId;
+    public List<TaskParticipant> getTaskParticipants() {
+        return taskParticipants;
+    }
+
+    public void setTaskParticipants(List<TaskParticipant> taskParticipants) {
+        this.taskParticipants = taskParticipants;
+    }
+
+    public String getActorOwnerId() {
+        return actorOwnerId;
+    }
+
+    public void setActorOwnerId(String actorOwnerId) {
+        this.actorOwnerId = actorOwnerId;
+    }
+
+    public Status getTaskStatus() {
+        return taskStatus;
+    }
+
+    public void setTaskStatus(Status taskStatus) {
+        this.taskStatus = taskStatus;
+    }
 }

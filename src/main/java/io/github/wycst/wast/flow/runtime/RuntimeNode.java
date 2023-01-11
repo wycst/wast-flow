@@ -36,7 +36,7 @@ public class RuntimeNode extends Node {
 
     protected HandlerOption handlerOption = new HandlerOption();
 
-    private final String nodeToString;
+    protected final String nodeToString;
 
     public RuntimeNode(String id, String name, RuleProcess ruleProcess) {
         this.id = id;
@@ -52,24 +52,24 @@ public class RuntimeNode extends Node {
     protected List<RuntimeConnect> outConnects = new ArrayList<RuntimeConnect>();
 
     @Override
-    public String getId() {
+    public final String getId() {
         return id;
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    public RuleProcess getRuleProcess() {
+    public final RuleProcess getRuleProcess() {
         return ruleProcess;
     }
 
-    public List<RuntimeConnect> getInConnects() {
+    public final List<RuntimeConnect> getInConnects() {
         return inConnects;
     }
 
-    public List<RuntimeConnect> getOutConnects() {
+    public final List<RuntimeConnect> getOutConnects() {
         return outConnects;
     }
 
@@ -90,7 +90,7 @@ public class RuntimeNode extends Node {
      *
      * @return
      */
-    public List<Node> frontNodes() {
+    public final List<Node> frontNodes() {
         List<Node> nodes = new ArrayList<Node>();
         for(RuntimeConnect connect : inConnects) {
             nodes.add(connect.from);
@@ -104,7 +104,7 @@ public class RuntimeNode extends Node {
      * @return
      */
     @Override
-    public List<Node> nextNodes() {
+    public final List<Node> nextNodes() {
         List<Node> nodes = new ArrayList<Node>();
         for(RuntimeConnect connect : outConnects) {
             nodes.add(connect.to);
@@ -146,23 +146,43 @@ public class RuntimeNode extends Node {
     }
 
     /**
+     * run node
+     *
      * @param processInstance
      */
     final void run(ProcessInstance processInstance, NodeInstance prev) throws Exception {
-
         // access
         boolean access = beforeRun(processInstance);
         if (!access) {
             return;
         }
-
-        // create instance
+        // create instance && run in
         NodeInstance nodeInstance = new NodeInstance(this, prev, processInstance);
-        try {
-            // in
-            runIn(nodeInstance, processInstance);
+        runIn(nodeInstance, processInstance);
+        if(isAutoCompleted()) {
+            // handle complete
+            complete(nodeInstance, processInstance);
+        }
+    }
 
+    protected boolean isAutoCompleted() {
+        return true;
+    }
+
+    protected boolean beforeRun(ProcessInstance processInstance) {
+        return true;
+    }
+
+    /**
+     * 完成
+     *
+     * @param nodeInstance
+     * @param processInstance
+     */
+    protected void complete(NodeInstance nodeInstance, ProcessInstance processInstance) throws Exception {
+        try {
             if(handlerOption.isSkip()) {
+                // handler skip
                 nodeInstance.setHandlerStatus(HandlerStatus.Skip);
             } else {
                 long delay = handlerOption.getDelay();
@@ -171,7 +191,7 @@ public class RuntimeNode extends Node {
                     log.debug("{}, about to sleep for {} ms", nodeToString, delay);
                     Thread.sleep(delay);
                 }
-                // 获取handler执行
+                // get handler to execute
                 NodeHandler nodeHandler = getHandler(processInstance);
                 executeHandler(nodeHandler, nodeInstance);
             }
@@ -179,6 +199,7 @@ public class RuntimeNode extends Node {
             // processInstance.addNodeInstance();
             nodeInstance.setOutDate(new Timestamp(System.currentTimeMillis()));
             nodeInstance.setStatus(Status.Completed);
+
         } catch (Exception exception) {
             // node instance Error
             nodeInstance.setStatus(Status.Error);
@@ -196,7 +217,7 @@ public class RuntimeNode extends Node {
             onNodeLeave(processInstance, nodeInstance);
         }
 
-        //
+        // out
         try {
             // chain call
             runOut(processInstance, nodeInstance);
@@ -219,12 +240,12 @@ public class RuntimeNode extends Node {
         }
     }
 
-    protected boolean beforeRun(ProcessInstance processInstance) {
-        return true;
+    protected final void onNodeEnter(ProcessInstance processInstance, NodeInstance nodeInstance) {
+        processInstance.getExecuteEngine().onNodeEnter(processInstance, nodeInstance);
     }
 
     // on Leave if manualNode please override this method
-    protected void onNodeLeave(ProcessInstance processInstance, NodeInstance nodeInstance) {
+    protected final void onNodeLeave(ProcessInstance processInstance, NodeInstance nodeInstance) {
         processInstance.getExecuteEngine().onNodeLeave(processInstance, nodeInstance);
         // persistence
         processInstance.getExecuteEngine().persistenceNodeInstance(nodeInstance);
@@ -296,7 +317,6 @@ public class RuntimeNode extends Node {
                     nodeHandler.handle(nodeContext);
                     successFlag = true;
                 } catch (Exception e) {
-                    e.printStackTrace();
                     exception = e;
                 }
             }
@@ -316,7 +336,7 @@ public class RuntimeNode extends Node {
     }
 
     // getHandler
-    private NodeHandler getHandler(ProcessInstance processInstance) {
+    NodeHandler getHandler(ProcessInstance processInstance) {
         NodeHandler nodeHandler = processInstance.getExecuteEngine().getHandler(type);
         if (nodeHandler != null) {
             return nodeHandler;
@@ -330,8 +350,7 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     protected void runIn(NodeInstance nodeInstance, ProcessInstance processInstance) {
-        // 网关类节点需要处理计数问题
-        nodeInstance.getExecuteEngine().onNodeEnter(processInstance, nodeInstance);
+        onNodeEnter(processInstance, nodeInstance);
     }
 
     /**

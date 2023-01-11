@@ -40,8 +40,11 @@ public class ProcessInstance {
     // 创建人id
     private String creator;
 
-    // 上下文信息
+    // 上下文信息（含历史）
     private Map<String, Object> context = new HashMap<String, Object>();
+
+    // 参数上下文（不含历史）
+    private Map<String, Object> params;
 
     private List<NodeInstance> nodeInstances = new ArrayList<NodeInstance>();
     private Map<String, Task> tasks = new LinkedHashMap<String, Task>();
@@ -145,7 +148,8 @@ public class ProcessInstance {
         this.creator = creator;
     }
 
-    public void setContextValues(Map<String, Object> vars) {
+    void setContextValues(Map<String, Object> vars) {
+        this.params = vars == null ? new HashMap<String,Object>() : vars;
         context.putAll(vars);
     }
 
@@ -157,7 +161,11 @@ public class ProcessInstance {
         return context.put(key, value);
     }
 
-    public Map getContext() {
+    public Map<String, Object> getContext() {
+        return context;
+    }
+
+    public Map<String, Object> getParams() {
         return context;
     }
 
@@ -203,5 +211,9 @@ public class ProcessInstance {
 
     public void setCustomContext(Object customContext) {
         this.customContext = customContext;
+    }
+
+    void addTask(Task task) {
+        tasks.put(task.getId(), task);
     }
 }

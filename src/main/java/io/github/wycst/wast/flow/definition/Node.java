@@ -21,27 +21,27 @@ public abstract class Node extends Data {
     // 输出参数映射
     private Map<String, Object> outMapping = new LinkedHashMap<String, Object>();
 
-    public Type getType() {
+    public final Type getType() {
         return type;
     }
 
-    public void setType(Type type) {
+    public final void setType(Type type) {
         this.type = type;
     }
 
-    public Map<String, Object> getInMapping() {
+    public final Map<String, Object> getInMapping() {
         return inMapping;
     }
 
-    public void setInMapping(Map<String, Object> inMapping) {
+    public final void setInMapping(Map<String, Object> inMapping) {
         this.inMapping = inMapping;
     }
 
-    public Map<String, Object> getOutMapping() {
+    public final Map<String, Object> getOutMapping() {
         return outMapping;
     }
 
-    public void setOutMapping(Map<String, Object> outMapping) {
+    public final void setOutMapping(Map<String, Object> outMapping) {
         this.outMapping = outMapping;
     }
 
