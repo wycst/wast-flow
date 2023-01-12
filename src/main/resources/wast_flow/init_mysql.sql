@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `wrf_process_instance`
     `instance_status`  varchar(16) DEFAULT NULL,
     `process_version`  varchar(64) DEFAULT NULL,
     `creator`          varchar(64) DEFAULT NULL,
-    `variables`        longtext    DEFAULT NULL,
+    `context`          longtext    DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
@@ -96,6 +96,42 @@ CREATE TABLE IF NOT EXISTS `wrf_connect_instance`
     `execute_time`        datetime    DEFAULT NULL,
     `condition_type`      varchar(16) DEFAULT NULL,
     `instance_status`     varchar(16) DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+-- ----------------------------
+-- Table structure for `wrf_task`
+-- ----------------------------
+-- DROP TABLE IF EXISTS `wrf_task`;
+CREATE TABLE IF NOT EXISTS `wrf_task`
+(
+    `id`                  varchar(36) NOT NULL,
+    `node_id`             varchar(36) DEFAULT NULL,
+    `node_name`           varchar(64) DEFAULT NULL,
+    `node_instance_id`    int(19)     DEFAULT NULL,
+    `process_id`          varchar(64) DEFAULT NULL,
+    `process_name`        varchar(64) DEFAULT NULL,
+    `process_instance_id` varchar(36) DEFAULT NULL,
+    `create_time`         datetime    DEFAULT NULL,
+    `last_modify_date`    datetime    DEFAULT NULL,
+    `task_status`         varchar(16) DEFAULT NULL,
+    `complete_time`       datetime    DEFAULT NULL,
+    `actual_owner_id`     varchar(16) DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+
+-- ----------------------------
+-- Table structure for `wrf_task_participants`
+-- ----------------------------
+-- DROP TABLE IF EXISTS `wrf_task_participants`;
+CREATE TABLE IF NOT EXISTS `wrf_task_participants`
+(
+    `id`          varchar(36) NOT NULL,
+    `task_id`     varchar(36) DEFAULT NULL,
+    `participant` varchar(16) DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;

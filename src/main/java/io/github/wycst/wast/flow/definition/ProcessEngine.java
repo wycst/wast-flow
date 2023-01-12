@@ -31,8 +31,8 @@ public interface ProcessEngine {
      * 终止流程实例
      *
      * @param processInstanceId
-     * @param actorId
+     * @param actualOwnerId
      * @param note
      */
-    public void stopProcess(String processInstanceId, String actorId, String note);
+    public void stopProcess(String processInstanceId, String actualOwnerId, String note);
 }

@@ -8,21 +8,21 @@ package io.github.wycst.wast.flow.definition;
  */
 public class ManualOption {
 
-    // 参与者支持使用占位符，例如: ${actor} or ${accepts}
-    private String actorOwner = "${actorOwner}";
+    // 参与者支持使用占位符，例如: ${actualOwner} or ${accepts}
+    private String actualOwner = "${actualOwner}";
 
-    // 泳道(目标节点id)（如果配置了泳道，当actorOwner解析为空时将启用泳道节点的历史受理人）
+    // 泳道(目标节点id)（如果配置了泳道，当actualOwner解析为空时将启用泳道节点的历史受理人）
     private String swimlane;
 
     // 人工节点是否自动完成
     private boolean autoComplete;
 
-    public String getActorOwner() {
-        return actorOwner;
+    public String getActualOwner() {
+        return actualOwner;
     }
 
-    public void setActorOwner(String actorOwner) {
-        this.actorOwner = actorOwner;
+    public void setActualOwner(String actualOwner) {
+        this.actualOwner = actualOwner;
     }
 
     public String getSwimlane() {

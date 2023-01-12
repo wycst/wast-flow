@@ -85,6 +85,11 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
         return sqlExecuter.getEntityExecuter().queryList(cls, oqlQuery, params);
     }
 
+    @Override
+    public void insertAll(List<? extends IEntity> entities) {
+        sqlExecuter.getEntityExecuter().insertList(entities);
+    }
+
     public void beginTransaction() {
         if (enableTransaction) {
             sqlExecuter.beginTransaction();

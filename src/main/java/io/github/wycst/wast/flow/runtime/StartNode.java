@@ -1,6 +1,7 @@
 package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.flow.definition.Consts;
+import io.github.wycst.wast.flow.definition.Status;
 
 /**
  * 开始节点（单出）
@@ -25,6 +26,7 @@ public class StartNode extends RuntimeNode {
      * @param processInstance
      */
     void start(ProcessInstance processInstance) throws Exception {
+        processInstance.setStatus(Status.Running);
         run(processInstance, null);
     }
 

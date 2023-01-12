@@ -1,0 +1,251 @@
+{
+    "id": "workflow_sample",
+    "name": "工作流测试",
+    "nodes": [
+        {
+            "id": "lcsrs66w",
+            "type": "Start",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "b0fd9d39-1f84-4d7b-888b-d29bd6db862b",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 295.01977157592773,
+                    "y": 159.04236602783203,
+                    "width": 48,
+                    "height": 48,
+                    "title": "Start:lcsrs66w",
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "x3o7z",
+            "name": "申请",
+            "type": "Manual",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "3d267cd6-302e-4779-8972-451c24404b33",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 502.01977157592773,
+                    "y": 143.04236602783203,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "fill": "#fff",
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:x3o7z"
+                },
+                "textAttrs": {
+                    "x": 552.0197715759277,
+                    "y": 183.04236602783203,
+                    "text-anchor": "middle",
+                    "text": "申请",
+                    "font-family": "\"Arial\"",
+                    "font-size": 13,
+                    "stroke": "none",
+                    "fill": "#000",
+                    "font-style": "normal",
+                    "width": 3
+                }
+            }
+        },
+        {
+            "id": "afvvk",
+            "name": "审批",
+            "type": "Manual",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "1be1c964-6fca-4eec-bd70-4dc1aa810329",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 702.0197715759277,
+                    "y": 143.04236602783203,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "fill": "#fff",
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:afvvk"
+                },
+                "textAttrs": {
+                    "x": 752.0197715759277,
+                    "y": 183.04236602783203,
+                    "text-anchor": "middle",
+                    "text": "审批",
+                    "font-family": "\"Arial\"",
+                    "font-size": 13,
+                    "stroke": "none",
+                    "fill": "#000",
+                    "font-style": "normal",
+                    "width": 3
+                }
+            }
+        },
+        {
+            "id": "lcsrsx74",
+            "type": "End",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "1426d017-029a-4d83-a77c-ec608c334e90",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 902.0197715759277,
+                    "y": 159.04236602783203,
+                    "width": 48,
+                    "height": 48,
+                    "title": "End:lcsrsx74",
+                    "color": "#409eff"
+                }
+            }
+        }
+    ],
+    "connects": [
+        {
+            "id": "uqr4g",
+            "name": " ",
+            "fromId": "lcsrs66w",
+            "toId": "x3o7z",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "5e0ac1c9-3539-4acf-861a-36c2c0ae33a9",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "fill": "none",
+                    "stroke": "#409eff",
+                    "path": [
+                        [
+                            "M",
+                            348.01977157592773,
+                            183.04236602783203
+                        ],
+                        [
+                            "L",
+                            497.01977157592773,
+                            183.04236602783203
+                        ]
+                    ],
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 410.01977157592773,
+                    "y": 170.54236602783203,
+                    "text-anchor": "middle",
+                    "text": " ",
+                    "font-family": "\"Arial\"",
+                    "font-size": 13,
+                    "stroke": "none",
+                    "fill": "#000",
+                    "font-style": "normal"
+                }
+            }
+        },
+        {
+            "id": "5nthx",
+            "name": " ",
+            "fromId": "x3o7z",
+            "toId": "afvvk",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "f7694298-04e8-4c5a-886e-eaf6008f7aaa",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "fill": "none",
+                    "stroke": "#409eff",
+                    "path": [
+                        [
+                            "M",
+                            607.0197715759277,
+                            183.04236602783203
+                        ],
+                        [
+                            "L",
+                            697.0197715759277,
+                            183.04236602783203
+                        ]
+                    ],
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 639.5197715759277,
+                    "y": 170.54236602783203,
+                    "text-anchor": "middle",
+                    "text": " ",
+                    "font-family": "\"Arial\"",
+                    "font-size": 13,
+                    "stroke": "none",
+                    "fill": "#000",
+                    "font-style": "normal"
+                }
+            }
+        },
+        {
+            "id": "e97l6",
+            "name": " ",
+            "fromId": "afvvk",
+            "toId": "lcsrsx74",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "0545038a-04bb-49e7-9f3b-a6cb06e27480",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "fill": "none",
+                    "stroke": "#409eff",
+                    "path": [
+                        [
+                            "M",
+                            807.0197715759277,
+                            183.04236602783203
+                        ],
+                        [
+                            "L",
+                            897.0197715759277,
+                            183.04236602783203
+                        ]
+                    ],
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 839.5197715759277,
+                    "y": 170.54236602783203,
+                    "text-anchor": "middle",
+                    "text": " ",
+                    "font-family": "\"Arial\"",
+                    "font-size": 13,
+                    "stroke": "none",
+                    "fill": "#000",
+                    "font-style": "normal"
+                }
+            }
+        }
+    ],
+    "startNodeId": "lcsrs66w"
+}

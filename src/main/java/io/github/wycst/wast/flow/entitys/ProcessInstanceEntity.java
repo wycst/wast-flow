@@ -49,8 +49,11 @@ public class ProcessInstanceEntity implements IEntity {
     // 流程版本号
     private String processVersion;
 
-    // 上下文参数
-    private String variables;
+//    // 参数
+//    private String variables;
+
+    // 上下文
+    private String context;
 
     public String getId() {
         return id;
@@ -132,11 +135,19 @@ public class ProcessInstanceEntity implements IEntity {
         this.processVersion = processVersion;
     }
 
-    public String getVariables() {
-        return variables;
+//    public String getVariables() {
+//        return variables;
+//    }
+//
+//    public void setVariables(String variables) {
+//        this.variables = variables;
+//    }
+
+    public String getContext() {
+        return context;
     }
 
-    public void setVariables(String variables) {
-        this.variables = variables;
+    public void setContext(String context) {
+        this.context = context;
     }
 }

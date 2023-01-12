@@ -92,7 +92,7 @@ public class RuntimeNode extends Node {
      */
     public final List<Node> frontNodes() {
         List<Node> nodes = new ArrayList<Node>();
-        for(RuntimeConnect connect : inConnects) {
+        for (RuntimeConnect connect : inConnects) {
             nodes.add(connect.from);
         }
         return nodes;
@@ -106,7 +106,7 @@ public class RuntimeNode extends Node {
     @Override
     public final List<Node> nextNodes() {
         List<Node> nodes = new ArrayList<Node>();
-        for(RuntimeConnect connect : outConnects) {
+        for (RuntimeConnect connect : outConnects) {
             nodes.add(connect.to);
         }
         return nodes;
@@ -159,7 +159,7 @@ public class RuntimeNode extends Node {
         // create instance && run in
         NodeInstance nodeInstance = new NodeInstance(this, prev, processInstance);
         runIn(nodeInstance, processInstance);
-        if(isAutoCompleted()) {
+        if (isAutoCompleted()) {
             // handle complete
             complete(nodeInstance, processInstance);
         }
@@ -181,7 +181,7 @@ public class RuntimeNode extends Node {
      */
     protected void complete(NodeInstance nodeInstance, ProcessInstance processInstance) throws Exception {
         try {
-            if(handlerOption.isSkip()) {
+            if (handlerOption.isSkip()) {
                 // handler skip
                 nodeInstance.setHandlerStatus(HandlerStatus.Skip);
             } else {
@@ -217,6 +217,9 @@ public class RuntimeNode extends Node {
             onNodeLeave(processInstance, nodeInstance);
         }
 
+        // complete
+        afterComplete(processInstance, nodeInstance);
+
         // out
         try {
             // chain call
@@ -240,6 +243,17 @@ public class RuntimeNode extends Node {
         }
     }
 
+    /**
+     * 通常情况下在节点完成时保存节点实例对象
+     *
+     * @param processInstance
+     * @param nodeInstance
+     */
+    protected void afterComplete(ProcessInstance processInstance, NodeInstance nodeInstance) {
+        // persistence
+        processInstance.getExecuteEngine().persistenceNodeInstance(nodeInstance);
+    }
+
     protected final void onNodeEnter(ProcessInstance processInstance, NodeInstance nodeInstance) {
         processInstance.getExecuteEngine().onNodeEnter(processInstance, nodeInstance);
     }
@@ -247,8 +261,6 @@ public class RuntimeNode extends Node {
     // on Leave if manualNode please override this method
     protected final void onNodeLeave(ProcessInstance processInstance, NodeInstance nodeInstance) {
         processInstance.getExecuteEngine().onNodeLeave(processInstance, nodeInstance);
-        // persistence
-        processInstance.getExecuteEngine().persistenceNodeInstance(nodeInstance);
     }
 
     protected void executeHandler(final NodeHandler nodeHandler, NodeInstance nodeInstance) throws Exception {

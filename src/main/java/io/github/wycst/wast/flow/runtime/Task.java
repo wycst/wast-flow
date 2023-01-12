@@ -2,7 +2,6 @@ package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.flow.definition.Status;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -23,7 +22,7 @@ public class Task {
     private List<TaskParticipant> taskParticipants;
 
     // 待办受理人
-    private String actorOwnerId;
+    private String actualOwnerId;
 
     // 待办状态
     private Status taskStatus;
@@ -55,12 +54,12 @@ public class Task {
         this.taskParticipants = taskParticipants;
     }
 
-    public String getActorOwnerId() {
-        return actorOwnerId;
+    public String getActualOwnerId() {
+        return actualOwnerId;
     }
 
-    public void setActorOwnerId(String actorOwnerId) {
-        this.actorOwnerId = actorOwnerId;
+    public void setActualOwnerId(String actualOwnerId) {
+        this.actualOwnerId = actualOwnerId;
     }
 
     public Status getTaskStatus() {

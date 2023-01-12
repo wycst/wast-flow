@@ -30,6 +30,9 @@ public class TaskEntity implements IEntity {
     // 节点名称
     private String nodeName;
 
+    // 节点实例id
+    private long nodeInstanceId;
+
     // 流程实例id
     private String processInstanceId;
 
@@ -43,7 +46,7 @@ public class TaskEntity implements IEntity {
     private Status taskStatus;
 
     // 任务归属人
-    private String actorOwnerId;
+    private String actualOwnerId;
 
     // 完成时间
     private Date completeTime;
@@ -88,6 +91,14 @@ public class TaskEntity implements IEntity {
         this.nodeName = nodeName;
     }
 
+    public long getNodeInstanceId() {
+        return nodeInstanceId;
+    }
+
+    public void setNodeInstanceId(long nodeInstanceId) {
+        this.nodeInstanceId = nodeInstanceId;
+    }
+
     public String getProcessInstanceId() {
         return processInstanceId;
     }
@@ -120,12 +131,12 @@ public class TaskEntity implements IEntity {
         this.taskStatus = taskStatus;
     }
 
-    public String getActorOwnerId() {
-        return actorOwnerId;
+    public String getActualOwnerId() {
+        return actualOwnerId;
     }
 
-    public void setActorOwnerId(String actorOwnerId) {
-        this.actorOwnerId = actorOwnerId;
+    public void setActualOwnerId(String actualOwnerId) {
+        this.actualOwnerId = actualOwnerId;
     }
 
     public Date getCompleteTime() {

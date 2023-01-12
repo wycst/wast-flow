@@ -16,24 +16,24 @@ import java.util.*;
 public class ManualNode extends RuntimeNode {
 
     private final ManualOption manualOption;
-    private String actorOwnerKey;
+    private String actualOwnerKey;
     private boolean fixedOwner;
 
     public ManualNode(String id, String name, RuleProcess process, ManualOption manualOption) {
         super(id, name, process);
         this.manualOption = manualOption == null ? new ManualOption() : manualOption;
-        this.setActorOwnerKey(this.manualOption.getActorOwner());
+        this.setActualOwnerKey(this.manualOption.getActualOwner());
     }
 
     // if static value or ${key}
-    public void setActorOwnerKey(String actorOwner) {
-        if (actorOwner == null) {
-            actorOwnerKey = null;
+    public void setActualOwnerKey(String actualOwner) {
+        if (actualOwner == null) {
+            actualOwnerKey = null;
         } else {
-            if ((actorOwner = actorOwner.trim()).startsWith("${") && actorOwner.endsWith("}")) {
-                actorOwnerKey = actorOwner.substring(2, actorOwner.length() - 1);
+            if ((actualOwner = actualOwner.trim()).startsWith("${") && actualOwner.endsWith("}")) {
+                actualOwnerKey = actualOwner.substring(2, actualOwner.length() - 1);
             } else {
-                actorOwnerKey = actorOwner;
+                actualOwnerKey = actualOwner;
                 fixedOwner = true;
             }
         }
@@ -56,58 +56,87 @@ public class ManualNode extends RuntimeNode {
 
     @Override
     protected void runIn(NodeInstance nodeInstance, ProcessInstance processInstance) {
-        super.runIn(nodeInstance, processInstance);
-        // init task
-        initTask(nodeInstance, processInstance);
+        try {
+            super.runIn(nodeInstance, processInstance);
+            // init node instance
+            initNodeInstance(nodeInstance, processInstance);
+            // init task
+            initTask(nodeInstance, processInstance);
+        } catch (Throwable throwable) {
+            processInstance.setThrowableAndRollback(throwable, true);
+        }
+    }
+
+    /**
+     * 更新实例对象
+     *
+     * @param processInstance
+     * @param nodeInstance
+     */
+    @Override
+    protected void afterComplete(ProcessInstance processInstance, NodeInstance nodeInstance) {
+        processInstance.getExecuteEngine().completeNodeInstance(nodeInstance);
+    }
+
+    private void initNodeInstance(NodeInstance nodeInstance, ProcessInstance processInstance) {
+        // node status
+        nodeInstance.setStatus(Status.Running);
+        // save nodeInstance
+        processInstance.getExecuteEngine().persistenceNodeInstance(nodeInstance);
     }
 
     private void initTask(NodeInstance nodeInstance, ProcessInstance processInstance) {
         Task task = new Task();
         task.setId(IdGenerator.hex());
         task.setNodeInstance(nodeInstance);
-        // load actorOwnerId and task participants from processInstance
-        parseActorOwner(task, processInstance);
+        // load actualOwnerId and task participants from processInstance
+        resolveActualOwner(task, nodeInstance, processInstance);
         processInstance.addTask(task);
     }
 
-    private void parseActorOwner(Task task, ProcessInstance processInstance) {
+    private void resolveActualOwner(Task task, NodeInstance nodeInstance, ProcessInstance processInstance) {
         // 初始化状态
         task.setTaskStatus(Status.Ready);
-        // 上下文中读取actorOwner
-        Map<String, Object> context = processInstance.getContext();
         if (fixedOwner) {
-            task.setActorOwnerId(actorOwnerKey);
+            task.setActualOwnerId(actualOwnerKey);
             task.setTaskStatus(Status.Running);
+            // 记录当前受理人
+            processInstance.recordActorOwner(nodeInstance.getNode().getId(), actualOwnerKey);
         } else {
             String swimlane = manualOption.getSwimlane();
             if (swimlane != null) {
                 // 如果配置了泳道，优先使用
-
+                // 实例上下文记录了每个环节的历史受理人，根据节点环节id去查找
+                String actualOwnerValue = processInstance.historyActorOwner(nodeInstance.getNode().getId());
+                task.setActualOwnerId(actualOwnerValue);
+                task.setTaskStatus(Status.Running);
             } else {
-                Object value = context.get(actorOwnerKey);
+                // 上下文中读取actualOwner
+                Map<String, Object> context = processInstance.getVariables();
+                Object value = context.get(actualOwnerKey);
                 if (value == null) {
-                    throw new FlowRuntimeException(String.format("Error: value not found for actorOwnerKey '%s', node: %s", actorOwnerKey, nodeToString));
+                    throw new FlowRuntimeException(String.format("Error: Task ActualOwner not found for key '%s' by context, %s", actualOwnerKey, nodeToString));
                 }
-                String actorOwnerValue = null;
-                if (value instanceof Collection || (actorOwnerValue = value.toString()).indexOf(",") > -1) {
-                    Collection actorOwnerList;
-                    if (actorOwnerValue == null) {
-                        actorOwnerList = (Collection) value;
+                String actualOwnerValue = null;
+                if (value instanceof Collection || (actualOwnerValue = value.toString()).indexOf(",") > -1) {
+                    Collection actualOwnerList;
+                    if (actualOwnerValue == null) {
+                        actualOwnerList = (Collection) value;
                     } else {
-                        actorOwnerList = Arrays.asList(actorOwnerValue.split(","));
+                        actualOwnerList = Arrays.asList(actualOwnerValue.split(","));
                     }
-                    task.setTaskStatus(Status.Ready);
                     List<TaskParticipant> taskParticipants = new ArrayList<TaskParticipant>();
-                    for (Object actorOwner : actorOwnerList) {
+                    for (Object actualOwner : actualOwnerList) {
                         TaskParticipant taskParticipant = new TaskParticipant();
                         taskParticipant.setTaskId(task.getId());
-                        taskParticipant.setParticipant(actorOwner.toString());
+                        taskParticipant.setParticipant(actualOwner.toString());
                         taskParticipants.add(taskParticipant);
                     }
                     task.setTaskParticipants(taskParticipants);
                 } else {
                     task.setTaskStatus(Status.Running);
-                    task.setActorOwnerId(actorOwnerValue);
+                    task.setActualOwnerId(actualOwnerValue);
+                    processInstance.recordActorOwner(nodeInstance.getNode().getId(), actualOwnerValue);
                 }
             }
         }

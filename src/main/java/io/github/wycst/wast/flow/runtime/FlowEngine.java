@@ -77,7 +77,12 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             // start
             ruleProcess.getStartNode().start(processInstance);
             persistenceProcessInstance(processInstance);
-            commitTransaction();
+            resolveTasks(processInstance);
+            if (processInstance.isRollback()) {
+                throw processInstance.getThrowable();
+            } else {
+                commitTransaction();
+            }
             return processInstance;
         } catch (Throwable throwable) {
             // 发生了未捕获的异常回滚数据
@@ -94,12 +99,12 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     @Override
-    public void complete(String taskId, String actorId, Map<String, Object> context) {
+    public void complete(String taskId, String actualOwnerId, Map<String, Object> context) {
 
     }
 
     @Override
-    public void stopProcess(String processInstanceId, String actorId, String note) {
+    public void stopProcess(String processInstanceId, String actualOwnerId, String note) {
 
     }
 
@@ -109,32 +114,32 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     @Override
-    public void startTask(String taskId, String actorId) {
+    public void startTask(String taskId, String actualOwnerId) {
 
     }
 
     @Override
-    public void suspendTask(String taskId, String actorId, String note) {
+    public void suspendTask(String taskId, String actualOwnerId, String note) {
 
     }
 
     @Override
-    public void resumeTask(String taskId, String actorId, String note) {
+    public void resumeTask(String taskId, String actualOwnerId, String note) {
 
     }
 
     @Override
-    public void claimTask(String taskId, String actorId) {
+    public void claimTask(String taskId, String actualOwnerId) {
 
     }
 
     @Override
-    public void giveupTask(String taskId, String actorId) {
+    public void giveupTask(String taskId, String actualOwnerId) {
 
     }
 
     @Override
-    public void skipTask(String taskId, String actorId) {
+    public void skipTask(String taskId, String actualOwnerId) {
 
     }
 
@@ -297,9 +302,40 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
         instanceEntity.setCreateDate(processInstance.getCreateDate());
         instanceEntity.setCompletedDate(processInstance.getCompletedDate());
         instanceEntity.setInstanceStatus(processInstance.getStatus());
-        instanceEntity.setVariables(processInstance.serializeVariables());
+        instanceEntity.setContext(processInstance.serializeInstanceContext());
         instanceEntity.setLastModifyDate(processInstance.getLastModifyDate());
+
         flowEntityManager.insert(instanceEntity);
+    }
+
+    private void resolveTasks(ProcessInstance processInstance) {
+        Collection<Task> tasks = processInstance.getTasks();
+        if (tasks == null || tasks.size() == 0) return;
+
+        for (Task task : tasks) {
+            NodeInstance nodeInstance = task.getNodeInstance();
+            TaskEntity taskEntity = new TaskEntity();
+            taskEntity.setId(task.getId());
+            taskEntity.setNodeId(nodeInstance.getNode().getId());
+            taskEntity.setNodeName(nodeInstance.getNode().getName());
+            taskEntity.setNodeInstanceId(nodeInstance.getId());
+            taskEntity.setProcessId(processInstance.getRuleProcess().getId());
+            taskEntity.setProcessName(processInstance.getRuleProcess().getName());
+            taskEntity.setProcessInstanceId(processInstance.getId());
+            taskEntity.setActualOwnerId(task.getActualOwnerId());
+            taskEntity.setTaskStatus(task.getTaskStatus());
+            taskEntity.setCreateTime(nodeInstance.getInDate());
+            flowEntityManager.insert(taskEntity);
+
+            List<TaskParticipant> taskParticipants = task.getTaskParticipants();
+            if(taskParticipants != null && taskParticipants.size() > 0) {
+                List<TaskParticipantEntity> taskParticipantEntities = new ArrayList<TaskParticipantEntity>();
+                for (TaskParticipant taskParticipant : taskParticipants) {
+                    taskParticipantEntities.add(new TaskParticipantEntity(taskParticipant.getTaskId(), taskParticipant.getParticipant()));
+                }
+                flowEntityManager.insertAll(taskParticipantEntities);
+            }
+        }
     }
 
     /**
@@ -335,7 +371,6 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
 
         instanceEntity.setInDate(nodeInstance.getInDate());
         instanceEntity.setOutDate(nodeInstance.getOutDate());
-
         flowEntityManager.insert(instanceEntity);
     }
 
@@ -357,5 +392,16 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
                 flowEntityManager.insert(connectInstanceEntity);
             }
         }
+    }
+
+    void completeNodeInstance(NodeInstance nodeInstance) {
+        PersistenceNodeInstance persistenceNodeInstance = (PersistenceNodeInstance) nodeInstance;
+        NodeInstanceEntity persistenceEntity = persistenceNodeInstance.getPersistenceInstance();
+        NodeInstanceEntity params = new NodeInstanceEntity();
+        params.setId(persistenceEntity.getId());
+        params.setHandlerStatus(nodeInstance.getHandlerStatus());
+        params.setOutDate(nodeInstance.getOutDate());
+        params.setInstanceStatus(nodeInstance.getStatus());
+        flowEntityManager.update(params, "handlerStatus", "outDate", "instanceStatus");
     }
 }

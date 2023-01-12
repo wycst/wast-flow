@@ -184,30 +184,7 @@ public class WastFlowTest {
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
         System.out.println("processInstanceId " + processInstance.getId());
 
-        List list = flowEngine.getNodeInstances(processInstance.getId());
-        System.out.println(list);
-
         flowEngine.destroy();
-
-        // 业务设置自定义的上下文对象（生命周期为流程调用结束）
-        // 方式1 流程启动钩子（onStarted）中给流程的实例添加自定义对象
-        // 自定义的上下文可以通过processInstance直接获取
-        flowEngine.setProcessHook(new DefaultProcessHook() {
-            @Override
-            public void onStarted(ProcessInstance processInstance) {
-                Object customObject = new HashMap();
-                processInstance.setCustomContext(customObject);
-            }
-        });
-
-        // 方式2 （生命周期为流程调用结束）
-        // 同方式1，每次流程启动前需要调用setCustomContext进行设置
-        Object customObject = new HashMap();
-        FlowEngine.setCustomContext(customObject);
-        // 流程驱动过程中都可以使用如下静态方法获取customObject，线程安全的
-        FlowEngine.getCustomContext(); // customObject2 == customObject
-
-
     }
 
 }

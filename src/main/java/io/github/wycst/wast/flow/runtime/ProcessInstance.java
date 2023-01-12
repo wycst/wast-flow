@@ -26,7 +26,7 @@ public class ProcessInstance {
     private final FlowEngine executeEngine;
 
     // 创建时间
-    private final Date createDate;
+    private Date createDate;
 
     // 启动时间
     private Date completedDate;
@@ -41,37 +41,35 @@ public class ProcessInstance {
     private String creator;
 
     // 上下文信息（含历史）
-    private Map<String, Object> context = new HashMap<String, Object>();
+    //    private Map<String, Object> variables = new HashMap<String, Object>();
 
-    // 参数上下文（不含历史）
+    // 实例上下文
+    private ProcessInstanceContext processInstanceContext = new ProcessInstanceContext();
+
+    // 提交参数（合并到variables中）
     private Map<String, Object> params;
 
+    // 节点实例列表
     private List<NodeInstance> nodeInstances = new ArrayList<NodeInstance>();
-    private Map<String, Task> tasks = new LinkedHashMap<String, Task>();
+    // 待办列表
+    private List<Task> tasks = new ArrayList<Task>();
 
-    // If the process instance loaded from the database is initialized to the value with the largest ID in the node instance list
-    private long nextId;
+    private Throwable throwable;
+    private boolean rollback;
 
-    // 网关聚合信息
-    private Map<String, JoinCountContext> joinCountContextMap = new HashMap<String, JoinCountContext>();
-
-    // 自定义对象
+    // 自定义对象(不参与持久化存储)
     private Object customContext;
 
     ProcessInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
-        this.id = IdGenerator.hex();
-        this.ruleProcess = ruleProcess.self();
-        this.parent = parent;
-        this.executeEngine = executeEngine;
+        this(IdGenerator.hex(), ruleProcess.self(), parent, executeEngine);
         this.createDate = new Timestamp(System.currentTimeMillis());
     }
 
-    ProcessInstance(String id, RuleProcess ruleProcess, ProcessInstance parent, Date createDate, FlowEngine executeEngine) {
+    ProcessInstance(String id, RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         this.id = id;
         this.ruleProcess = ruleProcess.self();
         this.parent = parent;
         this.executeEngine = executeEngine;
-        this.createDate = createDate;
     }
 
     /**
@@ -84,20 +82,6 @@ public class ProcessInstance {
      */
     static ProcessInstance createInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         return new ProcessInstance(ruleProcess, parent, executeEngine);
-    }
-
-    /**
-     * 实例加载
-     *
-     * @param id
-     * @param ruleProcess
-     * @param parent
-     * @param createDate
-     * @param executeEngine
-     * @return
-     */
-    static ProcessInstance of(String id, RuleProcess ruleProcess, ProcessInstance parent, Date createDate, FlowEngine executeEngine) {
-        return new ProcessInstance(id, ruleProcess, parent, createDate, executeEngine);
     }
 
     public String getId() {
@@ -149,24 +133,28 @@ public class ProcessInstance {
     }
 
     void setContextValues(Map<String, Object> vars) {
-        this.params = vars == null ? new HashMap<String,Object>() : vars;
-        context.putAll(vars);
+        this.params = vars == null ? new HashMap<String, Object>() : vars;
+        processInstanceContext.getVariables().putAll(vars);
     }
 
-    public Object getContextValue(String key) {
-        return context.get(key);
+    public Object getVariable(String key) {
+        return processInstanceContext.getVariable(key);
     }
 
-    public Object setContextValue(String key, Object value) {
-        return context.put(key, value);
+    public void setVariable(String key, Object value) {
+        processInstanceContext.setVariable(key, value);
     }
 
-    public Map<String, Object> getContext() {
-        return context;
+    public Object removeVariable(String key) {
+        return processInstanceContext.removeVariable(key);
+    }
+
+    public Map<String, Object> getVariables() {
+        return processInstanceContext.getVariables();
     }
 
     public Map<String, Object> getParams() {
-        return context;
+        return params;
     }
 
     void addNodeInstance(NodeInstance nodeInstance) {
@@ -178,11 +166,11 @@ public class ProcessInstance {
     }
 
     public Collection<Task> getTasks() {
-        return tasks.values();
+        return tasks; // .values();
     }
 
     synchronized long nextNodeInstanceId() {
-        return ++nextId;
+        return processInstanceContext.nextNodeInstanceId();
     }
 
     FlowEngine getExecuteEngine() {
@@ -190,19 +178,23 @@ public class ProcessInstance {
     }
 
     public String serializeVariables() {
-        return JSON.toJsonString(context);
+        return JSON.toJsonString(getVariables());
+    }
+
+    public String serializeInstanceContext() {
+        return JSON.toJsonString(processInstanceContext);
     }
 
     void setJoinCountContext(String joinNodeId, JoinCountContext joinCountContext) {
-        joinCountContextMap.put(joinNodeId, joinCountContext);
+        processInstanceContext.setJoinCountContext(joinNodeId, joinCountContext);
     }
 
     JoinCountContext getJoinCountContext(String joinNodeId) {
-        return joinCountContextMap.get(joinNodeId);
+        return processInstanceContext.getJoinCountContext(joinNodeId);
     }
 
     void removeJoinCountContext(String joinNodeId) {
-        joinCountContextMap.remove(joinNodeId);
+        processInstanceContext.removeJoinCountContext(joinNodeId);
     }
 
     public Object getCustomContext() {
@@ -214,6 +206,28 @@ public class ProcessInstance {
     }
 
     void addTask(Task task) {
-        tasks.put(task.getId(), task);
+//        tasks.put(task.getId(), task);
+        tasks.add(task);
+    }
+
+    public void recordActorOwner(String nodeId, String actualOwnerId) {
+        processInstanceContext.recordActorOwner(nodeId, actualOwnerId);
+    }
+
+    public String historyActorOwner(String nodeId) {
+        return processInstanceContext.historyActorOwner(nodeId);
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    public boolean isRollback() {
+        return rollback;
+    }
+
+    void setThrowableAndRollback(Throwable throwable, boolean rollback) {
+        this.throwable = throwable;
+        this.rollback = rollback;
     }
 }

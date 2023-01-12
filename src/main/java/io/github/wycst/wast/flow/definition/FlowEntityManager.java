@@ -1,6 +1,7 @@
 package io.github.wycst.wast.flow.definition;
 
 import io.github.wycst.wast.flow.entitys.IEntity;
+import io.github.wycst.wast.flow.entitys.TaskEntity;
 import io.github.wycst.wast.jdbc.oql.OqlQuery;
 
 import java.io.Serializable;
@@ -71,6 +72,13 @@ public interface FlowEntityManager {
      * @return
      */
     public <E> List<E> queryList(Class<E> cls, OqlQuery oqlQuery, Map<String, Object> params);
+
+    /**
+     * 批量插入
+     *
+     * @param entities
+     */
+    void insertAll(List<? extends IEntity> entities);
 
     /**
      * 开启事务

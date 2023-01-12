@@ -66,7 +66,7 @@ public class RuntimeConnect extends Connect {
                 case Script: {
                     Object result;
                     try {
-                        result = scriptEL.evaluate(processInstance.getContext());
+                        result = scriptEL.evaluate(processInstance.getVariables());
                     } catch (RuntimeException runtimeException) {
                         throw new FlowRuntimeException(String.format("ScriptEl: '%s' execute error: %s", getScript(), runtimeException.getMessage()), runtimeException);
                     }

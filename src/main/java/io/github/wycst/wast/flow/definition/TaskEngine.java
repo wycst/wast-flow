@@ -14,10 +14,10 @@ public interface TaskEngine {
      * 完成任务
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      * @param context
      */
-    public void complete(String taskId, String actorId, Map<String, Object> context);
+    public void complete(String taskId, String actualOwnerId, Map<String, Object> context);
 
 
     /**
@@ -32,50 +32,50 @@ public interface TaskEngine {
      * 启动任务
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      */
-    public void startTask(String taskId, String actorId);
+    public void startTask(String taskId, String actualOwnerId);
 
     /**
      * 暂停任务
      *
      * @param taskId
-     * @param actorId
-     * @param note    阶段回复
+     * @param actualOwnerId
+     * @param note         阶段回复
      */
-    public void suspendTask(String taskId, String actorId, String note);
+    public void suspendTask(String taskId, String actualOwnerId, String note);
 
     /**
      * 恢复暂停的任务
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      * @param note
      */
-    public void resumeTask(String taskId, String actorId, String note);
+    public void resumeTask(String taskId, String actualOwnerId, String note);
 
     /**
      * 组待办场景下认领任务
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      */
-    public void claimTask(String taskId, String actorId);
+    public void claimTask(String taskId, String actualOwnerId);
 
     /**
      * 组待办场景下已认领任务放弃
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      */
-    public void giveupTask(String taskId, String actorId);
+    public void giveupTask(String taskId, String actualOwnerId);
 
     /**
      * 跳过任务（不执行当前任务，并将任务下发到下个环节）
      *
      * @param taskId
-     * @param actorId
+     * @param actualOwnerId
      */
-    public void skipTask(String taskId, String actorId);
+    public void skipTask(String taskId, String actualOwnerId);
 
 }
