@@ -84,12 +84,12 @@ public class SplitNode extends RuntimeNode {
             JoinCountContext joinCountContext = new JoinCountContext(passNextOuts.size());
             processInstance.setJoinCountContext(joinNodeId, joinCountContext);
 
-            boolean asynchronous = handlerOption.isAsynchronous();
             // 暂时按异步处理
-            asynchronous = true;
+            boolean asynchronous = passNextOuts.size() > 1;
             for (RuntimeNode nextOut : passNextOuts) {
                 final RuntimeNode nextNode = nextOut;
                 if(asynchronous) {
+                    processInstance.setAsyncMode(true);
                     processInstance.getExecuteEngine().submitRunnable(new Callable() {
                         @Override
                         public Object call() throws Exception {
@@ -121,6 +121,7 @@ public class SplitNode extends RuntimeNode {
             asynchronous = true;
             final RuntimeNode nextNode = runtimeConnect.getTo();
             if(asynchronous) {
+                processInstance.setAsyncMode(true);
                 processInstance.getExecuteEngine().submitRunnable(new Callable() {
                     @Override
                     public Object call() throws Exception {

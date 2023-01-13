@@ -35,6 +35,9 @@ public class JoinNode extends RuntimeNode {
         if (joinCountContext == null) return true;
         if (joinCountContext.decrementAndGet() == 0) {
             processInstance.removeJoinCountContext(getId());
+            if(processInstance.isAsyncMode()) {
+                processInstance.unlock();
+            }
             return true;
         }
         return false;

@@ -21,10 +21,12 @@ public class WastWorkFlowTest {
     private static DataSource getDatasource() {
         //note: 正式使用不要使用SimpleDataSource
         SimpleDataSource simpleDataSource = new SimpleDataSource();
-        simpleDataSource.setJdbcUrl("jdbc:mysql://localhost:3306/wtf_flow?createDatabaseIfNotExist=true&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&pinGlobalTxToPhysicalConnection=true");
+        simpleDataSource.setJdbcUrl("jdbc:mysql://10.1.22.121:3306/monitor-operation-server-hlj?createDatabaseIfNotExist=true&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&pinGlobalTxToPhysicalConnection=true");
         simpleDataSource.setDriverClass("com.mysql.cj.jdbc.Driver");
-        simpleDataSource.setUsername("dev");
-        simpleDataSource.setPassword("dev#000");
+//        simpleDataSource.setUsername("dev");
+//        simpleDataSource.setPassword("dev#000");
+        simpleDataSource.setUsername("root");
+        simpleDataSource.setPassword("3edc");
         return simpleDataSource;
     }
 

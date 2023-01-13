@@ -23,10 +23,8 @@ public class EndNode extends RuntimeNode {
     }
 
     @Override
-    protected void runOut(ProcessInstance processInstance, NodeInstance nodeInstance) {
-        processInstance.setStatus(Status.Completed);
-        processInstance.setCompletedDate(new Timestamp(System.currentTimeMillis()));
-
+    protected void runOut(ProcessInstance processInstance, NodeInstance nodeInstance) throws Exception {
+        processInstance.completedInstance();
         processInstance.getExecuteEngine().onCompleted(processInstance);
     }
 

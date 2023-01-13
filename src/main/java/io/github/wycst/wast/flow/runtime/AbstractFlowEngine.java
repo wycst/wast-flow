@@ -180,6 +180,7 @@ class AbstractFlowEngine implements NodeEngine {
     private void loadStaticResources() {
         try {
             if (staticResources == null) return;
+            log.info("static resources {}", staticResources);
             // 约定:注意路径首字母不能是/,否则为空
             Enumeration<URL> urls = this.getClass().getClassLoader().getResources(staticResources);
             while (urls.hasMoreElements()) {
@@ -193,7 +194,8 @@ class AbstractFlowEngine implements NodeEngine {
                         String jarEntryName = jarEntry.getName();
                         // 排除文件夹或class
                         if (!jarEntry.isDirectory()) {
-                            if (jarEntryName.toLowerCase().endsWith(".json")) {
+                            int index = jarEntryName.indexOf(staticResources);
+                            if (jarEntryName.toLowerCase().endsWith(".json") && (index == 0 && index == 1)) {
                                 String json = null;
                                 try {
                                     json = StringUtils.fromResource(jarEntryName);
@@ -201,7 +203,6 @@ class AbstractFlowEngine implements NodeEngine {
                                 } catch (Throwable throwable) {
                                     log.error(throwable.getMessage(), throwable);
                                     log.info("json {}", json);
-                                    log.info("jarEntryName {}", jarEntryName);
                                 }
                             }
                         }
@@ -221,7 +222,6 @@ class AbstractFlowEngine implements NodeEngine {
                                 } catch (Throwable throwable) {
                                     log.error(throwable.getMessage(), throwable);
                                     log.info("json {}", json);
-                                    log.info("file {}", path);
                                 }
                             }
                         }

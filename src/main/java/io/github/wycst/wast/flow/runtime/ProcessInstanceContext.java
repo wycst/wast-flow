@@ -21,6 +21,9 @@ class ProcessInstanceContext {
     // 聚合信息
     private Map<String, JoinCountContext> joinCountContexts = new HashMap<String, JoinCountContext>();
 
+    // 异步模式
+    private boolean asyncMode;
+
     public long getNextId() {
         return nextId;
     }
@@ -87,5 +90,13 @@ class ProcessInstanceContext {
 
     public String historyActorOwner(String nodeId) {
         return actualOwners.get(nodeId);
+    }
+
+    public boolean isAsyncMode() {
+        return asyncMode;
+    }
+
+    public void setAsyncMode(boolean asyncMode) {
+        this.asyncMode = asyncMode;
     }
 }

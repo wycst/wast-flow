@@ -19,9 +19,8 @@ public class TerminationNode extends RuntimeNode {
     }
 
     @Override
-    protected void runOut(ProcessInstance processInstance, NodeInstance nodeInstance) {
-        processInstance.setStatus(Status.Stop);
-        processInstance.setCompletedDate(new Timestamp(System.currentTimeMillis()));
+    protected void runOut(ProcessInstance processInstance, NodeInstance nodeInstance) throws Exception {
+        processInstance.stopInstance();
     }
 
     @Override

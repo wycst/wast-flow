@@ -53,7 +53,9 @@ public class ProcessInstance {
     private List<NodeInstance> nodeInstances = new ArrayList<NodeInstance>();
     // 待办列表
     private List<Task> tasks = new ArrayList<Task>();
-
+    // 同步lock
+    private Object lock = new Object();
+    private boolean asynchronous;
     private Throwable throwable;
     private boolean rollback;
 
@@ -229,5 +231,43 @@ public class ProcessInstance {
     void setThrowableAndRollback(Throwable throwable, boolean rollback) {
         this.throwable = throwable;
         this.rollback = rollback;
+    }
+
+    void setAsyncMode(boolean asyncMode) {
+        processInstanceContext.setAsyncMode(asyncMode);
+    }
+
+    public boolean isAsyncMode() {
+        return processInstanceContext.isAsyncMode();
+    }
+
+    void lock() throws InterruptedException {
+        synchronized (lock) {
+            lock.wait();
+        }
+    }
+
+    void unlock() {
+        synchronized (lock) {
+            lock.notify();
+        }
+        // reset async mode
+        setAsyncMode(false);
+    }
+
+    void completedInstance() throws Exception {
+        setStatus(Status.Completed);
+        setCompletedDate(new Timestamp(System.currentTimeMillis()));
+        if (isAsyncMode()) {
+            unlock();
+        }
+    }
+
+    void stopInstance() throws Exception {
+        setStatus(Status.Stop);
+        setCompletedDate(new Timestamp(System.currentTimeMillis()));
+        if (isAsyncMode()) {
+            unlock();
+        }
     }
 }
