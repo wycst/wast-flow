@@ -194,11 +194,14 @@ class AbstractFlowEngine implements NodeEngine {
                         // 排除文件夹或class
                         if (!jarEntry.isDirectory()) {
                             if (jarEntryName.toLowerCase().endsWith(".json")) {
+                                String json = null;
                                 try {
-                                    String json = StringUtils.fromResource(jarEntryName);
+                                    json = StringUtils.fromResource(jarEntryName);
                                     FlowHelper.deployment(FlowResource.ofJson(json));
                                 } catch (Throwable throwable) {
                                     log.error(throwable.getMessage(), throwable);
+                                    log.info("json {}", json);
+                                    log.info("jarEntryName {}", jarEntryName);
                                 }
                             }
                         }
@@ -211,11 +214,14 @@ class AbstractFlowEngine implements NodeEngine {
                         for (File f : files) {
                             String path = f.getPath();
                             if (path.toLowerCase().endsWith(".json")) {
+                                String json = null;
                                 try {
-                                    String json = StringUtils.fromStream(new FileInputStream(f));
+                                    json = StringUtils.fromStream(new FileInputStream(f));
                                     FlowHelper.deployment(FlowResource.ofJson(json));
                                 } catch (Throwable throwable) {
                                     log.error(throwable.getMessage(), throwable);
+                                    log.info("json {}", json);
+                                    log.info("file {}", path);
                                 }
                             }
                         }

@@ -38,7 +38,13 @@ public class NodeInstance {
         this.prev = prev;
         this.processInstance = processInstance;
         this.inDate = new Timestamp(System.currentTimeMillis());
-        processInstance.addNodeInstance(this);
+    }
+
+    NodeInstance(long id, RuntimeNode node, ProcessInstance processInstance) {
+        this.id = id;
+        this.node = node;
+        this.prev = null;
+        this.processInstance = processInstance;
     }
 
     // 节点运行态id，默认和nodeId一致，当发生并行时按:序号后缀区分

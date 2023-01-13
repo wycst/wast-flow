@@ -76,13 +76,12 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             onStarted(processInstance);
             // start
             ruleProcess.getStartNode().start(processInstance);
-            persistenceProcessInstance(processInstance);
-            resolveTasks(processInstance);
             if (processInstance.isRollback()) {
                 throw processInstance.getThrowable();
-            } else {
-                commitTransaction();
             }
+            persistenceProcessInstance(processInstance);
+            resolveTasks(processInstance);
+            commitTransaction();
             return processInstance;
         } catch (Throwable throwable) {
             // 发生了未捕获的异常回滚数据

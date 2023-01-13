@@ -68,7 +68,7 @@ public class ManualNode extends RuntimeNode {
     }
 
     /**
-     * 更新实例对象
+     * 完成时更新节点实例对象
      *
      * @param processInstance
      * @param nodeInstance

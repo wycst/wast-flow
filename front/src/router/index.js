@@ -6,6 +6,11 @@ const routers = [
     redirect: "/main/flow",
   },
   {
+    path: "/iframe",
+    name: "iframe",
+    component: () => import("../demo/iframe.vue"),
+  },
+  {
     path: "/main",
     title: "主页",
     name: "main",

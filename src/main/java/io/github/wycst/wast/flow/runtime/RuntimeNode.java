@@ -158,6 +158,8 @@ public class RuntimeNode extends Node {
         }
         // create instance && run in
         NodeInstance nodeInstance = new NodeInstance(this, prev, processInstance);
+        processInstance.addNodeInstance(nodeInstance);
+
         runIn(nodeInstance, processInstance);
         if (isAutoCompleted()) {
             // handle complete
@@ -211,6 +213,8 @@ public class RuntimeNode extends Node {
                 // continue throw up
                 throw exception;
             }
+            // print exception
+            exception.printStackTrace();
             return;
         } finally {
             // on Leave
