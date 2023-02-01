@@ -55,6 +55,9 @@ const DefaultHtmlTypes = {
                 <path d="M986.112 446.7712a38.4 38.4 0 0 0 38.4-38.4V144.128a140.9536 140.9536 0 0 0-140.8-140.8L140.7488 3.6864a140.9536 140.9536 0 0 0-140.8 140.8v735.3856a140.9536 140.9536 0 0 0 140.8 140.8l742.9632-0.4096a140.9536 140.9536 0 0 0 140.8-140.8V588.288c0-3.6864-1.1264-7.0144-2.0992-10.3936a37.8368 37.8368 0 0 0-11.9808-29.5936L785.8176 342.6304c-26.0096-23.8592-65.8432-24.576-96.2048 1.9968l-163.1232 182.8864-146.2272-84.9408a70.8608 70.8608 0 0 0-53.3504-13.6192 70.3488 70.3488 0 0 0-44.544 26.4704L179.6096 563.8656a38.4 38.4 0 0 0 55.7056 52.8384l103.8336-109.568 145.9712 84.8384c25.9584 20.0192 62.976 18.9952 91.5968-5.888l162.3552-182.1184 208.5888 191.0272v284.4672c0 35.2768-28.7232 64-64 64l-742.912 0.4096c-35.2768 0-64-28.7232-64-64V144.4864c0-35.2768 28.7232-64 64-64l742.9632-0.4096c35.2768 0 64 28.7232 64 64v264.2944c0 21.1968 17.2032 38.4 38.4 38.4z"></path>
                 <path d="M264.4992 248.4224m-49.664 0a49.664 49.664 0 1 0 99.328 0 49.664 49.664 0 1 0-99.328 0Z"></path>
               </svg>`,
+    del: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M202.666667 256h-42.666667a32 32 0 0 1 0-64h704a32 32 0 0 1 0 64H266.666667v565.333333a53.333333 53.333333 0 0 0 53.333333 53.333334h384a53.333333 53.333333 0 0 0 53.333333-53.333334V352a32 32 0 0 1 64 0v469.333333c0 64.8-52.533333 117.333333-117.333333 117.333334H320c-64.8 0-117.333333-52.533333-117.333333-117.333334V256z m224-106.666667a32 32 0 0 1 0-64h170.666666a32 32 0 0 1 0 64H426.666667z m-32 288a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z m170.666666 0a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z" fill="#000000" p-id="3009"></path>
+          </svg>`,
 };
 
 const defs = `
@@ -410,7 +413,7 @@ class GraphicDesign {
         // 容器
         this.containers = {};
         // 圈选记录
-        this.selections = [];
+        this.groupSelectElements = [];
         // 设计模式
         this.designMode = 'Simple'
         // 当前选择元素
@@ -527,6 +530,11 @@ class GraphicDesign {
         }).hide();
         this.groupSelection.node.setAttribute("stroke-dasharray", "8 8");
         this.dragableGroupSelection();
+        this.groupSelection.click(function (evt) {
+            // showGroupSelectionTool
+            me.showGroupSelectionTool();
+            preventDefault(evt);
+        });
 
         // 水平对齐线使用rect替代，只需要更新y即可
         this.horizontalLine = this.renderRect(0, 0, 0, 0.0001).attr({
@@ -650,6 +658,31 @@ class GraphicDesign {
             // create next task
             me.nextEnd();
         });
+
+        if (this.deleteTool) {
+            this.deleteTool.remove();
+        }
+        this.deleteTool = this.renderHTML("del", 0, 0, 16, 16).attr({
+            opacity: .5,
+            title: "删除元素",
+            cursor: "pointer"
+        }).mouseover(function () {
+            this.attr("opacity", 1);
+            me.dragingElement = {};
+        }).mouseout(function () {
+            this.attr("opacity", .5);
+            me.dragingElement = null;
+        }).hide();
+        this.deleteTool.click(function (evt) {
+            let host = me.deleteTool.data("host");
+            if(!host) {
+                me.deleteGroupSelectElements();
+            } else {
+                // delete element
+                me.deleteSelectElement();
+            }
+            me.deleteTool.hide();
+        });
     };
 
     /**
@@ -672,7 +705,7 @@ class GraphicDesign {
             dragContext.dx = dx;
             dragContext.dy = dy;
             // update select elements position
-            me.elementsPanTo(this.selections, panX, panY);
+            me.elementsPanTo(this.groupSelectElements, panX, panY);
         }, (event) => {
             // start down
             if (!me.option.editable) return;
@@ -1424,7 +1457,7 @@ class GraphicDesign {
         this.elements = {};
         this.containers = {};
         this.idPool = [];
-        this.selections = [];
+        this.groupSelectElements = [];
     };
 
     initPaper() {
@@ -1450,7 +1483,7 @@ class GraphicDesign {
         this.handleDocumentKeyDown = (e) => {
             if (e.keyCode == 46) {
                 // delete
-                me.delSelectElement();
+                me.deleteSelectElement();
             } else if (e.keyCode == 8) {
                 // backspace
                 let active = document.activeElement;
@@ -1540,7 +1573,8 @@ class GraphicDesign {
                 } else {
                     me.translateX = canvasDragContext.translateX + dx;
                     me.translateY = canvasDragContext.translateY + dy;
-                    me.hideEditElements(this.selectElement);
+                    // me.hideEditElements(this.selectElement);
+                    me.cancelSelect();
                     me.translateTo(me.translateX, me.translateY);
                 }
             }
@@ -1548,8 +1582,8 @@ class GraphicDesign {
                 // panto and remove transform
 
                 if (me.enableGroupSelection()) {
-                    // compute selections
-                    me.selectionElements();
+                    // compute groupSelectElements
+                    me.showGroupSelection();
                 } else {
                     me.panTo(me.translateX, me.translateY, true);
                 }
@@ -1597,15 +1631,37 @@ class GraphicDesign {
     };
 
     /**
+     * 显示圈选的工具栏图标
+     */
+    showGroupSelectionTool() {
+        this.cancelSelect();
+        let {x, y, width, height} = this.groupSelection.attrs;
+        // this.deleteTool
+        let tx = x + width + 5;
+        let ty = y - 5;
+        this.deleteTool.attr({
+            x: tx,
+            y: ty
+        }).data("host", null).show();
+    };
+
+    /**
+     * 隐藏圈选的工具栏图标
+     */
+    hideGroupSelectionTool() {
+        this.deleteTool.hide();
+    };
+    
+    /**
      * 圈选元素
      * */
-    selectionElements() {
+    showGroupSelection() {
         let groupSelection = this.groupSelection;
         if (!groupSelection || !groupSelection.attrs) return;
         let {x, y, width, height} = groupSelection.attrs;
         if (!x || !y || !width || !height) return;
 
-        let selections = this.selections = [];
+        let groupSelectElements = this.groupSelectElements = [];
         let elements = this.elements;
         let connectSets = [];
         for (let elementId in elements) {
@@ -1614,48 +1670,64 @@ class GraphicDesign {
             if (type != "path") {
                 let dropFlag = this.isDropContainer(element, groupSelection);
                 if (dropFlag) {
-                    selections.push(element);
+                    groupSelectElements.push(element);
                     let outLines = element.data("out");
                     for (let lineId in outLines || {}) {
                         if (!connectSets.includes(lineId)) {
                             connectSets.push(lineId);
-                            selections.push(outLines[lineId]);
+                            groupSelectElements.push(outLines[lineId]);
                         }
                     }
                     let inLines = element.data("in");
                     for (let lineId in inLines || {}) {
                         if (!connectSets.includes(lineId)) {
                             connectSets.push(lineId);
-                            selections.push(inLines[lineId]);
+                            groupSelectElements.push(inLines[lineId]);
                         }
                     }
                 }
             }
         }
 
-        if (this.selections.length == 0) {
+        if (this.groupSelectElements.length == 0) {
             this.groupSelection.hide();
+            this.groupSelectionVisible = false;
+        } else {
+            this.groupSelection.show();
+            this.groupSelectionVisible = true;
+            // show delete tool
+            this.showGroupSelectionTool();
         }
     };
 
     /** 重置圈选 */
     resetGroupSelection() {
         this.groupSelection.hide();
-        this.selections = [];
+        this.groupSelectElements = [];
+        if(this.groupSelectionVisible) {
+            this.hideGroupSelectionTool();
+        }
     };
 
-    // 单击事件
-    handleClickBlank(evt) {
-        this.option.clickBlank && this.option.clickBlank(evt);
+    /**
+     * 取消当前选择
+     */
+    cancelSelect() {
         let selectElement = this.selectElement;
         if (selectElement) {
             this.hideEditElements(selectElement);
             this.selectElement = null;
         }
+    };
+
+    // 单击事件
+    handleClickBlank(evt) {
+        this.option.clickBlank && this.option.clickBlank(evt);
+        this.cancelSelect();
         // if(!this.selectionMode) {
         //     // 关闭圈选
         //     this.groupSelection.hide();
-        //     this.selections = [];
+        //     this.groupSelectElements = [];
         // }
         this.closePopwin();
     };
@@ -2010,7 +2082,42 @@ class GraphicDesign {
         return h;
     };
 
-    delSelectElement() {
+    /**
+     * 删除圈选元素
+     * 
+     */
+    deleteGroupSelectElements() {
+        let me = this;
+        let groupSelectElements = this.groupSelectElements;
+        if(!groupSelectElements || groupSelectElements.length == 0) return;
+        let undoData = null;
+        let enableHistory = this.enableHistory();
+        if (enableHistory) {
+            undoData = JSON.stringify(this.getData());
+        }
+        for(let element of groupSelectElements) {
+            if(element.removed !== true) {
+                this.removeElement(element);
+            }
+        }
+        if (enableHistory) {
+            let data = JSON.stringify(this.getData());
+            this.addAction({
+                undo() {
+                    me.setData(undoData);
+                },
+                redo() {
+                    me.setData(data);
+                }
+            });
+        }
+        this.resetGroupSelection();
+    };
+
+    /**
+     * 删除选中的元素
+     */
+    deleteSelectElement() {
         if (this.selectElement) {
             let me = this;
             let element = this.selectElement;
@@ -2018,7 +2125,7 @@ class GraphicDesign {
             let action = null;
             let undoData = null;
             if (this.enableHistory()) {
-                let {in: inlines, out: outLines} = element.data();
+                let {in: inlines = {}, out: outLines = {}} = element.data();
                 let type = element.type;
                 if (type == "path" || (Object.keys(inlines).length == 0 && Object.keys(outLines).length == 0)) {
                     let elementId = element.id;
@@ -3794,7 +3901,13 @@ class GraphicDesign {
     hideEditElements(targetElement) {
         let type = null;
         if (!targetElement || (type = targetElement.type) == "rect" || type == "image" || type == "html") {
-            let {nw, w, sw, n, s, ne, e, se, dashOuterPath, linkTool, nextTaskTool, nextSplitTool, nextEndTool} = this;
+            let {nw, w, sw, n, s, ne, e, se, dashOuterPath,
+                linkTool,
+                nextTaskTool,
+                nextSplitTool,
+                nextEndTool,
+                deleteTool
+            } = this;
             nw.hide();
             w.hide();
             sw.hide();
@@ -3808,6 +3921,7 @@ class GraphicDesign {
             nextTaskTool.hide();
             nextSplitTool.hide();
             nextEndTool.hide();
+            deleteTool.hide();
         } else if (type == "path") {
             // 连线
             let startElement = targetElement.data("start");
@@ -3841,7 +3955,13 @@ class GraphicDesign {
         if (type == "rect" || isImage || type == "html") {
             let {x, y, width, height} = targetElement.attrs;
             let nodeType = targetElement.data("nodeType");
-            let {nw, w, sw, n, s, ne, e, se, dashOuterPath, linkTool, nextTaskTool, nextSplitTool, nextEndTool} = this;
+            let {nw, w, sw, n, s, ne, e, se, dashOuterPath,
+                linkTool,
+                nextTaskTool,
+                nextSplitTool,
+                nextEndTool,
+                deleteTool
+            } = this;
             // 更新位置，并显示
             let hiddenPathStartX = x - 5;
             let hiddenPathStartY = y - 5;
@@ -3899,7 +4019,18 @@ class GraphicDesign {
                     x: hiddenPathEndX + 10,
                     y: hiddenPathStartY + 48
                 }).show();
+
+                deleteTool.attr({
+                    x: hiddenPathEndX + 10 + 16,
+                    y: hiddenPathStartY - 5
+                }).data("host", targetElement).show();
+            } else {
+                deleteTool.attr({
+                    x: hiddenPathEndX + 10,
+                    y: hiddenPathStartY - 5
+                }).data("host", targetElement).show();
             }
+
             // dropNw.attr("path", "M" + (hiddenPathStartX + 5) + "," + hiddenPathStartY + "H" + hiddenPathStartX + "V" + (hiddenPathStartY + 5));
             // dropNe.attr("path","M" + (hiddenPathEndX - 5) + "," + hiddenPathStartY + "H" + hiddenPathEndX + "V" + (hiddenPathStartY + 5));
             // dropSw.attr("path","M" + (hiddenPathStartX + 5) + "," + hiddenPathEndY + "H" + hiddenPathStartX + "V" + (hiddenPathEndY - 5));
@@ -3915,6 +4046,15 @@ class GraphicDesign {
                 leftRect.show();
                 nextElement = nextElement.data("right");
             }
+
+            let connectRect = this.connectRect;
+            let {x, y, width, height} = connectRect.attrs;
+            let dx = x + width / 2;
+            let dy = y + height / 2;
+            this.deleteTool.attr({
+                x: dx,
+                y: dy
+            }).data("host", targetElement).show();
         }
         targetElement.attr("cursor", "move");
     };

@@ -242,6 +242,7 @@ class ElementData {
      */
     hide() {
         setAndRemoveStyle(this.node, "display", "none");
+        this.hidden = true;
         return this;
     };
 
@@ -252,7 +253,17 @@ class ElementData {
      */
     show() {
         setAndRemoveStyle(this.node, "display", null);
+        this.hidden = false;
         return this;
+    };
+
+    /**
+     * 是否隐藏
+     *
+     * @returns {boolean|*}
+     */
+    isHidden() {
+        return this.hidden;
     };
 
     /**
