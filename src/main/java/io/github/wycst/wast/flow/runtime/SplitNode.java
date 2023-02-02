@@ -90,6 +90,7 @@ public class SplitNode extends RuntimeNode {
                 final RuntimeNode nextNode = nextOut;
                 if(asynchronous) {
                     processInstance.setAsyncMode(true);
+                    processInstance.incrementStackCount();
                     processInstance.getExecuteEngine().submitRunnable(new Callable() {
                         @Override
                         public Object call() throws Exception {
@@ -102,6 +103,9 @@ public class SplitNode extends RuntimeNode {
                 }
             }
         }
+
+        // 检查栈退出
+        checkExitStack(processInstance);
     }
 
     // 网关and
@@ -122,6 +126,7 @@ public class SplitNode extends RuntimeNode {
             final RuntimeNode nextNode = runtimeConnect.getTo();
             if(asynchronous) {
                 processInstance.setAsyncMode(true);
+                processInstance.incrementStackCount();
                 processInstance.getExecuteEngine().submitRunnable(new Callable() {
                     @Override
                     public Object call() throws Exception {
@@ -133,6 +138,9 @@ public class SplitNode extends RuntimeNode {
                 nextNode.run(processInstance, nodeInstance);
             }
         }
+
+        // 检查栈退出
+        checkExitStack(processInstance);
     }
 
     @Override

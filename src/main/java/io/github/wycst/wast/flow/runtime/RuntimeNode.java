@@ -215,6 +215,7 @@ public class RuntimeNode extends Node {
             }
             // print exception
             exception.printStackTrace();
+            // Exit current stack
             return;
         } finally {
             // on Leave
@@ -238,7 +239,6 @@ public class RuntimeNode extends Node {
                 throw exception;
             } else {
                 exception.printStackTrace();
-                // stop
                 return;
             }
         } finally {
@@ -408,6 +408,21 @@ public class RuntimeNode extends Node {
             } else {
                 nextOut.run(processInstance, nodeInstance);
             }
+        }
+
+        // the stack may exit here
+        checkExitStack(processInstance);
+    }
+
+    /**
+     * 检查流程当前调用栈是否结束，处理异步线程下数据持久化问题
+     *
+     * @param processInstance
+     */
+    void checkExitStack(ProcessInstance processInstance) {
+        int count = processInstance.decrementStackCount();
+        if(count == 0) {
+            // end
         }
     }
 

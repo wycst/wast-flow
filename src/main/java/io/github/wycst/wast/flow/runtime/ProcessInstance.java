@@ -6,6 +6,7 @@ import io.github.wycst.wast.json.JSON;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author wangyunchao
@@ -55,7 +56,8 @@ public class ProcessInstance {
     private List<Task> tasks = new ArrayList<Task>();
     // 同步lock
     private Object lock = new Object();
-    private boolean asynchronous;
+    // 每次初始化主栈计数为1
+    private final AtomicInteger stackCount = new AtomicInteger(1);
     private Throwable throwable;
     private boolean rollback;
 
@@ -269,5 +271,17 @@ public class ProcessInstance {
         if (isAsyncMode()) {
             unlock();
         }
+    }
+
+    int getStackCountValue() {
+        return stackCount.get();
+    }
+
+    int incrementStackCount() {
+        return stackCount.incrementAndGet();
+    }
+
+    int decrementStackCount() {
+        return stackCount.decrementAndGet();
     }
 }

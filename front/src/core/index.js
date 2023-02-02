@@ -1116,6 +1116,11 @@ class GraphicDesign {
             me.closePopwin();
         });
 
+        // mousedown事件阻止冒泡（传播）
+        bindDomEvent(popwinDom, "mousedown", function (evt) {
+            evt.stopPropagation();
+        });
+
         // 表单dom
         this.propertyForm = popwinDom.querySelector(".flow-property-form");
     };
@@ -4047,14 +4052,12 @@ class GraphicDesign {
                 nextElement = nextElement.data("right");
             }
 
-            let connectRect = this.connectRect;
-            let {x, y, width, height} = connectRect.attrs;
-            let dx = x + width / 2;
-            let dy = y + height / 2;
-            this.deleteTool.attr({
-                x: dx,
-                y: dy
-            }).data("host", targetElement).show();
+            // let connectRect = this.connectRect;
+            // let {x, y, width, height} = connectRect.attrs;
+            // let dx = x + width / 2;
+            // let dy = y + height / 2;
+            let {x, y} = targetElement.getPointAtLength(1);
+            this.deleteTool.attr({x, y}).data("host", targetElement).show();
         }
         targetElement.attr("cursor", "move");
     };

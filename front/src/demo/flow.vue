@@ -5,7 +5,7 @@
     <div ref="flow" class="wast-flow" style="width: 100%; height: 680px; overflow: hidden;">
     </div>
 
-    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>
+<!--    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>-->
 
   </div>
 </template>
