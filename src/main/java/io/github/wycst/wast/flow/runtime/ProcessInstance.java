@@ -241,7 +241,7 @@ public class ProcessInstance {
         return processInstanceContext.isAsyncMode();
     }
 
-    void lock() throws InterruptedException {
+    void await() throws InterruptedException {
         synchronized (lock) {
             lock.wait();
         }
