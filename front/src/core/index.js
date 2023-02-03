@@ -5374,8 +5374,15 @@ class GraphicDesign {
     exportImage() {
         const svg = this.dom;
         const content = new XMLSerializer().serializeToString(svg);// svg.outerHTML;
-        const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(content)))}`;
-        console.log(src);
+        let htmlSvgcontent =
+            `<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2000">
+                <foreignObject x="0" y="0" width="100%" height="100%">
+                    ${content}
+                </foreignObject>
+             </svg>`;
+
+        console.log(content);
+        const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(htmlSvgcontent)))}`;
         const img = new Image();
         img.src = src;
         img.onload = () => {
