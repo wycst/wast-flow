@@ -33,11 +33,11 @@ public class JoinNode extends RuntimeNode {
     protected boolean beforeRun(ProcessInstance processInstance) {
         JoinCountContext joinCountContext = processInstance.getJoinCountContext(getId());
         if (joinCountContext == null) return true;
-        if (joinCountContext.decrementAndGet() == 0) {
+        int value = joinCountContext.decrementAndGet();
+        // complete current and continue await
+        joinCountContext.completeAndAwait();
+        if (value == 0) {
             processInstance.removeJoinCountContext(getId());
-            if(processInstance.isAsyncMode()) {
-                processInstance.unlock();
-            }
             return true;
         }
         return false;

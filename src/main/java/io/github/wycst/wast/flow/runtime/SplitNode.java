@@ -81,20 +81,28 @@ public class SplitNode extends RuntimeNode {
         if (passNextOuts.size() == 0) {
             throw new FlowRuntimeException(String.format("Gateway Error: SplitNode[id = '%s', name = '%s'] no branch passes through.", id, name));
         } else {
-            JoinCountContext joinCountContext = new JoinCountContext(passNextOuts.size());
+            final JoinCountContext joinCountContext = new JoinCountContext(passNextOuts.size());
             processInstance.setJoinCountContext(joinNodeId, joinCountContext);
 
+            int nextOutsSize = passNextOuts.size();
             // 暂时按异步处理
-            boolean asynchronous = passNextOuts.size() > 1;
+            boolean asynchronous = nextOutsSize > 1;
+            if(asynchronous) {
+                processInstance.addAndGetStackCount(nextOutsSize);
+            }
             for (RuntimeNode nextOut : passNextOuts) {
                 final RuntimeNode nextNode = nextOut;
-                if(asynchronous) {
+                if (asynchronous) {
                     processInstance.setAsyncMode(true);
-                    processInstance.incrementStackCount();
                     processInstance.getExecuteEngine().submitRunnable(new Callable() {
                         @Override
                         public Object call() throws Exception {
-                            nextNode.run(processInstance, nodeInstance);
+                            try {
+                                nextNode.run(processInstance, nodeInstance);
+                            } finally {
+                                // complete one
+                                joinCountContext.completeOne();
+                            }
                             return null;
                         }
                     });
@@ -102,16 +110,22 @@ public class SplitNode extends RuntimeNode {
                     nextNode.run(processInstance, nodeInstance);
                 }
             }
+            if(asynchronous) {
+                processInstance.decrementStackCount();
+            }
         }
-
-        // 检查栈退出
-        checkExitStack(processInstance);
     }
 
     // 网关and
     private void runOutAnd(final ProcessInstance processInstance, final NodeInstance nodeInstance) throws Exception {
-        JoinCountContext joinCountContext = new JoinCountContext(outConnects.size());
+        final JoinCountContext joinCountContext = new JoinCountContext(outConnects.size());
         processInstance.setJoinCountContext(joinNodeId, joinCountContext);
+        int outConnectCount = outConnects.size();
+        // 暂时使用异步
+        boolean asynchronous = outConnectCount > 1; // handlerOption.isAsynchronous();
+        if(asynchronous) {
+            processInstance.addAndGetStackCount(outConnectCount);
+        }
         for (RuntimeConnect runtimeConnect : outConnects) {
             ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);
             nodeInstance.addConnectInstance(connectInstance);
@@ -120,17 +134,19 @@ public class SplitNode extends RuntimeNode {
             connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
             connectInstance.setExecuteTime(new Date());
 
-            boolean asynchronous = handlerOption.isAsynchronous();
-            // 暂时使用异步
-            asynchronous = true;
             final RuntimeNode nextNode = runtimeConnect.getTo();
-            if(asynchronous) {
+            if (asynchronous) {
                 processInstance.setAsyncMode(true);
-                processInstance.incrementStackCount();
+                // processInstance.incrementStackCount();
                 processInstance.getExecuteEngine().submitRunnable(new Callable() {
                     @Override
                     public Object call() throws Exception {
-                        nextNode.run(processInstance, nodeInstance);
+                        try {
+                            nextNode.run(processInstance, nodeInstance);
+                        } finally {
+                            // complete one
+                            joinCountContext.completeOne();
+                        }
                         return null;
                     }
                 });
@@ -138,9 +154,9 @@ public class SplitNode extends RuntimeNode {
                 nextNode.run(processInstance, nodeInstance);
             }
         }
-
-        // 检查栈退出
-        checkExitStack(processInstance);
+        if(asynchronous) {
+            processInstance.decrementStackCount();
+        }
     }
 
     @Override

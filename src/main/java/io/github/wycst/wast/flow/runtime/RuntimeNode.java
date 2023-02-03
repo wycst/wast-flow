@@ -154,6 +154,8 @@ public class RuntimeNode extends Node {
         // access
         boolean access = beforeRun(processInstance);
         if (!access) {
+            // exit
+            checkExitStack(processInstance);
             return;
         }
         // create instance && run in
@@ -164,6 +166,9 @@ public class RuntimeNode extends Node {
         if (isAutoCompleted()) {
             // handle complete
             complete(nodeInstance, processInstance);
+        } else {
+            // exit
+            checkExitStack(processInstance);
         }
     }
 
@@ -202,6 +207,9 @@ public class RuntimeNode extends Node {
             nodeInstance.setOutDate(new Timestamp(System.currentTimeMillis()));
             nodeInstance.setStatus(Status.Completed);
 
+            // fire on Leave if success
+            onNodeLeave(processInstance, nodeInstance);
+
         } catch (Exception exception) {
             // node instance Error
             nodeInstance.setStatus(Status.Error);
@@ -216,14 +224,12 @@ public class RuntimeNode extends Node {
             // print exception
             exception.printStackTrace();
             // Exit current stack
+            checkExitStack(processInstance);
             return;
         } finally {
-            // on Leave
-            onNodeLeave(processInstance, nodeInstance);
+            // complete
+            afterComplete(processInstance, nodeInstance);
         }
-
-        // complete
-        afterComplete(processInstance, nodeInstance);
 
         // out
         try {
@@ -409,9 +415,6 @@ public class RuntimeNode extends Node {
                 nextOut.run(processInstance, nodeInstance);
             }
         }
-
-        // the stack may exit here
-        checkExitStack(processInstance);
     }
 
     /**
@@ -420,9 +423,12 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     void checkExitStack(ProcessInstance processInstance) {
-        int count = processInstance.decrementStackCount();
-        if(count == 0) {
-            // end
+        if(processInstance.isAsyncMode()) {
+            int count = processInstance.decrementStackCount();
+            if(count == 0) {
+                // unlock
+                processInstance.unlock();
+            }
         }
     }
 

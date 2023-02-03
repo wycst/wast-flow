@@ -103,7 +103,9 @@
             "name": "n6",
             "type": "Business",
             "gateway": "XOR",
-            "handler": {},
+            "handler": {
+                "policy": "Continue"
+            },
             "uuid": "b80a89aa-2ef9-4b9a-af09-d953baf68122",
             "meta": {},
             "component": {

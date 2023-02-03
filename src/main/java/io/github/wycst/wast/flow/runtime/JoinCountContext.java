@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.runtime;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -9,13 +10,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class JoinCountContext {
 
     private final AtomicInteger count;
+    private final CountDownLatch countDownLatch;
 
     JoinCountContext(int value) {
         count = new AtomicInteger(value);
+        countDownLatch = new CountDownLatch(value);
     }
 
     int decrementAndGet() {
         return count.decrementAndGet();
     }
 
+    /**
+     * 完成当前并等待未完成
+     */
+    void completeAndAwait() {
+        try {
+            completeOne();
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+        }
+    }
+
+    void completeOne() {
+        countDownLatch.countDown();
+    }
 }

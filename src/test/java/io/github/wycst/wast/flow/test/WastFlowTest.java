@@ -132,11 +132,12 @@ public class WastFlowTest {
 //                System.out.println(nodeContext.getNode().frontNodes());
 //                System.out.println(nodeContext.getNode().nextNodes());
 //                String nodeId = nodeContext.getNode().getId();
-//                String name = nodeContext.getNode().getName();
-//                if("n1".equals(name)) {
-//                    System.out.println(nodeContext.getNode().getUuid());
-//                    throw new RuntimeException("error");
-//                }
+                String name = nodeContext.getNode().getName();
+                if("n6".equals(name)) {
+                    System.out.println(nodeContext.getNode().getUuid());
+                    throw new RuntimeException("error");
+                }
+                Thread.sleep(1000);
             }
         });
         flowEngine.setDatasource(getDatasource());

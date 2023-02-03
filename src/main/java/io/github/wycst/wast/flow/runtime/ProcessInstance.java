@@ -273,12 +273,8 @@ public class ProcessInstance {
         }
     }
 
-    int getStackCountValue() {
-        return stackCount.get();
-    }
-
-    int incrementStackCount() {
-        return stackCount.incrementAndGet();
+    int addAndGetStackCount(int v) {
+        return stackCount.addAndGet(v);
     }
 
     int decrementStackCount() {
