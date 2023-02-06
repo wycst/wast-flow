@@ -354,6 +354,13 @@ const extensionTemplate = `
             <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
        </div>
     </div>
+    
+    <div class="flow-tools" style="display:none;z-index: 100;">
+        <div class="tool-item" data-type="zoomReset" draggable="true" title="初始大小"></div>
+        <div class="tool-item" data-type="zoomIn" draggable="true" title="放大"></div>
+        <div class="tool-item" data-type="zoomOut" draggable="true" title="缩小"></div>
+    </div>
+    
     <input class="flow-import-input" type="file" accept=".json" style="position: absolute;display:none;opacity: 0; width: 0; height: 0; border: unset;"/>
 `
 
@@ -921,8 +928,10 @@ class GraphicDesign {
                 if (!element) {
                     let x = dragContext.px - dragContext.offsetX - 20,
                         y = dragContext.py - dragContext.offsetY - 20;
-                    x -= me.translateX;
-                    y -= me.translateY;
+                    // x -= me.translateX;
+                    // y -= me.translateY;
+                    x = x / (this.scaleValue || 1);
+                    y = y / (this.scaleValue || 1);
 
                     // 获取初始位置
                     if (type == "task") {
@@ -1446,8 +1455,10 @@ class GraphicDesign {
             this.input.innerHTML = textValue;
             // 设置input的位置
             Object.assign(this.input.style, {
-                left: x + this.translateX + "px",
-                top: y + this.translateY + "px",
+                // left: x + this.translateX + "px",
+                // top: y + this.translateY + "px",
+                left: x + "px",
+                top: y + "px",
                 display: "block"
             });
             this.input.focus();
@@ -1506,6 +1517,7 @@ class GraphicDesign {
         bindDomEvent(me.paper.canvas, "dblclick", (evt) => me.handleDblClickBlank(evt));
 
         this.handleDocumentKeyDown = (e) => {
+            console.log(e.keyCode, e);
             if (e.keyCode == 46) {
                 // delete
                 me.deleteSelectElement();
@@ -1515,6 +1527,8 @@ class GraphicDesign {
                 if (active.getAttribute && active.getAttribute("readonly") == "readonly") {
                     return false;
                 }
+            } else if (e.keyCode == 16) {
+                me.shiftMode = true;
             } else if (e.keyCode == 17) {
                 // Control
                 me.resetGroupSelection();
@@ -1536,6 +1550,9 @@ class GraphicDesign {
 
         this.handleDocumentKeyUp = (event) => {
             // Control up
+            if (event.keyCode == 16) {
+                me.shiftMode = false;
+            }
             if (event.keyCode == 17) {
                 me.groupSelectionMode = false;
                 me.paper.canvas.style.cursor = "default";
@@ -1610,7 +1627,7 @@ class GraphicDesign {
                     // compute groupSelectElements
                     me.showGroupSelection();
                 } else {
-                    me.panTo(me.translateX, me.translateY, true);
+                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
                 }
 
                 if (!canvasDragContext.moved) {
@@ -1640,6 +1657,27 @@ class GraphicDesign {
 
         // 是否支持缩放
         this.setScaleable(this.option.zoomable);
+        if(this.option.zoomable) {
+            let me = this;
+            let flowToolsDom = this.dom.querySelector(".flow-tools");
+            this.flowToolsDom = flowToolsDom;
+            Object.assign(flowToolsDom, {
+                position: "absolute",
+                left: "0px",
+                top: "0px",
+                width: "64px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                fontSize: "14px",
+                color: this.option.settings.themeColor,
+                padding: "5px 5px 20px",
+                background: "hsla(0,0%,100%,.9)",
+                boxShadow: "0 1px 4px rgba(0,0,0,.3)",
+                userSelect: "none",
+            });
+
+        }
     };
 
     /**
@@ -1683,12 +1721,11 @@ class GraphicDesign {
     };
 
     setScale(value) {
-        if(value < 0.2) {
+        if (value < 0.2) {
             value = 0.2;
         }
         this.scaleValue = value;
-        this.flowWrapper.style.transform = `scale(${value})`;
-
+        this.updateWrapperTransform();
         // let elements = this.elements;
         // for(let element of Object.values(elements)) {
         //     element.node.style.transform = `scale(${value})`;
@@ -2541,26 +2578,57 @@ class GraphicDesign {
     translateTo(x, y) {
         this.translateX = x;
         this.translateY = y;
+        this.updateWrapperTransform();
 
-        // // svg 画板
-        // Object.assign(this.paper.canvas.style, {
-        //     transform: `translate(${x}px, ${y}px)`
-        // });
-        this.paper.canvas.childNodes.forEach(child => {
-            Object.assign(child.style, {
-                transform: `translate(${x}px, ${y}px)`
-            });
+        // if(this.shiftMode) {
+        //     this.paper.canvas.childNodes.forEach(child => {
+        //         Object.assign(child.style, {
+        //             transform: `translate(${x}px, ${y}px)`
+        //         });
+        //     });
+        //
+        //     // update HtmlNodes
+        //     for (let elementId in this.elements) {
+        //         let element = this.elements[elementId];
+        //         if (element.type == "html") {
+        //             Object.assign(element.node.style, {
+        //                 transform: `translate(${x}px, ${y}px)`
+        //             });
+        //         }
+        //     }
+        // } else {
+        //
+        // }
+    };
+
+    updateWrapperTransform() {
+        let x = this.translateX;
+        let y = this.translateY;
+        let scaleValue = this.scaleValue || 1;
+        let wrapperParent = this.flowWrapper.parentNode;
+        let {width, height} = wrapperParent.getBoundingClientRect();
+
+        let newWidth = width, newHeight = height;
+        // 计算offset
+        let ox = 0, oy = 0;
+        if (scaleValue < 1) {
+            newWidth = width / scaleValue;
+            newHeight = height / scaleValue;
+            ox = -newWidth * (1 - scaleValue) / 2;
+            oy = -newHeight * (1 - scaleValue) / 2;
+        }
+
+        // flow wrapper
+        Object.assign(this.flowWrapper.style, {
+            transform: `translate(${x}px, ${y}px) scale(${scaleValue})`,
+            minWidth: `${newWidth}px`,
+            minHeight: `${newHeight}px`,
         });
 
-        // update HtmlNodes
-        for (let elementId in this.elements) {
-            let element = this.elements[elementId];
-            if (element.type == "html") {
-                Object.assign(element.node.style, {
-                    transform: `translate(${x}px, ${y}px)`
-                });
-            }
-        }
+        // offset
+        Object.assign(wrapperParent.style, {
+            transform: `translate(${ox}px, ${oy}px)`
+        });
     };
 
     /**
@@ -3631,9 +3699,11 @@ class GraphicDesign {
     };
 
     elementDragMove(element, dx, dy) {
+
+        let scaleValue = this.scaleValue;
         let location = {
-            x: element.ox + dx,
-            y: element.oy + dy
+            x: element.ox + dx / scaleValue,
+            y: element.oy + dy / scaleValue
         };
         // if (location.x < 0 || location.y < 0) {
         //     return;
