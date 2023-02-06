@@ -32,8 +32,8 @@ export default {
     console.log(" mounted ");
     this.graphicDesign = wf.render(this.$refs.flow, {
       grid: true,
-      width: "2000px",
-      height: "1000px",
+      // width: "2000px",
+      // height: "1000px",
       menu: {
         draggable: true
       },

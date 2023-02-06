@@ -179,10 +179,10 @@ const defaultOption = {
     background: null,
 
     /** 画布宽度 */
-    width: "1024px",
+    width: "100%",
 
     /** 画布高度 */
-    height: "768px",
+    height: "100%",
 
     /** 显示节点拖拽菜单 */
     menu: true,
@@ -230,6 +230,11 @@ const defaultOption = {
      * 默认条件类型
      */
     defaultConditionType: "Script",
+
+    /**
+     * 是否支持缩放
+     */
+    zoomable: true,
 
     /**
      * 提示信息，默认使用window.alert
@@ -336,14 +341,18 @@ const extensionTemplate = `
 <!--        <div class="menu-item" data-type="picture" title="导出图片"></div>-->
 <!--        <div>图片</div>-->
     </div>
-    <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
     <div class="flow-popwin" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);z-index: 100;">
        <div>
             <span class="close-handle" style="color:red;float: right;cursor: pointer;" title="关闭">x</span>
             <h4>基本属性</h4>
-       <div>
+       </div>
        <form class="flow-property-form">
        </form>
+    </div>
+    <div class="flow-wrapper" style="position: absolute;width: 100%; height: 100%;left: 0; top: 0">
+       <div class="flow-wrapper-body"  style="position: relative;width: 100%;height: 100%;">
+            <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
+       </div>
     </div>
     <input class="flow-import-input" type="file" accept=".json" style="position: absolute;display:none;opacity: 0; width: 0; height: 0; border: unset;"/>
 `
@@ -387,6 +396,11 @@ class GraphicDesign {
             this.option.settings = Object.assign({}, DefaultSettings, this.option.settings);
         }
         let {width = '100%', height = '100%'} = this.option;
+        let rootStyle = {
+            position: "relative",
+            overflow: this.option.overflow || "hidden"
+        };
+        Object.assign(dom.style, rootStyle);
         dom.innerHTML = extensionTemplate;
         if (this.option.menu) {
             this.initMenu(dom.children[0]);
@@ -394,7 +408,10 @@ class GraphicDesign {
         this.initInput(dom.querySelector(".flow-edit-input"));
         this.initPopwin(dom.querySelector(".flow-popwin"));
         this.initFileInput(dom.querySelector(".flow-import-input"));
-        this.paper = new Raphael(dom, width, height);
+
+        let flowWrapper = dom.querySelector(".flow-wrapper .flow-wrapper-body");
+        this.flowWrapper = flowWrapper;
+        this.paper = new Raphael(flowWrapper, width, height);
         Object.assign(this.paper.canvas.style, {
             userSelect: "none",
             cursor: "default"
@@ -422,6 +439,7 @@ class GraphicDesign {
         this.idPool = [];
         // 节点绑定在element中的属性集合
 
+
         let me = this;
         let setElementUUID = (element) => {
             return me.setElementUUID(element);
@@ -446,6 +464,7 @@ class GraphicDesign {
 
         this.translateX = 0;
         this.translateY = 0;
+        this.scaleValue = 1;
     };
 
     // 初始化及事件处理
@@ -675,7 +694,7 @@ class GraphicDesign {
         }).hide();
         this.deleteTool.click(function (evt) {
             let host = me.deleteTool.data("host");
-            if(!host) {
+            if (!host) {
                 me.deleteGroupSelectElements();
             } else {
                 // delete element
@@ -801,7 +820,7 @@ class GraphicDesign {
      * 设置背景图片
      */
     setContainerStyle(style) {
-        let container = this.paper.canvas.parentNode;
+        let container = this.flowWrapper;
         if (style && typeof style == 'object') {
             Object.assign(container.style, style);
         }
@@ -822,7 +841,8 @@ class GraphicDesign {
             parentStyle.background = `url("${imgs.bg}")`;
         }
         // 设置bg图片
-        this.setContainerStyle(parentStyle);
+        // this.setContainerStyle(parentStyle);
+        Object.assign(this.dom.style, parentStyle);
     };
 
     /** 初始化菜单 */
@@ -1617,6 +1637,62 @@ class GraphicDesign {
                 }
             });
         }
+
+        // 是否支持缩放
+        this.setScaleable(this.option.zoomable);
+    };
+
+    /**
+     * 是否支持缩放
+     *
+     * @param zoomable
+     */
+    setScaleable(zoomable) {
+        let me = this;
+        if (zoomable) {
+            let wheelEventFn = (event) => {
+                let data = event.wheelDelta || -event.detail;
+                if (data > 0) {
+                    // 向上滚 放大
+                    me.zoomOut();
+                } else {
+                    // 向下滚 缩小
+                    me.zoomIn();
+                }
+                preventDefault(event);
+            }
+            this.wheelEventFn = wheelEventFn;
+            // 平移处理
+            bindDomEvent(me.dom, "wheel", wheelEventFn);
+        }
+    };
+
+    // 放大
+    zoomIn() {
+        this.setScale(this.scaleValue + 0.2);
+    };
+
+    // 缩小
+    zoomOut() {
+        this.setScale(this.scaleValue - 0.2);
+    };
+
+    // reset zoom
+    resetScale() {
+        this.setScale(1);
+    };
+
+    setScale(value) {
+        if(value < 0.2) {
+            value = 0.2;
+        }
+        this.scaleValue = value;
+        this.flowWrapper.style.transform = `scale(${value})`;
+
+        // let elements = this.elements;
+        // for(let element of Object.values(elements)) {
+        //     element.node.style.transform = `scale(${value})`;
+        // }
     };
 
     /**
@@ -1656,7 +1732,7 @@ class GraphicDesign {
     hideGroupSelectionTool() {
         this.deleteTool.hide();
     };
-    
+
     /**
      * 圈选元素
      * */
@@ -1709,7 +1785,7 @@ class GraphicDesign {
     resetGroupSelection() {
         this.groupSelection.hide();
         this.groupSelectElements = [];
-        if(this.groupSelectionVisible) {
+        if (this.groupSelectionVisible) {
             this.hideGroupSelectionTool();
         }
     };
@@ -1788,7 +1864,7 @@ class GraphicDesign {
         }
         let domEle = document.createElement("div");
         // 插入到指定节点
-        this.dom.appendChild(domEle);
+        this.flowWrapper.appendChild(domEle);
         domEle.innerHTML = html;
         domEle.style.position = "absolute";
         let element = new ElementData(domEle);
@@ -2089,19 +2165,19 @@ class GraphicDesign {
 
     /**
      * 删除圈选元素
-     * 
+     *
      */
     deleteGroupSelectElements() {
         let me = this;
         let groupSelectElements = this.groupSelectElements;
-        if(!groupSelectElements || groupSelectElements.length == 0) return;
+        if (!groupSelectElements || groupSelectElements.length == 0) return;
         let undoData = null;
         let enableHistory = this.enableHistory();
         if (enableHistory) {
             undoData = JSON.stringify(this.getData());
         }
-        for(let element of groupSelectElements) {
-            if(element.removed !== true) {
+        for (let element of groupSelectElements) {
+            if (element.removed !== true) {
                 this.removeElement(element);
             }
         }
@@ -2784,20 +2860,20 @@ class GraphicDesign {
     };
 
     handleElementAction(element) {
-      if(!element) return;
-      if(this.enableHistory()) {
-          let me = this;
-          let elementId = element.id;
-          let elementData = this.toElementData(element);
-          this.addAction({
-              undo() {
-                  me.deleteElementById(elementId);
-              },
-              redo() {
-                  me.fromElementData(elementData);
-              }
-          });
-      }
+        if (!element) return;
+        if (this.enableHistory()) {
+            let me = this;
+            let elementId = element.id;
+            let elementData = this.toElementData(element);
+            this.addAction({
+                undo() {
+                    me.deleteElementById(elementId);
+                },
+                redo() {
+                    me.fromElementData(elementData);
+                }
+            });
+        }
     };
 
 
@@ -3906,7 +3982,8 @@ class GraphicDesign {
     hideEditElements(targetElement) {
         let type = null;
         if (!targetElement || (type = targetElement.type) == "rect" || type == "image" || type == "html") {
-            let {nw, w, sw, n, s, ne, e, se, dashOuterPath,
+            let {
+                nw, w, sw, n, s, ne, e, se, dashOuterPath,
                 linkTool,
                 nextTaskTool,
                 nextSplitTool,
@@ -3960,7 +4037,8 @@ class GraphicDesign {
         if (type == "rect" || isImage || type == "html") {
             let {x, y, width, height} = targetElement.attrs;
             let nodeType = targetElement.data("nodeType");
-            let {nw, w, sw, n, s, ne, e, se, dashOuterPath,
+            let {
+                nw, w, sw, n, s, ne, e, se, dashOuterPath,
                 linkTool,
                 nextTaskTool,
                 nextSplitTool,
@@ -5372,7 +5450,7 @@ class GraphicDesign {
 
     /** 导出图片 */
     exportImage() {
-        const svg = this.dom;
+        const svg = this.flowWrapper;
         const content = new XMLSerializer().serializeToString(svg);// svg.outerHTML;
         let htmlSvgcontent =
             `<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2000">
