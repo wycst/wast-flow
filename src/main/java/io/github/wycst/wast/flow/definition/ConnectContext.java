@@ -31,4 +31,11 @@ public interface ConnectContext {
      * @return
      */
     public Node getToNode();
+
+    /**
+     * 是否调试模式（忽略不持久数据）
+     *
+     * @return
+     */
+    public boolean isDebugMode();
 }

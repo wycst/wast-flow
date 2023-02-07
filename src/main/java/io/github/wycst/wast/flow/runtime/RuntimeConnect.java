@@ -85,7 +85,7 @@ public class RuntimeConnect extends Connect {
                         throw new UnsupportedOperationException("unregister connect handler for " + conditionType);
                     }
                     try {
-                        return connectHandler.handle(new ConnectRuntimeContext(this, fromNodeInstance));
+                        return connectHandler.handle(new ConnectRuntimeContext(this, processInstance, fromNodeInstance));
                     } catch (Throwable throwable) {
                         throwable.printStackTrace();
                         return false;

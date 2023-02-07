@@ -14,10 +14,12 @@ class ConnectRuntimeContext implements ConnectContext {
 
     final RuntimeConnect connect;
     final NodeInstance nodeInstance;
+    final ProcessInstance processInstance;
 
-    ConnectRuntimeContext(RuntimeConnect connect, NodeInstance nodeInstance) {
+    ConnectRuntimeContext(RuntimeConnect connect, ProcessInstance processInstance, NodeInstance nodeInstance) {
         this.connect = connect;
         this.nodeInstance = nodeInstance;
+        this.processInstance = processInstance;
     }
 
     @Override
@@ -38,5 +40,10 @@ class ConnectRuntimeContext implements ConnectContext {
     @Override
     public Node getToNode() {
         return connect.getTo();
+    }
+
+    @Override
+    public boolean isDebugMode() {
+        return processInstance.isDebugMode();
     }
 }

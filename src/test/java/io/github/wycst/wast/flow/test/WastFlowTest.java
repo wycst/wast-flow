@@ -134,6 +134,7 @@ public class WastFlowTest {
 //                System.out.println(nodeContext.getNode().nextNodes());
 //                String nodeId = nodeContext.getNode().getId();
                 String name = nodeContext.getNode().getName();
+                nodeContext.isDebugMode();
                 if("n6".equals(name)) {
                     System.out.println(nodeContext.getNode().getUuid());
                     throw new RuntimeException("error");
