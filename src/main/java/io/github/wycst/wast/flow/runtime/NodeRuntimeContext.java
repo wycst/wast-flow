@@ -69,4 +69,9 @@ class NodeRuntimeContext implements NodeContext {
     public int loopIndex() {
         return loopIndex;
     }
+
+    @Override
+    public boolean isDebugMode() {
+        return nodeInstance.getProcessInstance().isDebugMode();
+    }
 }

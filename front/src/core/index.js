@@ -58,6 +58,19 @@ const DefaultHtmlTypes = {
     del: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <path d="M202.666667 256h-42.666667a32 32 0 0 1 0-64h704a32 32 0 0 1 0 64H266.666667v565.333333a53.333333 53.333333 0 0 0 53.333333 53.333334h384a53.333333 53.333333 0 0 0 53.333333-53.333334V352a32 32 0 0 1 64 0v469.333333c0 64.8-52.533333 117.333333-117.333333 117.333334H320c-64.8 0-117.333333-52.533333-117.333333-117.333334V256z m224-106.666667a32 32 0 0 1 0-64h170.666666a32 32 0 0 1 0 64H426.666667z m-32 288a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z m170.666666 0a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z" fill="#000000" p-id="3009"></path>
           </svg>`,
+
+    zoomReset: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M514.2 854.1c-188 0-340.9-152.9-340.9-340.9s152.9-340.9 340.9-340.9 340.9 152.9 340.9 340.9-152.9 340.9-340.9 340.9z m0-598.8C372 255.3 256.3 371 256.3 513.2S372 771.1 514.2 771.1s257.9-115.7 257.9-257.9-115.7-257.9-257.9-257.9z"></path>
+                    <path d="M888.5 554.7H742.1c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5h146.5c22.9 0 41.5 18.6 41.5 41.5-0.1 22.9-18.6 41.5-41.6 41.5zM288 554.7H141.5c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5H288c22.9 0 41.5 18.6 41.5 41.5s-18.6 41.5-41.5 41.5zM515 327.7c-22.9 0-41.5-18.6-41.5-41.5V139.7c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.4c0 23-18.5 41.6-41.5 41.6zM515 928.2c-22.9 0-41.5-18.6-41.5-41.5V740.3c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.5c0 22.8-18.5 41.4-41.5 41.4z"></path>
+                </svg>`,
+    zoomIn: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z"></path>
+                    <path d="M625.792 448H512v-112a32 32 0 0 0-64 0V448h-112a32 32 0 0 0 0 64H448v112a32 32 0 1 0 64 0V512h113.792a32 32 0 1 0 0-64z"></path>
+                </svg>`,
+    zoomOut: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z" ></path>
+                    <path d="M625.792 448H336a32 32 0 0 0 0 64h289.792a32 32 0 1 0 0-64z"></path>
+              </svg>`,
 };
 
 const defs = `
@@ -1106,6 +1119,20 @@ class GraphicDesign {
         }
     };
 
+    /**
+     * 设置工具栏的样式
+     *
+     * @param style
+     */
+    setToolsStyle(style) {
+        if (typeof style != 'object') {
+            style = {};
+        }
+        if (this.flowToolsDom) {
+            Object.assign(this.flowToolsDom.style, style || {});
+        }
+    };
+
     /** 初始化input */
     initInput(inputDom) {
         let me = this;
@@ -1661,22 +1688,46 @@ class GraphicDesign {
             let me = this;
             let flowToolsDom = this.dom.querySelector(".flow-tools");
             this.flowToolsDom = flowToolsDom;
-            Object.assign(flowToolsDom, {
+            Object.assign(flowToolsDom.style, {
                 position: "absolute",
-                left: "0px",
-                top: "0px",
-                width: "64px",
+                right: "5px",
+                top: "75%",
+                transform: "translate(0, -50%)",
+                width: "48px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 fontSize: "14px",
                 color: this.option.settings.themeColor,
-                padding: "5px 5px 20px",
-                background: "hsla(0,0%,100%,.9)",
-                boxShadow: "0 1px 4px rgba(0,0,0,.3)",
+                padding: "5px",
                 userSelect: "none",
             });
 
+            // 设置item背景图片
+            flowToolsDom.querySelectorAll(".tool-item").forEach(item => {
+                let type = item.dataset.type;
+                let width = 36, height = 36;
+                Object.assign(item.style, {
+                    width: `${width}px`,
+                    height: `${height}px`,
+                    margin: "2px 0",
+                    cursor: "pointer",
+                    background: "hsla(0,0%,100%,.9)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,.3)",
+                });
+                // item.style.color = this.option.settings.themeColor;
+                item.innerHTML = DefaultHtmlTypes[type];
+                // 拖动处理
+                bindDomEvent(item, "click", function (event) {
+                    if(type == "zoomReset") {
+                        me.zoomReset();
+                    } else if(type == "zoomIn") {
+                        me.zoomIn();
+                    } else if(type == "zoomOut") {
+                        me.zoomOut();
+                    }
+                });
+            });
         }
     };
 
@@ -1716,7 +1767,7 @@ class GraphicDesign {
     };
 
     // reset zoom
-    resetScale() {
+    zoomReset() {
         this.setScale(1);
     };
 
@@ -1726,6 +1777,7 @@ class GraphicDesign {
         }
         this.scaleValue = value;
         this.updateWrapperTransform();
+
         // let elements = this.elements;
         // for(let element of Object.values(elements)) {
         //     element.node.style.transform = `scale(${value})`;
@@ -5374,6 +5426,10 @@ class GraphicDesign {
         this.setElementsColor(color);
         // 菜单颜色
         this.setMenuStyle({
+            color
+        });
+        // 工具栏颜色
+        this.setToolsStyle({
             color
         });
     };

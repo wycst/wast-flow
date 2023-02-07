@@ -1,5 +1,6 @@
 package io.github.wycst.wast.flow.test;
 
+import io.github.wycst.wast.common.utils.StringUtils;
 import io.github.wycst.wast.flow.defaults.DefaultProcessHook;
 import io.github.wycst.wast.flow.definition.*;
 import io.github.wycst.wast.flow.deployment.DeploymentConnect;
@@ -180,6 +181,10 @@ public class WastFlowTest {
         System.out.println("processID " + processId);
 
         Connect connect = null;
+
+        String flowSource = StringUtils.fromResource("flows/gateway.json");
+        ProcessInstance debugProcessInstance = flowEngine.debugProcess(flowSource, vars);
+
 
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);

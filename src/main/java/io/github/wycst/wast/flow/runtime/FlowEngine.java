@@ -57,6 +57,20 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     /**
+     * 调试流程
+     *
+     * @param processSource 流程内容
+     * @param context
+     * @return
+     */
+    public ProcessInstance debugProcess(String processSource, Map<String, Object> context) {
+        RuleProcess ruleProcess = FlowHelper.fromJson(processSource);
+        // create instance
+        ProcessInstance processInstance = new DebugProcessInstance(ruleProcess, null, this);
+        return startProcess(ruleProcess, processInstance, context);
+    }
+
+    /**
      * 启动流程
      *
      * @param processId
@@ -67,16 +81,29 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     ProcessInstance startProcess(String processId, ProcessInstance parent, Map<String, Object> context) {
         // get flow
         RuleProcess ruleProcess = FlowHelper.getProcess(processId);
+        // create instance
+        ProcessInstance processInstance = ProcessInstance.createInstance(ruleProcess, parent, this);
+        startProcess(ruleProcess, processInstance, context);
+        return processInstance;
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param process
+     * @param processInstance
+     * @param context
+     * @return
+     */
+    ProcessInstance startProcess(RuleProcess process, ProcessInstance processInstance, Map<String, Object> context) {
         try {
             beginTransaction();
-            // create instance and set context
-            ProcessInstance processInstance = ProcessInstance.createInstance(ruleProcess, parent, this);
             processInstance.setContextValues(context);
             // Synchronous blocking execution
             onStarted(processInstance);
             // start
-            ruleProcess.getStartNode().start(processInstance);
-            if(processInstance.isAsyncMode()) {
+            process.getStartNode().start(processInstance);
+            if (processInstance.isAsyncMode()) {
                 processInstance.await();
             }
             if (processInstance.isRollback()) {
@@ -290,7 +317,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     void persistenceProcessInstance(ProcessInstance processInstance) {
-        if (flowEntityManager == null || !persistenceInstanceLog) {
+        if (flowEntityManager == null || !persistenceInstanceLog || processInstance.isDebugMode()) {
             return;
         }
         ProcessInstanceEntity instanceEntity = new ProcessInstanceEntity();
@@ -330,7 +357,7 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             flowEntityManager.insert(taskEntity);
 
             List<TaskParticipant> taskParticipants = task.getTaskParticipants();
-            if(taskParticipants != null && taskParticipants.size() > 0) {
+            if (taskParticipants != null && taskParticipants.size() > 0) {
                 List<TaskParticipantEntity> taskParticipantEntities = new ArrayList<TaskParticipantEntity>();
                 for (TaskParticipant taskParticipant : taskParticipants) {
                     taskParticipantEntities.add(new TaskParticipantEntity(taskParticipant.getTaskId(), taskParticipant.getParticipant()));
@@ -346,7 +373,8 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
      * @param nodeInstance
      */
     void persistenceNodeInstance(NodeInstance nodeInstance) {
-        if (flowEntityManager == null || !persistenceInstanceLog) return;
+        if (flowEntityManager == null || !persistenceInstanceLog || nodeInstance.getProcessInstance().isDebugMode())
+            return;
 
         String nodeId = nodeInstance.getNode().getId();
         long nodeInstanceId = nodeInstance.getId();
@@ -377,6 +405,9 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
     }
 
     void persistenceConnectInstances(NodeInstance nodeInstance) {
+        if (flowEntityManager == null || !persistenceInstanceLog || nodeInstance.getProcessInstance().isDebugMode())
+            return;
+
         String nodeId = nodeInstance.getNode().getId();
         long nodeInstanceId = nodeInstance.getId();
         String processInstanceId = nodeInstance.getProcessInstance().getId();

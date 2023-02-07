@@ -61,4 +61,11 @@ public interface NodeContext {
      * @return
      */
     public int loopIndex();
+
+    /**
+     * 是否调试模式（忽略不持久）
+     *
+     * @return
+     */
+    public boolean isDebugMode();
 }

@@ -243,6 +243,10 @@ public class ProcessInstance {
         return processInstanceContext.isAsyncMode();
     }
 
+    public boolean isDebugMode() {
+        return false;
+    }
+
     void await() throws InterruptedException {
         synchronized (lock) {
             lock.wait();

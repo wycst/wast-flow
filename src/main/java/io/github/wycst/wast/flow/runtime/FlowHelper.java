@@ -417,6 +417,16 @@ public class FlowHelper {
     }
 
     /**
+     * 构建流程
+     *
+     * @param processSource(json)
+     */
+    static RuleProcess fromJson(String processSource) {
+        FlowResource flowResource = FlowResource.ofJson(processSource);
+        return loadProcess(null, flowResource.getDeploymentProcess());
+    }
+
+    /**
      * 卸载所有流程
      */
     public static void destroy() {
