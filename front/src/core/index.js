@@ -5230,7 +5230,7 @@ class GraphicDesign {
             let nodeType = nodeElement.data("nodeType");
             // 网关类型
             let gateway = nodeElement.data("gateway");
-            if (nodeType == "Split" && gateway != "xor") {
+            if (nodeType == "Split" && gateway != "XOR") {
                 splitElements.push(nodeElement);
             }
             if (nodeType == "Join") {
