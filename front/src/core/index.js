@@ -434,7 +434,8 @@ class GraphicDesign {
         this.paper = new Raphael(flowWrapper, width, height);
         Object.assign(this.paper.canvas.style, {
             userSelect: "none",
-            cursor: "default"
+            cursor: "default",
+            overflow: "visible"
         });
         // 连线颜色作为箭头的颜色
         this.connectColors = [this.option.settings.themeColor];
@@ -484,6 +485,8 @@ class GraphicDesign {
 
         this.translateX = 0;
         this.translateY = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
         this.scaleValue = 1;
     };
 
@@ -799,7 +802,7 @@ class GraphicDesign {
      * 追加分支
      */
     nextSplit() {
-        let fromNode = this.nextTaskTool.data("from");
+        let fromNode = this.nextSplitTool.data("from");
         if (!fromNode) return;
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
@@ -811,7 +814,9 @@ class GraphicDesign {
         nextOneNode.attr({y: centerY - h1 / 2 - 100});
         this.updateElements(nextOneNode);
         // 创建连线1
-        this.hideEditElements(this.createPath(fromNode, nextOneNode));
+        let connect = this.createPath(fromNode, nextOneNode);
+        this.setConnectType(connect, this.option.defaultConditionType || "Script");
+        this.hideEditElements(connect);
 
         let nextTwoNode = this.createNode(x + width + 100, y);
         nextTwoNode.data("nodeType", NodeTypes.Business);
@@ -820,7 +825,9 @@ class GraphicDesign {
         nextTwoNode.attr({y: centerY - h2 / 2 + 100});
         this.updateElements(nextTwoNode);
         // 创建连线2
-        this.hideEditElements(this.createPath(fromNode, nextTwoNode));
+        let connect2 = this.createPath(fromNode, nextTwoNode);
+        this.setConnectType(connect2, this.option.defaultConditionType || "Script");
+        this.hideEditElements(connect2);
     };
 
     nextEnd() {
@@ -941,10 +948,9 @@ class GraphicDesign {
                 if (!element) {
                     let x = dragContext.px - dragContext.offsetX - 20,
                         y = dragContext.py - dragContext.offsetY - 20;
-                    // x -= me.translateX;
-                    // y -= me.translateY;
-                    x = x / (this.scaleValue || 1);
-                    y = y / (this.scaleValue || 1);
+
+                    x = (x - me.offsetX) / (this.scaleValue || 1)
+                    y = (y - me.offsetY) / (this.scaleValue || 1)
 
                     // 获取初始位置
                     if (type == "task") {
@@ -1654,7 +1660,7 @@ class GraphicDesign {
                     // compute groupSelectElements
                     me.showGroupSelection();
                 } else {
-                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+                    // me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
                 }
 
                 if (!canvasDragContext.moved) {
@@ -1684,7 +1690,7 @@ class GraphicDesign {
 
         // 是否支持缩放
         this.setScaleable(this.option.zoomable);
-        if(this.option.zoomable) {
+        if (this.option.zoomable) {
             let me = this;
             let flowToolsDom = this.dom.querySelector(".flow-tools");
             this.flowToolsDom = flowToolsDom;
@@ -1719,11 +1725,11 @@ class GraphicDesign {
                 item.innerHTML = DefaultHtmlTypes[type];
                 // 拖动处理
                 bindDomEvent(item, "click", function (event) {
-                    if(type == "zoomReset") {
+                    if (type == "zoomReset") {
                         me.zoomReset();
-                    } else if(type == "zoomIn") {
+                    } else if (type == "zoomIn") {
                         me.zoomIn();
-                    } else if(type == "zoomOut") {
+                    } else if (type == "zoomOut") {
                         me.zoomOut();
                     }
                 });
@@ -1743,10 +1749,10 @@ class GraphicDesign {
                 let data = event.wheelDelta || -event.detail;
                 if (data > 0) {
                     // 向上滚 放大
-                    me.zoomOut();
+                    me.zoomIn();
                 } else {
                     // 向下滚 缩小
-                    me.zoomIn();
+                    me.zoomOut();
                 }
                 preventDefault(event);
             }
@@ -2657,30 +2663,34 @@ class GraphicDesign {
         let x = this.translateX;
         let y = this.translateY;
         let scaleValue = this.scaleValue || 1;
-        let wrapperParent = this.flowWrapper.parentNode;
-        let {width, height} = wrapperParent.getBoundingClientRect();
-
-        let newWidth = width, newHeight = height;
-        // 计算offset
-        let ox = 0, oy = 0;
-        if (scaleValue < 1) {
-            newWidth = width / scaleValue;
-            newHeight = height / scaleValue;
-            ox = -newWidth * (1 - scaleValue) / 2;
-            oy = -newHeight * (1 - scaleValue) / 2;
-        }
-
         // flow wrapper
         Object.assign(this.flowWrapper.style, {
             transform: `translate(${x}px, ${y}px) scale(${scaleValue})`,
-            minWidth: `${newWidth}px`,
-            minHeight: `${newHeight}px`,
+            // minWidth: `${newWidth}px`,
+            // minHeight: `${newHeight}px`,
         });
 
-        // offset
-        Object.assign(wrapperParent.style, {
-            transform: `translate(${ox}px, ${oy}px)`
-        });
+        // let newWidth = width, newHeight = height;
+        // // 计算offset
+        // let ox = 0, oy = 0;
+        // if (scaleValue < 1) {
+        //     newWidth = width / scaleValue;
+        //     newHeight = height / scaleValue;
+        //     ox = -newWidth * (1 - scaleValue) / 2;
+        //     oy = -newHeight * (1 - scaleValue) / 2;
+        // }
+
+        // // offset
+        // Object.assign(wrapperParent.style, {
+        //     transform: `translate(${ox}px, ${oy}px)`
+        // });
+
+        // after set transform
+        let wrapperParent = this.flowWrapper.parentNode;
+        let {left: l1, top: t1} = wrapperParent.getBoundingClientRect();
+        let {left: l2, top: t2} = this.flowWrapper.getBoundingClientRect();
+        this.offsetX = l2 - l1;
+        this.offsetY = t2 - t1;
     };
 
     /**
@@ -3866,8 +3876,8 @@ class GraphicDesign {
         // 初始化位置
         let {x, y} = linkTool.attrs;
         // move 修改鼠标
-        let mx = x + dx;
-        let my = y + dy;
+        let mx = x + dx / (this.scaleValue || 1);
+        let my = y + dy / (this.scaleValue || 1);
         // 创建一个透明的点
         let dropEndRect = linkTool.data("dropEndRect");
         let element = linkTool.data("from");
