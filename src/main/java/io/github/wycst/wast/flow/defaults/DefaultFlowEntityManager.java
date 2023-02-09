@@ -28,6 +28,10 @@ public class DefaultFlowEntityManager implements FlowEntityManager {
         this.sqlExecuter = sqlExecuter;
     }
 
+    public DefaultFlowEntityManager(DefaultSqlExecuter sqlExecuter) {
+        this.sqlExecuter = sqlExecuter;
+    }
+
     public void setEnableTransaction(boolean enableTransaction) {
         this.enableTransaction = enableTransaction;
     }
