@@ -53,8 +53,21 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
      * @return
      */
     public ProcessInstance startProcess(String processId, Map<String, Object> context) {
-        return startProcess(processId, null, context);
+        return startProcess(processId, (ProcessInstance) null, context, null);
     }
+
+    /**
+     * 启动流程
+     *
+     * @param processId
+     * @param context
+     * @param temporaryContext
+     * @return
+     */
+    public ProcessInstance startProcess(String processId, Map<String, Object> context, Object temporaryContext) {
+        return startProcess(processId, (ProcessInstance) null, context, temporaryContext);
+    }
+
 
     /**
      * 调试流程
@@ -64,11 +77,25 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
      * @return
      */
     public ProcessInstance debugProcess(String processSource, Map<String, Object> context) {
+        return debugProcess(processSource, context, null);
+    }
+
+    /**
+     * 调试流程
+     *
+     * @param processSource    流程内容
+     * @param context
+     * @param temporaryContext
+     * @return
+     */
+    public ProcessInstance debugProcess(String processSource, Map<String, Object> context, Object temporaryContext) {
         RuleProcess ruleProcess = FlowHelper.fromJson(processSource);
         // create instance
         ProcessInstance processInstance = new DebugProcessInstance(ruleProcess, null, this);
+        processInstance.setCustomContext(temporaryContext);
         return startProcess(ruleProcess, processInstance, context);
     }
+
 
     /**
      * 启动流程
@@ -78,11 +105,12 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
      * @param context
      * @return
      */
-    ProcessInstance startProcess(String processId, ProcessInstance parent, Map<String, Object> context) {
+    ProcessInstance startProcess(String processId, ProcessInstance parent, Map<String, Object> context, Object temporaryContext) {
         // get flow
         RuleProcess ruleProcess = FlowHelper.getProcess(processId);
         // create instance
         ProcessInstance processInstance = ProcessInstance.createInstance(ruleProcess, parent, this);
+        processInstance.setCustomContext(temporaryContext);
         startProcess(ruleProcess, processInstance, context);
         return processInstance;
     }
