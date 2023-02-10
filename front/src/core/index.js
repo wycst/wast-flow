@@ -313,6 +313,12 @@ const defaultOption = {
     onNodeCreated(node) {
     },
 
+    /**
+     * 元素删除时触发
+     */
+    onRemoveElement(element) {
+    },
+
     /***
      * 配置项
      */
@@ -2354,6 +2360,16 @@ class GraphicDesign {
         }
         let type = targetElement.type;
         let dataObject = targetElement.data();
+
+        let me = this;
+        setTimeout(() => {
+            try {
+                if(typeof me.option.onRemoveElement == "function") {
+                    me.option.onRemoveElement(targetElement);
+                }
+            } catch (err) {
+            }
+        }, 0);
         if (type == "path") {
             // 连线，移除箭头、连线中的矩形、文本
             // 移除元素关系
@@ -2415,6 +2431,10 @@ class GraphicDesign {
             // 最后删除元素
             targetElement.remove();
         }
+
+
+
+
     };
 
     /** 移除路径关联的rects */
