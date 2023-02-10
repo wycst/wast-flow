@@ -74,4 +74,9 @@ class NodeRuntimeContext implements NodeContext {
     public boolean isDebugMode() {
         return nodeInstance.getProcessInstance().isDebugMode();
     }
+
+    @Override
+    public Object getCustomContext() {
+        return getProcessInstance().getCustomContext();
+    }
 }

@@ -133,6 +133,9 @@ public class WastFlowTest {
 //                System.out.println(nodeContext.getNode().frontNodes());
 //                System.out.println(nodeContext.getNode().nextNodes());
 //                String nodeId = nodeContext.getNode().getId();
+
+                Object obj = nodeContext.getCustomContext();
+
                 String name = nodeContext.getNode().getName();
                 nodeContext.isDebugMode();
                 if("n6".equals(name)) {
@@ -183,9 +186,11 @@ public class WastFlowTest {
 
         Connect connect = null;
 
-        String flowSource = StringUtils.fromResource("flows/gateway.json");
-        ProcessInstance debugProcessInstance = flowEngine.debugProcess(flowSource, vars);
+//        String flowSource = StringUtils.fromResource("flows/gateway.json");
+//        ProcessInstance debugProcessInstance = flowEngine.debugProcess(flowSource, vars);
 
+
+        FlowEngine.setCustomContext(new Object());
 
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);

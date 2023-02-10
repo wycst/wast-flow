@@ -68,4 +68,11 @@ public interface NodeContext {
      * @return
      */
     public boolean isDebugMode();
+
+    /**
+     * 获取自定义上下文
+     *
+     * @return
+     */
+    public Object getCustomContext();
 }

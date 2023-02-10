@@ -46,4 +46,9 @@ class ConnectRuntimeContext implements ConnectContext {
     public boolean isDebugMode() {
         return processInstance.isDebugMode();
     }
+
+    @Override
+    public Object getCustomContext() {
+        return processInstance.getCustomContext();
+    }
 }
