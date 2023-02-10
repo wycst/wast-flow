@@ -743,8 +743,11 @@ class GraphicDesign {
         target.drag((dx, dy) => {
             // move
             if (!me.option.editable) return;
+            let scaleValue = me.scaleValue || 1;
+            dx /= scaleValue;
+            dy /= scaleValue;
             let location = {
-                x: dragContext.ox + dx,
+                x: dragContext.ox + dx ,
                 y: dragContext.oy + dy
             };
             target.attr(location);
@@ -810,6 +813,9 @@ class GraphicDesign {
     nextSplit() {
         let fromNode = this.nextSplitTool.data("from");
         if (!fromNode) return;
+        let isAnd = fromNode.data("gateway") == "AND";
+        console.log(isAnd);
+        console.log(fromNode.data("gateway"));
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
 
@@ -821,7 +827,9 @@ class GraphicDesign {
         this.updateElements(nextOneNode);
         // 创建连线1
         let connect = this.createPath(fromNode, nextOneNode);
-        this.setConnectType(connect, this.option.defaultConditionType || "Script");
+        if(!isAnd) {
+            this.setConnectType(connect, this.option.defaultConditionType || "Script");
+        }
         this.hideEditElements(connect);
 
         let nextTwoNode = this.createNode(x + width + 100, y);
@@ -832,7 +840,9 @@ class GraphicDesign {
         this.updateElements(nextTwoNode);
         // 创建连线2
         let connect2 = this.createPath(fromNode, nextTwoNode);
-        this.setConnectType(connect2, this.option.defaultConditionType || "Script");
+        if(!isAnd) {
+            this.setConnectType(connect2, this.option.defaultConditionType || "Script");
+        }
         this.hideEditElements(connect2);
     };
 
@@ -1611,11 +1621,16 @@ class GraphicDesign {
                 canvasDragContext.py = pageY;
                 if (me.enableGroupSelection()) {
                     // 获取鼠标点击的坐标，设置为圈选的位置
-                    let {x, y, left, top} = me.dom.getBoundingClientRect()
+                    let {x, y, left, top} = me.dom.getBoundingClientRect();
                     let start = {
-                        x: pageX - (x || left || 0),
-                        y: pageY - (y || top || 0)
+                        x: (pageX - (x || left || 0)),
+                        y: (pageY - (y || top || 0))
                     };
+
+                    let scaleValue = me.scaleValue || 1;
+                    start.x = (start.x - me.offsetX) / scaleValue;
+                    start.y = (start.y - me.offsetY) / scaleValue;
+
                     this.groupSelection.data("start", start);
                 } else {
                     me.paper.canvas.style.cursor = "grab";
@@ -1634,6 +1649,9 @@ class GraphicDesign {
 
                 if (me.enableGroupSelection()) {
                     let {x, y} = this.groupSelection.data("start");
+                    let scaleValue = this.scaleValue || 1;
+                    dx /= scaleValue;
+                    dy /= scaleValue;
                     let width = dx, height = dy;
                     if (dx < 0) {
                         x += dx;
@@ -1780,6 +1798,8 @@ class GraphicDesign {
 
     // reset zoom
     zoomReset() {
+        this.translateX = 0;
+        this.translateY = 0;
         this.setScale(1);
     };
 
@@ -3267,10 +3287,18 @@ class GraphicDesign {
         outLines[linkPath.id] = linkPath;
         fromNode.data("out", outLines);
 
-        if (Object.keys(outLines).length == 1) {
-            this.setConnectType(linkPath, "Always");
-        } else {
+        let fromNodeType = fromNode.data("nodeType");
+        let isFromAnd = fromNode.data("gateway") == "AND";
+        let conditionTypeFlag = Object.keys(outLines).length > 1 && !isFromAnd;
+        if(!conditionTypeFlag) {
+            if(fromNodeType == "Split" && !isFromAnd) {
+                conditionTypeFlag = true;
+            }
+        }
+        if (conditionTypeFlag) {
             this.setConnectType(linkPath, this.option.defaultConditionType || "Script");
+        } else {
+            this.setConnectType(linkPath, "Always");
         }
         onConnectCreated(linkPath, this);
 
