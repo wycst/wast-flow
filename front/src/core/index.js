@@ -1684,7 +1684,7 @@ class GraphicDesign {
                     // compute groupSelectElements
                     me.showGroupSelection();
                 } else {
-                    // me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
                 }
 
                 if (!canvasDragContext.moved) {
