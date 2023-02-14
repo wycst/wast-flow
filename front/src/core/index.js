@@ -2,7 +2,7 @@
 import Raphael from 'raphael'
 // 图标库
 import imgs from "./img"
-import {bindDomEvent, exportBlob, exportTextFile, preventDefault} from "./util"
+import {bindDomEvent, browser, exportBlob, exportTextFile, preventDefault} from "./util"
 
 import {ElementData} from "./element"
 import historyActions from "./modules/history"
@@ -747,7 +747,7 @@ class GraphicDesign {
             dx /= scaleValue;
             dy /= scaleValue;
             let location = {
-                x: dragContext.ox + dx ,
+                x: dragContext.ox + dx,
                 y: dragContext.oy + dy
             };
             target.attr(location);
@@ -827,7 +827,7 @@ class GraphicDesign {
         this.updateElements(nextOneNode);
         // 创建连线1
         let connect = this.createPath(fromNode, nextOneNode);
-        if(!isAnd) {
+        if (!isAnd) {
             this.setConnectType(connect, this.option.defaultConditionType || "Script");
         }
         this.hideEditElements(connect);
@@ -840,7 +840,7 @@ class GraphicDesign {
         this.updateElements(nextTwoNode);
         // 创建连线2
         let connect2 = this.createPath(fromNode, nextTwoNode);
-        if(!isAnd) {
+        if (!isAnd) {
             this.setConnectType(connect2, this.option.defaultConditionType || "Script");
         }
         this.hideEditElements(connect2);
@@ -1747,18 +1747,41 @@ class GraphicDesign {
                 });
                 // item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes[type];
-                // 拖动处理
+                // zoom处理
                 bindDomEvent(item, "click", function (event) {
                     if (type == "zoomReset") {
                         me.zoomReset();
+                        // chrome文本位置有兼容问题
+                        if (browser.isChrome) {
+                            me.triggerTextRefreshPos();
+                        }
                     } else if (type == "zoomIn") {
                         me.zoomIn();
+                        // chrome文本位置有兼容问题
+                        if (browser.isChrome) {
+                            me.triggerTextRefreshPos();
+                        }
                     } else if (type == "zoomOut") {
                         me.zoomOut();
+                        // chrome文本位置有兼容问题
+                        if (browser.isChrome) {
+                            me.triggerTextRefreshPos();
+                        }
                     }
                 });
             });
         }
+    };
+
+    // 刷新文本位置
+    triggerTextRefreshPos() {
+        let texts = this.paper.canvas.querySelectorAll("text");
+        texts.forEach(text => {
+            let x = text.getAttribute("x");
+            if (x != undefined) {
+                text.setAttribute("x", x);
+            }
+        });
     };
 
     /**
@@ -2384,7 +2407,7 @@ class GraphicDesign {
         let me = this;
         setTimeout(() => {
             try {
-                if(typeof me.option.onRemoveElement == "function") {
+                if (typeof me.option.onRemoveElement == "function") {
                     me.option.onRemoveElement(targetElement);
                 }
             } catch (err) {
@@ -2451,8 +2474,6 @@ class GraphicDesign {
             // 最后删除元素
             targetElement.remove();
         }
-
-
 
 
     };
@@ -3290,8 +3311,8 @@ class GraphicDesign {
         let fromNodeType = fromNode.data("nodeType");
         let isFromAnd = fromNode.data("gateway") == "AND";
         let conditionTypeFlag = Object.keys(outLines).length > 1 && !isFromAnd;
-        if(!conditionTypeFlag) {
-            if(fromNodeType == "Split" && !isFromAnd) {
+        if (!conditionTypeFlag) {
+            if (fromNodeType == "Split" && !isFromAnd) {
                 conditionTypeFlag = true;
             }
         }

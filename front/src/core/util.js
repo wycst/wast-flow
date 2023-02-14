@@ -1,3 +1,11 @@
+var userAgent = navigator.userAgent;
+export const browser = {
+    isFF: userAgent.indexOf("Firefox") > -1,// Firefox
+    isChrome: userAgent.indexOf("Chrome") > -1,// Chrome
+    isIE: userAgent.indexOf("MSIE") > -1,
+    isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1
+}
+
 /**
  * 给dom绑定事件
  *
