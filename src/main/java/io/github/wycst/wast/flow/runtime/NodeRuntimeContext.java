@@ -3,6 +3,9 @@ package io.github.wycst.wast.flow.runtime;
 import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.definition.NodeContext;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @Author wangyunchao
  * @Date 2022/12/1 8:11
@@ -79,4 +82,22 @@ class NodeRuntimeContext implements NodeContext {
     public Object getCustomContext() {
         return getProcessInstance().getCustomContext();
     }
+
+    public List<NodeInstance> getFrontNearestNodeInstances(Node.Type type) {
+        List<NodeInstance> resultNodeInstances = new ArrayList<NodeInstance>();
+        NodeInstance prevInstance = nodeInstance.getPrev();
+        while (prevInstance != null) {
+            Node node = prevInstance.getNode();
+            if(node.getType() == type) {
+                resultNodeInstances.add(prevInstance);
+                break;
+            }
+            prevInstance = prevInstance.getPrev();
+        }
+        // 一般运行时前置节点只有一个，并行场景需要通过下面数据来获取
+        // List<Node> nodes = getNode().getFrontNearestNodes(type);
+        // List<NodeInstance> nodeInstances = getProcessInstance().getNodeInstances();
+        return resultNodeInstances;
+    }
+
 }

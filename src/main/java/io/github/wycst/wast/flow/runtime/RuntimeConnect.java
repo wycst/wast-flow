@@ -8,6 +8,9 @@ import io.github.wycst.wast.flow.definition.ConnectHandler;
 import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @Author wangyunchao
  * @Date 2022/11/29 10:42
@@ -107,5 +110,27 @@ public class RuntimeConnect extends Connect {
     @Override
     public Node to() {
         return to;
+    }
+
+    @Override
+    public List<Node> getFrontNearestNodes(Node.Type type) {
+        List<Node> nodes = null;
+        if (from.getType() == type) {
+            nodes = new ArrayList<Node>();
+            nodes.add(from);
+            return nodes;
+        }
+        return from.getFrontNearestNodes(type);
+    }
+
+    @Override
+    public List<Node> getNextNearestNodes(Node.Type type) {
+        List<Node> nodes = null;
+        if (to.getType() == type) {
+            nodes = new ArrayList<Node>();
+            nodes.add(to);
+            return nodes;
+        }
+        return to.getNextNearestNodes(type);
     }
 }

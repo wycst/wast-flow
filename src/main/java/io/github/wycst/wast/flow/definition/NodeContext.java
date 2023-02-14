@@ -4,6 +4,8 @@ import io.github.wycst.wast.flow.runtime.NodeInstance;
 import io.github.wycst.wast.flow.runtime.ProcessInstance;
 import io.github.wycst.wast.flow.runtime.RuleProcess;
 
+import java.util.List;
+
 /**
  * 节点执行上下文
  *
@@ -75,4 +77,12 @@ public interface NodeContext {
      * @return
      */
     public Object getCustomContext();
+
+    /**
+     * 获取运行时与指定类型最近的节点实例信息
+     *
+     * @param type
+     * @return
+     */
+    public List<NodeInstance> getFrontNearestNodeInstances(Node.Type type);
 }

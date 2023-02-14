@@ -4,6 +4,9 @@ import io.github.wycst.wast.flow.definition.Connect;
 import io.github.wycst.wast.flow.definition.ConnectContext;
 import io.github.wycst.wast.flow.definition.Node;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 连线上下文对象
  *
@@ -50,5 +53,23 @@ class ConnectRuntimeContext implements ConnectContext {
     @Override
     public Object getCustomContext() {
         return processInstance.getCustomContext();
+    }
+
+    public List<NodeInstance> getFrontNearestNodeInstances(Node.Type type) {
+        List<NodeInstance> resultNodeInstances = new ArrayList<NodeInstance>();
+        
+        NodeInstance targetInstance = nodeInstance;
+        while (targetInstance != null) {
+            Node node = targetInstance.getNode();
+            if(node.getType() == type) {
+                resultNodeInstances.add(targetInstance);
+                break;
+            }
+            targetInstance = targetInstance.getPrev();
+        }
+        // 一般运行时前置节点只有一个，并行场景需要通过下面数据来获取
+        // List<Node> nodes = getNode().getFrontNearestNodes(type);
+        // List<NodeInstance> nodeInstances = getProcessInstance().getNodeInstances();
+        return resultNodeInstances;
     }
 }

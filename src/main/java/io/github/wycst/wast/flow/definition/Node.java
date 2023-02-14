@@ -45,11 +45,41 @@ public abstract class Node extends Data {
         this.outMapping = outMapping;
     }
 
+    /**
+     * 获取前置节点集合
+     *
+     * @return
+     */
     public List<Node> frontNodes() {
         return null;
     }
 
+    /**
+     * 获取后置节点集合
+     *
+     * @return
+     */
     public List<Node> nextNodes() {
+        return null;
+    }
+
+    /**
+     * 获取前置最近指定类型的节点集合
+     *
+     * @param type
+     * @return
+     */
+    public List<Node> getFrontNearestNodes(Node.Type type) {
+        return null;
+    }
+
+    /**
+     * 获取后置最近的指定类型的节点集合
+     *
+     * @param type
+     * @return
+     */
+    public List<Node> getNextNearestNodes(Node.Type type) {
         return null;
     }
 

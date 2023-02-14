@@ -7,7 +7,7 @@ package io.github.wycst.wast.flow.definition;
 public class HandlerOption {
 
     /**
-     * 需要延迟的场景下可以配置延迟执行，单位: 毫秒
+     * 需要延迟的场景下可以配置延迟执行，单位: 秒
      */
     private long delay;
 
@@ -28,7 +28,7 @@ public class HandlerOption {
     private int iterate;
 
     /**
-     * 超时配置,单位：毫秒
+     * 超时配置,单位：秒
      */
     private int timeout;
 

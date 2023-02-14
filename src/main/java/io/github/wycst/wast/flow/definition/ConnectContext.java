@@ -2,6 +2,8 @@ package io.github.wycst.wast.flow.definition;
 
 import io.github.wycst.wast.flow.runtime.NodeInstance;
 
+import java.util.List;
+
 public interface ConnectContext {
 
     /**
@@ -45,4 +47,12 @@ public interface ConnectContext {
      * @return
      */
     public Object getCustomContext();
+
+    /**
+     * 获取运行时与指定类型最近的节点实例信息
+     *
+     * @param type
+     * @return
+     */
+    public List<NodeInstance> getFrontNearestNodeInstances(Node.Type type);
 }

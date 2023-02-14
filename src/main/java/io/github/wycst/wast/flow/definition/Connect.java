@@ -1,5 +1,7 @@
 package io.github.wycst.wast.flow.definition;
 
+import java.util.List;
+
 /**
  * @Author wangyunchao
  * @Date 2022/11/29 10:55
@@ -64,6 +66,26 @@ public abstract class Connect extends Data implements Comparable<Connect> {
     public abstract Node from();
 
     public abstract Node to();
+
+    /**
+     * 获取前置最近指定类型的节点
+     *
+     * @param type
+     * @return
+     */
+    public List<Node> getFrontNearestNodes(Node.Type type) {
+        return null;
+    }
+
+    /**
+     * 获取后置最近的指定类型的节点
+     *
+     * @param type
+     * @return
+     */
+    public List<Node> getNextNearestNodes(Node.Type type) {
+        return null;
+    }
 
     /**
      * priority 越大优先级越高，越靠前

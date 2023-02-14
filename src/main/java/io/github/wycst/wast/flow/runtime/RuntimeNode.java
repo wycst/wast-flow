@@ -6,10 +6,7 @@ import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -112,6 +109,69 @@ public class RuntimeNode extends Node {
         return nodes;
     }
 
+    @Override
+    public List<Node> getFrontNearestNodes(Node.Type type) {
+        if (type == null) {
+            return frontNodes();
+        }
+        return getFrontNearestNodes(type, new HashSet<Node>());
+    }
+
+    final List<Node> getFrontNearestNodes(Node.Type type, Set<Node> includeNodes) {
+        includeNodes.add(this);
+        List<Node> nodes = new ArrayList<Node>();
+        for (RuntimeConnect connect : inConnects) {
+            RuntimeNode node = connect.from;
+            if (node.getType() == type) {
+                if (!nodes.contains(node)) {
+                    nodes.add(node);
+                }
+            } else {
+                if (includeNodes.add(node)) {
+                    List<Node> nearestNodes = node.getFrontNearestNodes(type, includeNodes);
+                    for (Node nearestNode : nearestNodes) {
+                        if (!nodes.contains(nearestNode)) {
+                            nodes.add(nearestNode);
+                        }
+                    }
+                }
+            }
+        }
+        return nodes;
+    }
+
+    @Override
+    public List<Node> getNextNearestNodes(Node.Type type) {
+        if (type == null) {
+            return nextNodes();
+        }
+        return getNextNearestNodes(type, new HashSet<Node>());
+    }
+
+    final List<Node> getNextNearestNodes(Node.Type type, Set<Node> includeNodes) {
+        includeNodes.add(this);
+        List<Node> nodes = new ArrayList<Node>();
+        for (RuntimeConnect connect : outConnects) {
+            RuntimeNode node = connect.to;
+            if (node.getType() == type) {
+                if (!nodes.contains(node)) {
+                    nodes.add(node);
+                }
+            } else {
+                if (includeNodes.add(node)) {
+                    List<Node> nearestNodes = node.getNextNearestNodes(type, includeNodes);
+                    for (Node nearestNode : nearestNodes) {
+                        if (!nodes.contains(nearestNode)) {
+                            nodes.add(nearestNode);
+                        }
+                    }
+                }
+            }
+        }
+        return nodes;
+    }
+
+
     void setHandlerOption(HandlerOption handlerOption) {
         this.handlerOption = handlerOption;
     }
@@ -195,8 +255,8 @@ public class RuntimeNode extends Node {
                 long delay = handlerOption.getDelay();
                 // sleep
                 if (delay > 0) {
-                    log.debug("{}, about to sleep for {} ms", nodeToString, delay);
-                    Thread.sleep(delay);
+                    log.debug("{}, about to sleep for {} s", nodeToString, delay);
+                    Thread.sleep(delay * 1000);
                 }
                 // get handler to execute
                 NodeHandler nodeHandler = getHandler(processInstance);
@@ -293,14 +353,14 @@ public class RuntimeNode extends Node {
                     }
                 });
                 if (!asynchronous) {
-                    future.get(timeout, TimeUnit.MILLISECONDS);
+                    future.get(timeout * 1000, TimeUnit.MILLISECONDS);
                 }
             } else {
                 callHandler(nodeHandler, nodeContext);
             }
         } catch (Exception exception) {
             if (exception instanceof TimeoutException) {
-                log.error("timeout {}", timeout);
+                log.error("timeout {}(s)", timeout);
             }
             nodeInstance.setHandlerStatus(HandlerStatus.Failure);
             if (policy == FailurePolicy.Stop) {
@@ -330,8 +390,8 @@ public class RuntimeNode extends Node {
                     log.info(String.format("Error: 正在进行第%d次重试", actualRetryCount));
                     long delay = handlerOption.getDelay();
                     if (delay > 0) {
-                        log.debug("{}, about to sleep for {} ms", nodeToString, delay);
-                        Thread.sleep(delay);
+                        log.debug("{}, about to sleep for {} s", nodeToString, delay);
+                        Thread.sleep(delay * 1000);
                     }
                 }
                 exception = null;
@@ -423,9 +483,9 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     void checkExitStack(ProcessInstance processInstance) {
-        if(processInstance.isAsyncMode()) {
+        if (processInstance.isAsyncMode()) {
             int count = processInstance.decrementStackCount();
-            if(count == 0) {
+            if (count == 0) {
                 // unlock
                 processInstance.unlock();
             }

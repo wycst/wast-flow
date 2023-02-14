@@ -134,6 +134,9 @@ public class WastFlowTest {
 //                System.out.println(nodeContext.getNode().nextNodes());
 //                String nodeId = nodeContext.getNode().getId();
 
+                List<NodeInstance> nodeInstances = nodeContext.getFrontNearestNodeInstances(Node.Type.Business);
+                List<Node> nextNodes = nodeContext.getNode().getNextNearestNodes(Node.Type.Business);
+
                 Object obj = nodeContext.getCustomContext();
 
                 String name = nodeContext.getNode().getName();
@@ -181,16 +184,13 @@ public class WastFlowTest {
         vars.put("a", 11);
 
         // 流程标识
-        String processId = "a";
+        String processId = "123d6b0b8b633611b2c4d0f53d01eec2";
         System.out.println("processID " + processId);
 
         Connect connect = null;
 
 //        String flowSource = StringUtils.fromResource("flows/gateway.json");
 //        ProcessInstance debugProcessInstance = flowEngine.debugProcess(flowSource, vars);
-
-
-        FlowEngine.setCustomContext(new Object());
 
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
