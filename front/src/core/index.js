@@ -5457,6 +5457,23 @@ class GraphicDesign {
         return this.elements[id];
     };
 
+    /***
+     * 自定义查找元素
+     *
+     * @param fn
+     */
+    getElementByUUID(uuid) {
+        if (!uuid) return null;
+        let elementValues = Object.values(this.elements);
+        for (let elementValue of elementValues) {
+            let data = elementValue.data();
+            if (data.uuid == uuid) {
+                return elementValue;
+            }
+        }
+        return null;
+    };
+
     /**
      * 重置所有元素的颜色
      */
@@ -5523,6 +5540,55 @@ class GraphicDesign {
             this.option.alertMessage(message, level);
         } else {
             console.info(message, level);
+        }
+    };
+
+    /**
+     * 设置元素的颜色
+     *
+     * @param elementId
+     * @param color
+     */
+    setElementColorById(elementId, color) {
+        let element = this.getElementById(elementId);
+        this.setElementColor(element, color);
+    };
+
+    /**
+     * 设置元素的颜色
+     *
+     * @param uuid
+     * @param color
+     */
+    setElementColorByUUID(uuid, color) {
+        let element = this.getElementByUUID(uuid);
+        this.setElementColor(element, color);
+    };
+
+    /**
+     * 设置元素的颜色
+     *
+     * @param element
+     * @param color
+     */
+    setElementColor(element, color) {
+        if (!element) return;
+        let type = element.type;
+        if (type == "path") {
+            let pathAttr = {
+                fill: color,
+                stroke: color
+            }
+            // 路径
+            element.attr(pathAttr); //.data("arrow").attr(pathAttr);
+            this.setConnectArrow(element);
+            this.setConnectType(element);
+        } else if (type == "html") {
+            element.attr("color", color);
+        } else {
+            element.attr({
+                stroke: color
+            });
         }
     };
 
