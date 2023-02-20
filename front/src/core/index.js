@@ -1840,6 +1840,43 @@ class GraphicDesign {
     };
 
     /**
+     * 返回大纲视图（全节点视图）
+     */
+    overview() {
+        let scale = 0;
+        let elementValues = Object.values(this.elements);
+        // 设置一个矩形边界使所有的节点都在矩形范围内
+        let minX = 0, minY = 0;
+        let maxEndx = 0, maxEndy = 0, onceFlag = true;
+        for(let elementValue of elementValues) {
+            let type = elementValue.type;
+            if(type == "path") continue;
+            let {x, y, width, height} = elementValue.attrs;
+
+            if(onceFlag) {
+                onceFlag = false;
+                minX = x;
+                minY = y;
+                maxEndx = x + width;
+                maxEndy = y + height;
+            } else {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxEndx = Math.max(maxEndx, x + width);
+                maxEndy = Math.max(maxEndy, y + height);
+            }
+        }
+
+        let rectX = minX, rectY = minY;
+        let rectWidth = maxEndx - rectX, rectHeight = maxEndy - rectY;
+
+        let {width, height} = this.flowWrapper.parentNode.getBoundingClientRect();
+        console.log(width, height);
+        console.log(rectX, rectY, rectWidth, rectHeight);
+    };
+
+
+    /**
      * 是否支持圈选
      *
      * @returns {boolean|*}
