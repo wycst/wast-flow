@@ -134,18 +134,18 @@ public class WastFlowTest {
 //                System.out.println(nodeContext.getNode().nextNodes());
 //                String nodeId = nodeContext.getNode().getId();
 
-                List<NodeInstance> nodeInstances = nodeContext.getFrontNearestNodeInstances(Node.Type.Business);
-                List<Node> nextNodes = nodeContext.getNode().getNextNearestNodes(Node.Type.Business);
-
-                Object obj = nodeContext.getCustomContext();
-
-                String name = nodeContext.getNode().getName();
-                nodeContext.isDebugMode();
-                if("n6".equals(name)) {
-                    System.out.println(nodeContext.getNode().getUuid());
-                    throw new RuntimeException("error");
-                }
-                Thread.sleep(1000);
+//                List<NodeInstance> nodeInstances = nodeContext.getFrontNearestNodeInstances(Node.Type.Business);
+//                List<Node> nextNodes = nodeContext.getNode().getNextNearestNodes(Node.Type.Business);
+//
+//                Object obj = nodeContext.getCustomContext();
+//
+//                String name = nodeContext.getNode().getName();
+//                nodeContext.isDebugMode();
+//                if("n6".equals(name)) {
+//                    System.out.println(nodeContext.getNode().getUuid());
+//                    throw new RuntimeException("error");
+//                }
+//                Thread.sleep(1000);
             }
         });
         flowEngine.setDatasource(getDatasource());
@@ -174,17 +174,17 @@ public class WastFlowTest {
 
         //5 删除流程版本（暂不提供）
 
-        // 设置记录持久化日志
-        flowEngine.setPersistenceInstanceLog(true);
-        // 设置事务
-        flowEngine.setEnableTransaction(true);
+//        // 设置记录持久化日志
+//        flowEngine.setPersistenceInstanceLog(true);
+//        // 设置事务
+//        flowEngine.setEnableTransaction(true);
 
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("num", 111);
         vars.put("a", 11);
 
         // 流程标识
-        String processId = "123d6b0b8b633611b2c4d0f53d01eec2";
+        String processId = "sample";
         System.out.println("processID " + processId);
 
         Connect connect = null;
@@ -195,6 +195,15 @@ public class WastFlowTest {
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
         System.out.println("processInstanceId " + processInstance.getId());
+
+        long l1 = System.currentTimeMillis();
+        System.out.println();
+        for(int i = 0 ; i < 1000000; i++) {
+            flowEngine.startProcess(processId, vars);
+        }
+        long l2 = System.currentTimeMillis();
+        System.out.println(l2 - l1);
+
 
         flowEngine.destroy();
     }

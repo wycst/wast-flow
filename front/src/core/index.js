@@ -5589,6 +5589,7 @@ class GraphicDesign {
     setElementColorById(elementId, color) {
         let element = this.getElementById(elementId);
         this.setElementColor(element, color);
+        return element;
     };
 
     /**
@@ -5600,6 +5601,7 @@ class GraphicDesign {
     setElementColorByUUID(uuid, color) {
         let element = this.getElementByUUID(uuid);
         this.setElementColor(element, color);
+        return element;
     };
 
     /**
@@ -5626,6 +5628,52 @@ class GraphicDesign {
             element.attr({
                 stroke: color
             });
+        }
+    };
+
+    // 清除记录的完成记录
+    clearCompleteRecords() {
+        this.completeRecords = [];
+    };
+
+    /**
+     * 根据id完成一个元素状态
+     */
+    completeElementColorById(id, completeColor) {
+        let element = this.setElementColorById(id, completeColor);
+        if(element) {
+            this.completeFrontLines(element, completeColor);
+        }
+    };
+
+    /**
+     * 根据uuid完成一个元素状态
+     */
+    completeElementColorByUUID(uuid, completeColor) {
+        let element = this.setElementColorByUUID(uuid, completeColor);
+        if(element) {
+            this.completeFrontLines(element, completeColor);
+        }
+    };
+
+    completeFrontLines(element, completeColor) {
+        console.log(" completeFrontLines ", this.completeRecords);
+        if(!element) return;
+        if(!this.completeRecords) {
+            this.completeRecords = [];
+        }
+        this.completeRecords.push(element.id);
+        let inlines = element.data("in");
+        for(let lineId in inlines) {
+            let connectElement = inlines[lineId];
+            if(!this.completeRecords.includes(connectElement.id)) {
+                this.completeRecords.push(connectElement.id);
+                let fromElement = connectElement.data("from");
+                if(this.completeRecords.includes(fromElement.id)) {
+                    // 完成连线
+                    this.setElementColor(connectElement, completeColor);
+                }
+            }
         }
     };
 
