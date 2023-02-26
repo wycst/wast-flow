@@ -388,7 +388,7 @@ const extensionTemplate = `
     </div>
     
     <div class="flow-tools" style="display:none;z-index: 100;">
-        <div class="tool-item" data-type="overview" draggable="true" title="大纲视图，全貌"></div>
+        <div class="tool-item" data-type="overview" draggable="true" title="大纲，全貌视图"></div>
         <div class="tool-item" data-type="zoomReset" draggable="true" title="初始大小"></div>
         <div class="tool-item" data-type="zoomIn" draggable="true" title="放大"></div>
         <div class="tool-item" data-type="zoomOut" draggable="true" title="缩小"></div>
@@ -1578,153 +1578,10 @@ class GraphicDesign {
         bindDomEvent(me.paper.canvas, "contextmenu", (evt) => me.handleContextmenu(evt));
         // 绑定双击事件
         bindDomEvent(me.paper.canvas, "dblclick", (evt) => me.handleDblClickBlank(evt));
-
-        this.handleDocumentKeyDown = (e) => {
-            console.log(e.keyCode, e);
-            if (e.keyCode == 46) {
-                // delete
-                me.deleteSelectElement();
-            } else if (e.keyCode == 8) {
-                // backspace
-                let active = document.activeElement;
-                if (active.getAttribute && active.getAttribute("readonly") == "readonly") {
-                    return false;
-                }
-            } else if (e.keyCode == 16) {
-                me.shiftMode = true;
-            } else if (e.keyCode == 17) {
-                // Control
-                me.resetGroupSelection();
-                me.groupSelectionMode = true;
-                me.paper.canvas.style.cursor = "crosshair";
-            } else if (e.keyCode == 89) {
-                if (e.ctrlKey) {
-                    // ctrl+Y(前进)
-                    me.redo();
-                }
-            } else if (e.keyCode == 90) {
-                if (e.ctrlKey) {
-                    // ctrl+z（后退）
-                    me.undo();
-                }
-            }
-            console.log(e);
-        }
-
-        this.handleDocumentKeyUp = (event) => {
-            // Control up
-            if (event.keyCode == 16) {
-                me.shiftMode = false;
-            }
-            if (event.keyCode == 17) {
-                me.groupSelectionMode = false;
-                me.paper.canvas.style.cursor = "default";
-            }
-        }
-
-        // 键盘事件(在销毁时需要移除)
-        document.addEventListener("keydown", this.handleDocumentKeyDown);
-        document.addEventListener("keyup", this.handleDocumentKeyUp);
-        if (this.option.panable) {
-            const canvasDragContext = {
-                moved: false
-            };
-            const onCanvasDragStart = (event) => {
-                const {pageX, pageY} = event;
-                canvasDragContext.px = pageX;
-                canvasDragContext.py = pageY;
-                if (me.enableGroupSelection()) {
-                    // 获取鼠标点击的坐标，设置为圈选的位置
-                    let {x, y, left, top} = me.dom.getBoundingClientRect();
-                    let start = {
-                        x: (pageX - (x || left || 0)),
-                        y: (pageY - (y || top || 0))
-                    };
-
-                    let scaleValue = me.scaleValue || 1;
-                    start.x = (start.x - me.offsetX) / scaleValue;
-                    start.y = (start.y - me.offsetY) / scaleValue;
-
-                    this.groupSelection.data("start", start);
-                } else {
-                    me.paper.canvas.style.cursor = "grab";
-                    canvasDragContext.translateX = me.translateX;
-                    canvasDragContext.translateY = me.translateY;
-                }
-            }
-            const onCanvasDragMove = (event) => {
-                const {pageX, pageY} = event;
-                let dx = pageX - canvasDragContext.px;
-                let dy = pageY - canvasDragContext.py;
-
-                if (dx * dx + dy * dy > 0) {
-                    canvasDragContext.moved = true;
-                }
-
-                if (me.enableGroupSelection()) {
-                    let {x, y} = this.groupSelection.data("start");
-                    let scaleValue = this.scaleValue || 1;
-                    dx /= scaleValue;
-                    dy /= scaleValue;
-                    let width = dx, height = dy;
-                    if (dx < 0) {
-                        x += dx;
-                        width = -dx;
-                    }
-                    if (dy < 0) {
-                        y += dy;
-                        height = -dy;
-                    }
-                    // update selection rect
-                    this.groupSelection.attr({
-                        x,
-                        y,
-                        width,
-                        height,
-                        stroke: this.option.settings.themeColor
-                    }).show();
-                } else {
-                    me.translateX = canvasDragContext.translateX + dx;
-                    me.translateY = canvasDragContext.translateY + dy;
-                    // me.hideEditElements(this.selectElement);
-                    me.cancelSelect();
-                    me.translateTo(me.translateX, me.translateY);
-                }
-            }
-            const onCanvasDragUp = (event) => {
-                // panto and remove transform
-
-                if (me.enableGroupSelection()) {
-                    // compute groupSelectElements
-                    me.showGroupSelection();
-                } else {
-                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
-                }
-
-                if (!canvasDragContext.moved) {
-                    // only click
-                    me.resetGroupSelection();
-                } else {
-                    me.connectRect.hide();
-                }
-                me.groupSelectionMode = false;
-                canvasDragContext.moved = false;
-                me.paper.canvas.style.cursor = "default";
-
-                document.removeEventListener("mousemove", onCanvasDragMove);
-                document.removeEventListener("mouseup", onCanvasDragUp);
-            }
-            // 平移处理
-            bindDomEvent(me.dom, "mousedown", function (event) {
-                if (!me.dragingElement && !me.disablePan) {
-                    onCanvasDragStart(event);
-                    me.endInputEdit();
-                    document.addEventListener("mousemove", onCanvasDragMove);
-                    document.addEventListener("mouseup", onCanvasDragUp);
-                    preventDefault(event);
-                }
-            });
-        }
+        // 键盘事件
+        this.handleKeyboardEvents();
+        // 根节点的鼠标拖动事件
+        this.handleMouseDragMoveEvents();
 
         // 是否支持缩放
         this.setScaleable(this.option.zoomable);
@@ -1770,7 +1627,7 @@ class GraphicDesign {
                 // zoom处理
                 bindDomEvent(item, "click", function (event) {
                     preventDefault(event);
-                    if(type == "overview") {
+                    if (type == "overview") {
                         me.overview();
                     } else if (type == "zoomReset") {
                         me.zoomReset();
@@ -1795,6 +1652,163 @@ class GraphicDesign {
                 });
             });
         }
+    };
+
+    // 处理键盘事件
+    handleKeyboardEvents() {
+        let me = this;
+        if (!this.handleDocumentKeyDown) {
+            this.handleDocumentKeyDown = (e) => {
+                if (e.keyCode == 46) {
+                    // delete
+                    me.deleteSelectElement();
+                } else if (e.keyCode == 8) {
+                    // backspace
+                    let active = document.activeElement;
+                    if (active.getAttribute && active.getAttribute("readonly") == "readonly") {
+                        return false;
+                    }
+                } else if (e.keyCode == 16) {
+                    me.shiftMode = true;
+                } else if (e.keyCode == 17) {
+                    // Control
+                    me.resetGroupSelection();
+                    me.groupSelectionMode = true;
+                    me.paper.canvas.style.cursor = "crosshair";
+                } else if (e.keyCode == 89) {
+                    if (e.ctrlKey) {
+                        // ctrl+Y(前进)
+                        me.redo();
+                    }
+                } else if (e.keyCode == 90) {
+                    if (e.ctrlKey) {
+                        // ctrl+z（后退）
+                        me.undo();
+                    }
+                }
+            }
+        }
+        if (!this.handleDocumentKeyUp) {
+            this.handleDocumentKeyUp = (event) => {
+                // Control up
+                if (event.keyCode == 16) {
+                    me.shiftMode = false;
+                }
+                if (event.keyCode == 17) {
+                    me.groupSelectionMode = false;
+                    me.paper.canvas.style.cursor = "default";
+                }
+            }
+        }
+        // 先销毁
+        document.removeEventListener("keydown", this.handleDocumentKeyDown);
+        document.removeEventListener("keyup", this.handleDocumentKeyUp);
+
+        // 键盘事件(在销毁时需要移除)
+        document.addEventListener("keydown", this.handleDocumentKeyDown);
+        document.addEventListener("keyup", this.handleDocumentKeyUp);
+    };
+
+    // 鼠标拖拽移动事件
+    handleMouseDragMoveEvents() {
+        let me = this;
+        const canvasDragContext = {
+            moved: false
+        };
+        const onCanvasDragStart = (event) => {
+            const {pageX, pageY} = event;
+            canvasDragContext.px = pageX;
+            canvasDragContext.py = pageY;
+            if (me.enableGroupSelection()) {
+                // 获取鼠标点击的坐标，设置为圈选的位置
+                let {x, y, left, top} = me.dom.getBoundingClientRect();
+                let start = {
+                    x: (pageX - (x || left || 0)),
+                    y: (pageY - (y || top || 0))
+                };
+
+                let scaleValue = me.scaleValue || 1;
+                start.x = (start.x - me.offsetX) / scaleValue;
+                start.y = (start.y - me.offsetY) / scaleValue;
+
+                this.groupSelection.data("start", start);
+            } else {
+                me.paper.canvas.style.cursor = "grab";
+                canvasDragContext.translateX = me.translateX;
+                canvasDragContext.translateY = me.translateY;
+            }
+        }
+        const onCanvasDragMove = (event) => {
+            const {pageX, pageY} = event;
+            let dx = pageX - canvasDragContext.px;
+            let dy = pageY - canvasDragContext.py;
+            if (dx * dx + dy * dy > 0) {
+                canvasDragContext.moved = true;
+            }
+            if (me.enableGroupSelection()) {
+                let {x, y} = this.groupSelection.data("start");
+                let scaleValue = this.scaleValue || 1;
+                dx /= scaleValue;
+                dy /= scaleValue;
+                let width = dx, height = dy;
+                if (dx < 0) {
+                    x += dx;
+                    width = -dx;
+                }
+                if (dy < 0) {
+                    y += dy;
+                    height = -dy;
+                }
+                // update selection rect
+                this.groupSelection.attr({
+                    x,
+                    y,
+                    width,
+                    height,
+                    stroke: this.option.settings.themeColor
+                }).show();
+            } else {
+                me.translateX = canvasDragContext.translateX + dx;
+                me.translateY = canvasDragContext.translateY + dy;
+                // me.hideEditElements(this.selectElement);
+                me.cancelSelect();
+                me.translateTo(me.translateX, me.translateY);
+            }
+        }
+        const onCanvasDragUp = (event) => {
+            // panto and remove transform
+            if (me.enableGroupSelection()) {
+                // compute groupSelectElements
+                me.showGroupSelection();
+            } else {
+                me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+            }
+            if (!canvasDragContext.moved) {
+                // only click
+                me.resetGroupSelection();
+            } else {
+                me.connectRect.hide();
+            }
+            me.groupSelectionMode = false;
+            canvasDragContext.moved = false;
+            me.paper.canvas.style.cursor = "default";
+
+            document.removeEventListener("mousemove", onCanvasDragMove);
+            document.removeEventListener("mouseup", onCanvasDragUp);
+        }
+        // 平移处理
+        bindDomEvent(me.dom, "mousedown", function (event) {
+            if (!me.dragingElement && !me.disablePan) {
+                if (!me.enablePanable() && !me.enableGroupSelection()) {
+                    return;
+                }
+                onCanvasDragStart(event);
+                me.endInputEdit();
+                document.addEventListener("mousemove", onCanvasDragMove);
+                document.addEventListener("mouseup", onCanvasDragUp);
+                preventDefault(event);
+            }
+        });
     };
 
     // 刷新文本位置
@@ -1897,7 +1911,7 @@ class GraphicDesign {
             y: minY + elementsBoundingHeight / 2
         }
         let targetCenter = {
-            x: width / 2 ,
+            x: width / 2,
             y: height / 2
         }
         let {overviewOffsetWidth: offsetW, overviewOffsetHeight: offsetH} = this.option;
@@ -1920,6 +1934,15 @@ class GraphicDesign {
      */
     enableGroupSelection() {
         return this.option.editable && this.groupSelectionMode;
+    };
+
+    /**
+     * 是否支持平移
+     *
+     * @returns {boolean|*}
+     */
+    enablePanable() {
+        return this.option.panable;
     };
 
     /**
@@ -2877,7 +2900,7 @@ class GraphicDesign {
         this.moveTo(this.groupSelection, dx, dy);
     };
 
-    /***/
+    /** move */
     moveTo(element, dx, dy) {
         if (!element || !element.type) return;
         let type = element.type;
@@ -2904,6 +2927,16 @@ class GraphicDesign {
         if (textElement) {
             textElement.attr({x: textElement.attr("x") + dx, y: textElement.attr("y") + dy});
         }
+    };
+
+    /**
+     * 设置是否可以平移
+     *
+     * @param panable
+     */
+    setPanable(panable) {
+        this.option.panable = !!panable;
+
     };
 
     getContextMenuFn(targetElement) {
