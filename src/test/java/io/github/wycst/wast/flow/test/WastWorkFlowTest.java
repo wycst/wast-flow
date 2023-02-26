@@ -37,14 +37,14 @@ public class WastWorkFlowTest {
         flowEngine.registerHandler(Node.Type.Business, new NodeHandler() {
             @Override
             public void handle(NodeContext nodeContext) throws Exception {
-                System.out.println(nodeContext.getNode().frontNodes());
-                System.out.println(nodeContext.getNode().nextNodes());
-                String nodeId = nodeContext.getNode().getId();
-                String name = nodeContext.getNode().getName();
-                if("n1".equals(name)) {
-                    System.out.println(nodeContext.getNode().getUuid());
-                    throw new RuntimeException("error");
-                }
+//                System.out.println(nodeContext.getNode().frontNodes());
+//                System.out.println(nodeContext.getNode().nextNodes());
+//                String nodeId = nodeContext.getNode().getId();
+//                String name = nodeContext.getNode().getName();
+//                if("n1".equals(name)) {
+//                    System.out.println(nodeContext.getNode().getUuid());
+//                    throw new RuntimeException("error");
+//                }
             }
         });
         flowEngine.setDatasource(getDatasource());
@@ -55,10 +55,10 @@ public class WastWorkFlowTest {
         // 加载已发布的资源
         flowEngine.loadDeployedProcess();
 
-        // 设置记录持久化日志
-        flowEngine.setPersistenceInstanceLog(true);
-        // 设置事务
-        flowEngine.setEnableTransaction(true);
+//        // 设置记录持久化日志
+//        flowEngine.setPersistenceInstanceLog(true);
+//        // 设置事务
+//        flowEngine.setEnableTransaction(true);
 
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("num", 111);
@@ -71,6 +71,7 @@ public class WastWorkFlowTest {
         //6 启动流程
         ProcessInstance processInstance = flowEngine.startProcess(processId, vars);
         System.out.println("processInstanceId " + processInstance.getId());
+
 
         flowEngine.destroy();
     }
