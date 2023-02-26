@@ -58,7 +58,10 @@ const DefaultHtmlTypes = {
     del: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <path d="M202.666667 256h-42.666667a32 32 0 0 1 0-64h704a32 32 0 0 1 0 64H266.666667v565.333333a53.333333 53.333333 0 0 0 53.333333 53.333334h384a53.333333 53.333333 0 0 0 53.333333-53.333334V352a32 32 0 0 1 64 0v469.333333c0 64.8-52.533333 117.333333-117.333333 117.333334H320c-64.8 0-117.333333-52.533333-117.333333-117.333334V256z m224-106.666667a32 32 0 0 1 0-64h170.666666a32 32 0 0 1 0 64H426.666667z m-32 288a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z m170.666666 0a32 32 0 0 1 64 0v256a32 32 0 0 1-64 0V437.333333z" fill="#000000" p-id="3009"></path>
           </svg>`,
-
+    overview: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;transform: scale(0.85);" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M512 349.888A162.112 162.112 0 1 0 674.112 512 162.32 162.32 0 0 0 512 349.888z m0 231.6A69.488 69.488 0 1 1 581.488 512 69.552 69.552 0 0 1 512 581.488z"></path>
+                    <path d="M972.8 460.8h-54.4a410.304 410.304 0 0 0-355.2-355.2V51.2a51.2 51.2 0 1 0-102.4 0v54.4a410.304 410.304 0 0 0-355.2 355.2H51.2a51.2 51.2 0 1 0 0 102.4h54.4a410.304 410.304 0 0 0 355.2 355.2v54.4a51.2 51.2 0 0 0 102.4 0v-54.4a410.304 410.304 0 0 0 355.2-355.2h54.4a51.2 51.2 0 0 0 0-102.4zM512 819.2A307.2 307.2 0 1 1 819.2 512 307.456 307.456 0 0 1 512 819.2z"></path>
+                </svg>`,
     zoomReset: `<svg style="width: 100%;height: 100%;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M514.2 854.1c-188 0-340.9-152.9-340.9-340.9s152.9-340.9 340.9-340.9 340.9 152.9 340.9 340.9-152.9 340.9-340.9 340.9z m0-598.8C372 255.3 256.3 371 256.3 513.2S372 771.1 514.2 771.1s257.9-115.7 257.9-257.9-115.7-257.9-257.9-257.9z"></path>
                     <path d="M888.5 554.7H742.1c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5h146.5c22.9 0 41.5 18.6 41.5 41.5-0.1 22.9-18.6 41.5-41.6 41.5zM288 554.7H141.5c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5H288c22.9 0 41.5 18.6 41.5 41.5s-18.6 41.5-41.5 41.5zM515 327.7c-22.9 0-41.5-18.6-41.5-41.5V139.7c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.4c0 23-18.5 41.6-41.5 41.6zM515 928.2c-22.9 0-41.5-18.6-41.5-41.5V740.3c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.5c0 22.8-18.5 41.4-41.5 41.4z"></path>
@@ -250,6 +253,16 @@ const defaultOption = {
     zoomable: true,
 
     /**
+     * 大纲视图左右抵消的宽度
+     */
+    overviewOffsetWidth: 60,
+
+    /**
+     * 大纲视图上下抵消的高度
+     */
+    overviewOffsetHeight: 20,
+
+    /**
      * 提示信息，默认使用window.alert
      *
      * @param message
@@ -375,6 +388,7 @@ const extensionTemplate = `
     </div>
     
     <div class="flow-tools" style="display:none;z-index: 100;">
+        <div class="tool-item" data-type="overview" draggable="true" title="大纲视图，全貌"></div>
         <div class="tool-item" data-type="zoomReset" draggable="true" title="初始大小"></div>
         <div class="tool-item" data-type="zoomIn" draggable="true" title="放大"></div>
         <div class="tool-item" data-type="zoomOut" draggable="true" title="缩小"></div>
@@ -1747,9 +1761,18 @@ class GraphicDesign {
                 });
                 // item.style.color = this.option.settings.themeColor;
                 item.innerHTML = DefaultHtmlTypes[type];
+
+                // stop propagation
+                bindDomEvent(item, "mousedown", function (event) {
+                    preventDefault(event);
+                });
+
                 // zoom处理
                 bindDomEvent(item, "click", function (event) {
-                    if (type == "zoomReset") {
+                    preventDefault(event);
+                    if(type == "overview") {
+                        me.overview();
+                    } else if (type == "zoomReset") {
                         me.zoomReset();
                         // chrome文本位置有兼容问题
                         if (browser.isChrome) {
@@ -1768,6 +1791,7 @@ class GraphicDesign {
                             me.triggerTextRefreshPos();
                         }
                     }
+
                 });
             });
         }
@@ -1827,8 +1851,8 @@ class GraphicDesign {
     };
 
     setScale(value) {
-        if (value < 0.2) {
-            value = 0.2;
+        if (value <= 0.01) {
+            value = 0.01;
         }
         this.scaleValue = value;
         this.updateWrapperTransform();
@@ -1843,17 +1867,15 @@ class GraphicDesign {
      * 返回大纲视图（全节点视图）
      */
     overview() {
-        let scale = 0;
         let elementValues = Object.values(this.elements);
         // 设置一个矩形边界使所有的节点都在矩形范围内
         let minX = 0, minY = 0;
         let maxEndx = 0, maxEndy = 0, onceFlag = true;
-        for(let elementValue of elementValues) {
+        for (let elementValue of elementValues) {
             let type = elementValue.type;
-            if(type == "path") continue;
+            if (type == "path") continue;
             let {x, y, width, height} = elementValue.attrs;
-
-            if(onceFlag) {
+            if (onceFlag) {
                 onceFlag = false;
                 minX = x;
                 minY = y;
@@ -1868,11 +1890,26 @@ class GraphicDesign {
         }
 
         let rectX = minX, rectY = minY;
-        let rectWidth = maxEndx - rectX, rectHeight = maxEndy - rectY;
-
+        let elementsBoundingWidth = maxEndx - rectX, elementsBoundingHeight = maxEndy - rectY;
         let {width, height} = this.flowWrapper.parentNode.getBoundingClientRect();
-        console.log(width, height);
-        console.log(rectX, rectY, rectWidth, rectHeight);
+        let center = {
+            x: minX + elementsBoundingWidth / 2,
+            y: minY + elementsBoundingHeight / 2
+        }
+        let targetCenter = {
+            x: width / 2 ,
+            y: height / 2
+        }
+        let {overviewOffsetWidth: offsetW, overviewOffsetHeight: offsetH} = this.option;
+        let viewWidth = width - 2 * offsetW, viewHeight = height - 2 * offsetH;
+        let scale = 1;
+        if (viewWidth < elementsBoundingWidth || viewHeight < elementsBoundingHeight) {
+            scale = Math.min(viewWidth / (elementsBoundingWidth || 1), viewHeight / (elementsBoundingHeight || 1));
+        }
+        let dx = (targetCenter.x - center.x) * scale;
+        let dy = (targetCenter.y - center.y) * scale;
+        this.translateTo(dx, dy);
+        this.setScale(scale);
     };
 
 
