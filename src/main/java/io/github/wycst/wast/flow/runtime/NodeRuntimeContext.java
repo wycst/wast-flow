@@ -22,7 +22,7 @@ class NodeRuntimeContext implements NodeContext {
         return new NodeRuntimeContext(nodeInstance);
     }
 
-    private NodeRuntimeContext(NodeInstance nodeInstance) {
+    NodeRuntimeContext(NodeInstance nodeInstance) {
         this.nodeInstance = nodeInstance;
     }
 
