@@ -38,7 +38,7 @@ export default {
         draggable: true
       },
       // background: "lightblue",
-      panable: false,
+      panable: true,
 
       /** 默认条件类型 */
       defaultConditionType: "HandlerCall",
