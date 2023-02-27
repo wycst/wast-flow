@@ -43,6 +43,9 @@ class AbstractFlowEngine implements NodeEngine {
     // 连线运行handler
     private ConnectHandler[] connectHandlers = new ConnectHandler[ConditionType.values().length];
 
+    // 事件处理
+    private EventHandler eventHandler = EventHandler.UndoHandler;
+
     // 是否持久化实例记录(流程实例和节点实例)
     protected boolean persistenceInstanceLog;
 
@@ -94,7 +97,6 @@ class AbstractFlowEngine implements NodeEngine {
         return flowEntityManager;
     }
 
-
     @Override
     public void registerHandler(Node.Type type, NodeHandler nodeHandler) {
         nodeHandlers[type.ordinal()] = nodeHandler;
@@ -119,6 +121,14 @@ class AbstractFlowEngine implements NodeEngine {
 
     public void setEnableTransaction(boolean enableTransaction) {
         flowEntityManager.setEnableTransaction(enableTransaction);
+    }
+
+    public EventHandler eventHandler() {
+        return eventHandler;
+    }
+
+    public void setEventHandler(EventHandler eventHandler) {
+        this.eventHandler = eventHandler;
     }
 
     public void setStaticResources(String staticResources) {

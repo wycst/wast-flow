@@ -127,7 +127,7 @@ public class WastFlowTest {
 
         FlowEngine flowEngine = new FlowEngine();
         // 业务节点设置handler
-        flowEngine.registerHandler(Node.Type.Business, new NodeHandler() {
+        flowEngine.registerHandler(Node.Type.Business, new NodeHandler()  {
             @Override
             public void handle(NodeContext nodeContext) throws Exception {
 //                System.out.println(nodeContext.getNode().frontNodes());

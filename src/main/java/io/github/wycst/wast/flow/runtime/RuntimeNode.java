@@ -470,11 +470,17 @@ public class RuntimeNode extends Node {
                 }
             }
             if (nextOut == null) {
+                this.handleEvent(EventType.GatewayError, processInstance, nodeInstance);
                 throw new FlowRuntimeException(String.format("Node[id = '%s', name = '%s'] any branch was not found matched! ", id, name));
             } else {
                 nextOut.run(processInstance, nodeInstance);
             }
         }
+    }
+
+    void handleEvent(EventType eventType, ProcessInstance processInstance, NodeInstance nodeInstance) throws Exception {
+        EventRuntimeContext eventRuntimeContext = new EventRuntimeContext(eventType, nodeInstance);
+        processInstance.getExecuteEngine().eventHandler().handle(eventRuntimeContext);
     }
 
     /**

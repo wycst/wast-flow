@@ -1101,7 +1101,7 @@ class GraphicDesign {
                 });
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
-                    me.importJSON();
+                    me.handleImport();
                     preventDefault(event);
                 });
             } else if (type == "picture") {
@@ -5833,6 +5833,14 @@ class GraphicDesign {
         return null;
     };
 
+    /** 导入JSON */
+    importJSON(json, ignoreFit) {
+        this.setData(json);
+        if(!ignoreFit) {
+            this.overview();
+        }
+    };
+    
     /** 导出JSON */
     exportJSON() {
         let errorMessage = this.validate();
@@ -5862,7 +5870,7 @@ class GraphicDesign {
             fileReader.readAsText(file, "utf-8");
             fileReader.onload = (evt) => {
                 let text = evt.target.result;
-                me.setData(text, true);
+                me.importJSON(text);
             }
         }
         // clear file area values
@@ -5870,7 +5878,7 @@ class GraphicDesign {
     };
 
     /** 导入json */
-    importJSON() {
+    handleImport() {
         this.fileInput.click();
     };
 

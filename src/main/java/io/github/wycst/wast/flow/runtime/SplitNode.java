@@ -2,6 +2,7 @@ package io.github.wycst.wast.flow.runtime;
 
 import io.github.wycst.wast.flow.definition.ConnectStatus;
 import io.github.wycst.wast.flow.definition.Consts;
+import io.github.wycst.wast.flow.definition.EventType;
 import io.github.wycst.wast.flow.definition.GatewayType;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 
@@ -79,6 +80,7 @@ public class SplitNode extends RuntimeNode {
             }
         }
         if (passNextOuts.size() == 0) {
+            this.handleEvent(EventType.GatewayError, processInstance, nodeInstance);
             throw new FlowRuntimeException(String.format("Gateway Error: SplitNode[id = '%s', name = '%s'] no branch passes through.", id, name));
         } else {
             final JoinCountContext joinCountContext = new JoinCountContext(passNextOuts.size());

@@ -12,5 +12,8 @@ public enum EventType {
     /**
      * 网关错误
      */
-    GatewayError
+    GatewayError;
+
+    private int code;
+    private String message;
 }
