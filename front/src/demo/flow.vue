@@ -1,11 +1,17 @@
 <template>
   <div>
     <el-button @click="validateProcess">校验</el-button>
+    <el-button @click="pop">多实例（弹出框）</el-button>
     <el-switch v-model="editable" active-text="可编辑" inactive-text="不可编辑" style="margin-left: 10px;"></el-switch>
     <div ref="flow" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
     </div>
 
 <!--    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>-->
+
+    <el-dialog title="测试" v-model="dialogVisible" :before-close="handleClose">
+      <div ref="flow2" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
+      </div>
+    </el-dialog>
 
   </div>
 </template>
@@ -25,7 +31,9 @@ export default {
     return {
       editable: true,
       propertyVisible: false,
-      selectElement: null
+      selectElement: null,
+
+      dialogVisible: false
     }
   },
   mounted() {
@@ -83,6 +91,18 @@ export default {
         this.$message.success("成功");
       }
     },
+    pop() {
+      this.dialogVisible = true;
+      this.$nextTick(() => {
+        if(!this.flowInstance) {
+          console.log(this.$refs.flow2);
+          this.flowInstance = wf.render(this.$refs.flow2, {
+            grid: true,
+            editable: false
+          })
+        }
+      })
+    },
     clearData() {
       this.graphicDesign.reset();
     },
@@ -112,6 +132,11 @@ export default {
     setEditable() {
       this.editable = !this.editable;
       this.graphicDesign.setEditable(this.editable);
+    },
+
+    handleClose() {
+      console.log("==== ");
+      this.dialogVisible = false;
     }
   },
 

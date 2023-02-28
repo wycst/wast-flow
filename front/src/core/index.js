@@ -1776,25 +1776,27 @@ class GraphicDesign {
             }
         }
         const onCanvasDragUp = (event) => {
-            // panto and remove transform
-            if (me.enableGroupSelection()) {
-                // compute groupSelectElements
-                me.showGroupSelection();
-            } else {
-                me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+            try {
+                // panto and remove transform
+                if (me.enableGroupSelection()) {
+                    // compute groupSelectElements
+                    me.showGroupSelection();
+                } else {
+                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+                }
+                if (!canvasDragContext.moved) {
+                    // only click
+                    me.resetGroupSelection();
+                } else {
+                    me.connectRect.hide();
+                }
+                me.groupSelectionMode = false;
+                canvasDragContext.moved = false;
+                me.paper.canvas.style.cursor = "default";
+            } finally {
+                document.removeEventListener("mousemove", onCanvasDragMove);
+                document.removeEventListener("mouseup", onCanvasDragUp);
             }
-            if (!canvasDragContext.moved) {
-                // only click
-                me.resetGroupSelection();
-            } else {
-                me.connectRect.hide();
-            }
-            me.groupSelectionMode = false;
-            canvasDragContext.moved = false;
-            me.paper.canvas.style.cursor = "default";
-
-            document.removeEventListener("mousemove", onCanvasDragMove);
-            document.removeEventListener("mouseup", onCanvasDragUp);
         }
         // 平移处理
         bindDomEvent(me.dom, "mousedown", function (event) {
@@ -3246,7 +3248,13 @@ class GraphicDesign {
             // element = this.loadImageElement(node, editable);
             // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
         }
-        nodeElement.id = id;
+        // todo if use Raphael to render, there is a bug in editable
+        if(this.option.editable) {
+            nodeElement.id = id;
+        } else {
+            // 只读模式
+            nodeElement.data("id", id);
+        }
         if (attrs.rx) {
             // 圆角处理
             nodeElement.attrs.r = attrs.rx;
@@ -3274,7 +3282,6 @@ class GraphicDesign {
         let {attrs} = component;
         let htmlElement = this.renderHTML(type, 0, 0, 0, 0);
         htmlElement.id = id;
-        // htmlElement.data("type", "node");
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr(attrs);
         htmlElement.attr("title", "id:" + htmlElement.id);
@@ -3318,7 +3325,11 @@ class GraphicDesign {
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
-        connect.id = id;
+        if(this.option.editable) {
+            connect.id = id;
+        } else {
+            connect.data("id", id);
+        }
         this.setConnectArrow(connect);
 
         // // 箭头
@@ -5732,19 +5743,29 @@ class GraphicDesign {
         if(!this.completeRecords) {
             this.completeRecords = [];
         }
-        this.completeRecords.push(element.id);
+        this.completeRecords.push(this.getElementId(element));
         let inlines = element.data("in");
         for(let lineId in inlines) {
             let connectElement = inlines[lineId];
-            if(!this.completeRecords.includes(connectElement.id)) {
-                this.completeRecords.push(connectElement.id);
+            if(!this.completeRecords.includes(lineId)) {
+                this.completeRecords.push(lineId);
                 let fromElement = connectElement.data("from");
-                if(this.completeRecords.includes(fromElement.id)) {
+                if(this.completeRecords.includes(this.getElementId(fromElement))) {
                     // 完成连线
                     this.setElementColor(connectElement, completeColor);
                 }
             }
         }
+    };
+
+    /**
+     * 获取元素的id,后续作废
+     *
+     * @param element
+     */
+    getElementId(element) {
+        let {id} = element.data();
+        return id ? id : element.id
     };
 
     /**
@@ -5947,6 +5968,8 @@ class GraphicDesign {
      */
     destroy() {
         this.clearElements();
+        this.paper.remove();
+        this.dom.innerHTML = "";
         this.initData();
         document.removeEventListener("keydown", this.handleDocumentKeyDown);
         document.removeEventListener("keyup", this.handleDocumentKeyUp);
