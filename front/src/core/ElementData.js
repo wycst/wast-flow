@@ -36,8 +36,9 @@ const stylePropSet = ["x", "y", "width", "height", "cursor", "text-anchor", "fon
  * @param attrValue
  */
 function setAndRemoveAttr(domElement, attrKey, attrValue) {
+
     // attr中的键值对如果是样式，处理dom的样式
-    if (stylePropSet.includes(attrKey)) {
+    if (!this.isSvg() && stylePropSet.includes(attrKey)) {
         setAndRemoveStyle(domElement, attrKey, attrValue);
         return;
     }
@@ -125,6 +126,14 @@ export default class ElementData {
         this.datas = {};
         // 节点属性（可修改属性）
         this.attrs = {};
+    };
+
+    /**
+     * is svg
+     * @returns {boolean}
+     */
+    isSvg() {
+        return false;
     };
 
     /**
@@ -224,6 +233,10 @@ export default class ElementData {
         return this;
     };
 
+    hover() {
+        return this;
+    };
+
     /**
      * 隐藏元素
      *
@@ -269,12 +282,14 @@ export default class ElementData {
                 setterMode = true;
                 for (let attrKey in p1) {
                     let attrValue = p1[attrKey];
-                    setAndRemoveAttr(this.node, attrKey, attrValue);
+                    // setAndRemoveAttr(this.node, attrKey, attrValue);
+                    setAndRemoveAttr.call(this, this.node, attrKey, attrValue);
                 }
             }
         } else if (len > 1) {
             if (type == 'string') {
-                setAndRemoveAttr(this.node, p1, p2);
+                // setAndRemoveAttr(this.node, p1, p2);
+                setAndRemoveAttr.call(this, this.node, p1, p2);
                 setterMode = true;
             }
         }
@@ -332,10 +347,24 @@ export class HtmlElementData extends ElementData {
     };
 }
 
+export class SvgElementData extends ElementData {
+    constructor(node) {
+        super(node);
+    };
+
+    /**
+     * is svg
+     * @returns {boolean}
+     */
+    isSvg() {
+        return true;
+    };
+}
+
 /**
  * svg rect element data
  */
-export class SvgRectElementData extends ElementData {
+export class SvgRectElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "rect";
@@ -345,12 +374,34 @@ export class SvgRectElementData extends ElementData {
 /**
  * svg path element data
  */
-export class SvgPathElementData extends ElementData {
+export class SvgPathElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "path";
     };
 }
+
+/**
+ * svg image element data
+ */
+export class SvgImageElementData extends SvgElementData {
+    constructor(node) {
+        super(node);
+        this.type = "image";
+    };
+}
+
+/**
+ * svg text element data
+ */
+export class SvgTextElementData extends SvgElementData {
+    constructor(node) {
+        super(node);
+        this.type = "text";
+    };
+}
+
+
 
 
 

@@ -1,5 +1,5 @@
 import {createDomElementNs, pointsToPathD} from "./util";
-import {SvgPathElementData, SvgRectElementData} from "./ElementData"
+import {SvgImageElementData, SvgPathElementData, SvgRectElementData, SvgTextElementData} from "./ElementData"
 
 // svg namespace
 const svgNS = "http://www.w3.org/2000/svg";
@@ -10,7 +10,7 @@ const svgNS = "http://www.w3.org/2000/svg";
  */
 export default class SvgPaper {
 
-    constructor(selector) {
+    constructor(selector, width, height) {
         let parentNode;
         if (typeof selector == "string") {
             parentNode = document.querySelector(dom);
@@ -19,13 +19,14 @@ export default class SvgPaper {
         }
         this.$parent = parentNode;
         let svg = createDomElementNs(svgNS, 'svg', parentNode, {
-            width: "100%",
-            height: "100%",
+            width: width || "100%",
+            height: height || "100%",
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             style: "overflow: visible; position: relative; user-select: none; cursor: default;"
         });
+        createDomElementNs(svgNS, "defs", svg)
         // create svg dom
         // let svg = createDomElement("svg", parentNode, );
         this.svg = svg;
@@ -68,5 +69,49 @@ export default class SvgPaper {
         return new SvgPathElementData(pathNode);
     };
 
+    /**
+     * draw image
+     *
+     * @param src
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
+    image(src, x, y, width, height, radius) {
+        let imageNode = createDomElementNs(svgNS, 'image', this.svg, {
+            src,
+            x,
+            y,
+            width,
+            height,
+            rx: radius,
+            ry: radius
+        });
+        return new SvgImageElementData(imageNode);
+    };
 
+    /**
+     * draw text
+     * @param x
+     * @param y
+     */
+    text(x, y) {
+        let textNode = createDomElementNs(svgNS, 'text', this.svg, {
+            x,
+            y
+        });
+        return new SvgTextElementData(textNode);
+    };
+
+    /**
+     * clear
+     */
+    clear() {
+    };
+
+    remove() {
+        this.clear();
+        this.svg.remove();
+    };
 }
