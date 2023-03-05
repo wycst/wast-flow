@@ -1,9 +1,104 @@
-var userAgent = navigator.userAgent;
+const userAgent = navigator.userAgent;
+/**
+ * browser env
+ *
+ * @type {{isEdge: boolean, isIE: boolean, isFF: boolean, isChrome: boolean}}
+ */
 export const browser = {
     isFF: userAgent.indexOf("Firefox") > -1,// Firefox
     isChrome: userAgent.indexOf("Chrome") > -1,// Chrome
     isIE: userAgent.indexOf("MSIE") > -1,
     isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1
+}
+
+/**
+ * create dom element
+ *
+ * @param tagName
+ * @param parent
+ * @param attrs
+ */
+export const createDomElement = function (tagName, parent, attrs) {
+    let dom = document.createElement(tagName);
+    parent.appendChild(dom);
+    setDomAttrs(dom, attrs)
+    return dom;
+}
+
+/**
+ * create dom namespace element
+ *
+ * @param tagName
+ * @param ns
+ * @param parent
+ * @param attrs
+ */
+export const createDomElementNs = function (ns, tagName, parent, attrs) {
+    let dom = document.createElementNS(ns, tagName);
+    parent.appendChild(dom);
+    setDomAttrs(dom, attrs)
+    return dom;
+}
+
+/**
+ * set dom attrs
+ *
+ * @param dom
+ * @param attrs
+ */
+export const setDomAttrs = function (dom, attrs) {
+
+    let argsLen = arguments.length;
+    if (argsLen == 3) {
+        let key = arguments[1];
+        let value = arguments[2];
+        if (key) {
+            if (value) {
+                dom.setAttribute(key, value);
+            } else {
+                dom.removeAttribute(key);
+            }
+        }
+    } else {
+        if (!attrs || !typeof attrs == 'object') return;
+        for (let attrKey in attrs) {
+            let value = attrs[attrKey];
+            if (value) {
+                dom.setAttribute(attrKey, value);
+            } else {
+                dom.removeAttribute(attrKey);
+            }
+        }
+    }
+}
+
+/**
+ * 将二维路径数据转化为points数据
+ *
+ * @param pathD
+ */
+export const pathDToPoints = function (pathD) {
+
+}
+
+/**
+ * 将points数据生成路径d
+ * @param points
+ */
+export const pointsToPathD = function (points) {
+    if (typeof points == "string") return points;
+    if (!Array.isArray(points)) return null;
+    let pathD = [];
+    for (let point of points) {
+        let [v1, v2, v3] = point;
+        pathD.push(v1);
+        pathD.push(v2);
+        if (v3) {
+            pathD.push(",");
+            pathD.push(v3);
+        }
+    }
+    return pathD.join("");
 }
 
 /**

@@ -4,7 +4,7 @@ import Raphael from 'raphael'
 import imgs from "./img"
 import {bindDomEvent, browser, exportBlob, exportTextFile, preventDefault} from "./util"
 
-import {ElementData} from "./element"
+import {HtmlElementData} from "./ElementData"
 import historyActions from "./modules/history"
 
 // 内置html块
@@ -74,6 +74,9 @@ const DefaultHtmlTypes = {
                     <path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z" ></path>
                     <path d="M625.792 448H336a32 32 0 0 0 0 64h289.792a32 32 0 1 0 0-64z"></path>
               </svg>`,
+    business: `<div style="width: 100%;height: 100%;overflow: hidden;text-align: center;">
+                    <div class="" contenteditable="true">节点名称</div>
+               </div>`
 };
 
 const defs = `
@@ -154,7 +157,7 @@ export const getHTML = (type) => {
  * 拓展html节点的方法
  * @param type
  */
-ElementData.prototype.setHtmlType = function (type) {
+HtmlElementData.prototype.setHtmlType = function (type) {
     let html = GlobalHTMLTypes[type];
     if (html) {
         this.updateHTML(html);
@@ -2110,7 +2113,7 @@ class GraphicDesign {
         this.flowWrapper.appendChild(domEle);
         domEle.innerHTML = html;
         domEle.style.position = "absolute";
-        let element = new ElementData(domEle);
+        let element = new HtmlElementData(domEle);
         element.attr({
             x: Number(x) || 0,
             y: Number(y) || 0,
@@ -3177,27 +3180,42 @@ class GraphicDesign {
     };
 
 
+    // /**
+    //  * 创建图片节点
+    //  *
+    //  * @param src
+    //  * @param x
+    //  * @param y
+    //  * @param w
+    //  * @param h
+    //  * @param nodeType
+    //  * @returns {*}
+    //  */
+    // createImage(src, x, y, w, h, nodeType) {
+    //     let image = this.renderImage(src, x, y, w, h);
+    //     // id需要第一时间修改
+    //     // image.id = this.createElementId();
+    //     // image.data("type", "node");
+    //     image.data("nodeType", nodeType);
+    //     image.attr("title", nodeType + ":" + image.id);
+    //     this.autoContainerSelect(image);
+    //     this.initElement(image);
+    //     return image;
+    // };
+
     /**
-     * 创建图片节点
+     * 创建业务节点
      *
-     * @param src
      * @param x
      * @param y
-     * @param w
-     * @param h
-     * @param nodeType
+     * @param width
+     * @param height
      * @returns {*}
      */
-    createImage(src, x, y, w, h, nodeType) {
-        let image = this.renderImage(src, x, y, w, h);
-        // id需要第一时间修改
-        // image.id = this.createElementId();
-        // image.data("type", "node");
-        image.data("nodeType", nodeType);
-        image.attr("title", nodeType + ":" + image.id);
-        this.autoContainerSelect(image);
-        this.initElement(image);
-        return image;
+    createBusinessNode2(x, y) {
+        return this.createHTMLNode("business", x || 100, y || 150, 100, 80, NodeTypes.Business).attr({
+            borderColor: this.option.settings.themeColor
+        });
     };
 
     /**
@@ -3249,7 +3267,7 @@ class GraphicDesign {
             // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
         }
         // todo if use Raphael to render, there is a bug in editable
-        if(this.option.editable) {
+        if (this.option.editable) {
             nodeElement.id = id;
         } else {
             // 只读模式
@@ -3325,7 +3343,7 @@ class GraphicDesign {
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
-        if(this.option.editable) {
+        if (this.option.editable) {
             connect.id = id;
         } else {
             connect.data("id", id);
@@ -5722,7 +5740,7 @@ class GraphicDesign {
      */
     completeElementColorById(id, completeColor) {
         let element = this.setElementColorById(id, completeColor);
-        if(element) {
+        if (element) {
             this.completeFrontLines(element, completeColor);
         }
     };
@@ -5732,25 +5750,25 @@ class GraphicDesign {
      */
     completeElementColorByUUID(uuid, completeColor) {
         let element = this.setElementColorByUUID(uuid, completeColor);
-        if(element) {
+        if (element) {
             this.completeFrontLines(element, completeColor);
         }
     };
 
     completeFrontLines(element, completeColor) {
         console.log(" completeFrontLines ", this.completeRecords);
-        if(!element) return;
-        if(!this.completeRecords) {
+        if (!element) return;
+        if (!this.completeRecords) {
             this.completeRecords = [];
         }
         this.completeRecords.push(this.getElementId(element));
         let inlines = element.data("in");
-        for(let lineId in inlines) {
+        for (let lineId in inlines) {
             let connectElement = inlines[lineId];
-            if(!this.completeRecords.includes(lineId)) {
+            if (!this.completeRecords.includes(lineId)) {
                 this.completeRecords.push(lineId);
                 let fromElement = connectElement.data("from");
-                if(this.completeRecords.includes(this.getElementId(fromElement))) {
+                if (this.completeRecords.includes(this.getElementId(fromElement))) {
                     // 完成连线
                     this.setElementColor(connectElement, completeColor);
                 }
@@ -5857,11 +5875,11 @@ class GraphicDesign {
     /** 导入JSON */
     importJSON(json, ignoreFit) {
         this.setData(json);
-        if(!ignoreFit) {
+        if (!ignoreFit) {
             this.overview();
         }
     };
-    
+
     /** 导出JSON */
     exportJSON() {
         let errorMessage = this.validate();

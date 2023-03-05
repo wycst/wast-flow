@@ -26,7 +26,7 @@ function getOrSetValue(target, args) {
 }
 
 // 维护样式key
-const stylePropSet = ["x", "y", "width", "height", "cursor", "text-anchor", "font-family", "font-size", "font-style", "left", "top", "width", "height", "opacity", "color"];
+const stylePropSet = ["x", "y", "width", "height", "cursor", "text-anchor", "font-family", "font-size", "font-style", "left", "top", "width", "height", "opacity", "color", "borderColor"];
 
 /**
  * dom设置属性（移除属性）
@@ -111,7 +111,7 @@ function id() {
 /**
  * 元素数据类定义对象
  */
-class ElementData {
+export default class ElementData {
 
     /**
      * 元素数据构造函数
@@ -121,21 +121,10 @@ class ElementData {
         this.id = id();
         // dom节点
         this.node = node;
-        // 类型： html
-        this.type = "html";
         // 数据属性
         this.datas = {};
         // 节点属性（可修改属性）
         this.attrs = {};
-    };
-
-    /**
-     * 更新node内容
-     *
-     * @param html
-     */
-    updateHTML(html) {
-        this.node.innerHTML = html;
     };
 
     /**
@@ -324,4 +313,46 @@ class ElementData {
     };
 }
 
-export {ElementData};
+/**
+ * html element data
+ */
+export class HtmlElementData extends ElementData {
+    constructor(node) {
+        super(node);
+        this.type = "html";
+    };
+
+    /**
+     * 更新node的innerHTML
+     *
+     * @param html
+     */
+    updateHTML(html) {
+        this.node.innerHTML = html;
+    };
+}
+
+/**
+ * svg rect element data
+ */
+export class SvgRectElementData extends ElementData {
+    constructor(node) {
+        super(node);
+        this.type = "rect";
+    };
+}
+
+/**
+ * svg path element data
+ */
+export class SvgPathElementData extends ElementData {
+    constructor(node) {
+        super(node);
+        this.type = "path";
+    };
+}
+
+
+
+
+

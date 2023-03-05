@@ -3,10 +3,15 @@
     <el-button @click="validateProcess">校验</el-button>
     <el-button @click="pop">多实例（弹出框）</el-button>
     <el-switch v-model="editable" active-text="可编辑" inactive-text="不可编辑" style="margin-left: 10px;"></el-switch>
+
+    <div ref="svg" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
+    </div>
+
+
     <div ref="flow" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
     </div>
 
-<!--    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>-->
+    <!--    <property-drawer :element="selectElement" v-model="propertyVisible"></property-drawer>-->
 
     <el-dialog title="测试" v-model="dialogVisible" :before-close="handleClose">
       <div ref="flow2" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
@@ -19,10 +24,10 @@
 <script>
 // import wrf from "../../dist/wastflow.es"
 import {wf} from "../core/index"
+import propertyDrawer from "./propertyDrawer.vue"
+import SvgPaper from "../core/SvgPaper";
 // import wf from "wastflow"
 console.log(wf);
-
-import propertyDrawer from "./propertyDrawer.vue"
 
 export default {
   name: "flow.vue",
@@ -69,6 +74,8 @@ export default {
     // let node1 = graphicDesign.createNode(300, 300, 200, 200, 8);
     console.log(this.graphicDesign.getData());
     window.instance = this.graphicDesign;
+
+    this.svgPaperTest();
   },
   beforeUnmount() {
     this.graphicDesign.destroy();
@@ -85,7 +92,7 @@ export default {
     },
     validateProcess() {
       let error = this.graphicDesign.validate();
-      if(error) {
+      if (error) {
         this.$message.error(error);
       } else {
         this.$message.success("成功");
@@ -94,8 +101,7 @@ export default {
     pop() {
       this.dialogVisible = true;
       this.$nextTick(() => {
-        if(!this.flowInstance) {
-          console.log(this.$refs.flow2);
+        if (!this.flowInstance) {
           this.flowInstance = wf.render(this.$refs.flow2, {
             grid: true,
             editable: false
@@ -134,6 +140,34 @@ export default {
       this.graphicDesign.setEditable(this.editable);
     },
 
+
+    svgPaperTest() {
+
+      /**
+       * <svg height="100%" version="1.1" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="overflow: visible; position: relative; top: -0.75px; user-select: none; cursor: default;">
+       * <svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="overflow: visible; position: relative; user-select: none; cursor: default;">
+       * @type {SvgPaper}
+       */
+      let svgPaper = new SvgPaper(this.$refs.svg);
+      let rect = svgPaper.rect(100, 200, 100, 90, 10);
+      console.log(rect);
+
+      let path = svgPaper.path([
+        [
+          "M",
+          997.4134396355353,
+          289.8069476082004
+        ],
+        [
+          "L",
+          1407.4134396355353,
+          300.0569476082004
+        ]
+      ]);
+
+    },
+
+
     handleClose() {
       console.log("==== ");
       this.dialogVisible = false;
@@ -142,7 +176,7 @@ export default {
 
   watch: {
     editable() {
-      if(this.graphicDesign) {
+      if (this.graphicDesign) {
         this.graphicDesign.setEditable(this.editable);
       }
     }
