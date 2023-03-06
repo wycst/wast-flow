@@ -267,6 +267,12 @@ const defaultOption = {
     overviewOffsetHeight: 20,
 
     /**
+     * 调试模式（临时解决bug使用，bug修复后将不生效）
+     *
+     */
+    debugMode: false,
+
+    /**
      * 提示信息，默认使用window.alert
      *
      * @param message
@@ -3269,7 +3275,7 @@ class GraphicDesign {
             // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
         }
         // todo if use Raphael to render, there is a bug in editable
-        if (this.option.editable) {
+        if (!this.option.debugMode/*this.option.editable*/) {
             nodeElement.id = id;
         } else {
             // 只读模式
@@ -3345,7 +3351,8 @@ class GraphicDesign {
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
-        if (this.option.editable) {
+        // todo if use Raphael to render, there is a bug in editable
+        if (!this.option.debugMode/*this.option.editable*/) {
             connect.id = id;
         } else {
             connect.data("id", id);
