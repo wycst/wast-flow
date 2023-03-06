@@ -5716,7 +5716,7 @@ class GraphicDesign {
         let type = element.type;
         if (type == "path") {
             let pathAttr = {
-                fill: color,
+                // fill: color,
                 stroke: color
             }
             // 路径
