@@ -43,15 +43,17 @@ export default class SvgPaper {
      * @param radius
      */
     rect(x, y, width, height, radius) {
-        let rectNode = createDomElementNs(svgNS, 'rect', this.svg, {
+        let attrs = {
             x,
             y,
             width,
             height,
             rx: radius,
             ry: radius
-        });
+        };
+        let rectNode = createDomElementNs(svgNS, 'rect', this.svg,);
         let rectElementData = new SvgRectElementData(rectNode);
+        rectElementData.attr(attrs);
         return rectElementData;
     };
 
@@ -66,7 +68,9 @@ export default class SvgPaper {
         let pathNode = createDomElementNs(svgNS, 'path', this.svg, {
             d
         });
-        return new SvgPathElementData(pathNode);
+        let pathElementData = new SvgPathElementData(pathNode);
+        pathElementData.attr("d", d);
+        return pathElementData;
     };
 
     /**
@@ -79,16 +83,19 @@ export default class SvgPaper {
      * @param height
      */
     image(src, x, y, width, height, radius) {
-        let imageNode = createDomElementNs(svgNS, 'image', this.svg, {
-            src,
+        let attrs = {
             x,
             y,
             width,
             height,
             rx: radius,
             ry: radius
-        });
-        return new SvgImageElementData(imageNode);
+        };
+        // let imageNode = createDomElementNs("http://www.w3.org/1999/xlink", 'image', this.svg, attrs);
+        let imageNode = createDomElementNs(svgNS, 'image', this.svg, attrs);
+        let imageElementData = new SvgImageElementData(imageNode);
+        imageElementData.setHref(src);
+        return imageElementData;
     };
 
     /**

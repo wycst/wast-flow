@@ -1,4 +1,4 @@
-import {bindDomEvent} from "./util";
+import {bindDomEvent, pointsToPathD, unbindDomEvent} from "./util";
 
 /***
  * set or get prop value
@@ -146,13 +146,14 @@ export default class ElementData {
      */
     drag(moveFn, startFn, upFn) {
         // context
+        let me = this;
         let dragContext = {};
         // start
         const onDragStart = (event) => {
             const {pageX, pageY} = event;
             Object.assign(dragContext, {pageX, pageY})
             if (typeof startFn == 'function') {
-                startFn(event);
+                startFn.call(me, event);
             }
         }
         // move
@@ -161,28 +162,37 @@ export default class ElementData {
                 // computer dx, dy
                 const {pageX, pageY} = event;
                 let {pageX: x1, pageY: y1} = dragContext;
-                moveFn(pageX - x1, pageY - y1, event);
+                moveFn.call(me, pageX - x1, pageY - y1, event);
             }
         }
         // up(end)
         const onDragUp = (event) => {
             if (typeof upFn == 'function') {
-                upFn(event);
+                upFn.call(me, event);
             }
             delete dragContext.pageX;
             delete dragContext.pageY;
             document.removeEventListener("mousemove", onDragMove);
             document.removeEventListener("mouseup", onDragUp);
         }
-        // 拖动处理
-        bindDomEvent(this.node, "mousedown", function (event) {
+
+        let mousedownFn = function (event) {
             onDragStart(event);
             document.addEventListener("mousemove", onDragMove);
             document.addEventListener("mouseup", onDragUp);
             event.stopPropagation();
             event.preventDefault();
-        });
+        }
+        this.mousedownFn = mousedownFn;
+
+        // 拖动处理
+        bindDomEvent(this.node, "mousedown", mousedownFn);
         return this;
+    };
+
+    /** unbind drag */
+    undrag() {
+        unbindDomEvent(this.node, "mousedown", this.mousedownFn);
     };
 
     /**
@@ -379,6 +389,28 @@ export class SvgPathElementData extends SvgElementData {
         super(node);
         this.type = "path";
     };
+
+    // override attr
+    attr() {
+        let [arg0, arg1] = arguments;
+        let len = arguments.length;
+        if (arg0 == "path" && typeof arg1 == "string") {
+            return super.attr("d", arg1);
+        } else {
+            if (typeof arg0 == "object" && arg0 && len == 1) {
+                let {path, ...props} = arg0;
+                let d = pointsToPathD(path);
+                return super.attr({d, ...props});
+            } else {
+                return super.attr(...arguments);
+            }
+        }
+    };
+
+    /** get getPointAtLength */
+    getPointAtLength(lenVal) {
+        return this.node.getPointAtLength(lenVal);
+    }
 }
 
 /**
@@ -388,6 +420,11 @@ export class SvgImageElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "image";
+    };
+
+    // set image xlink:href
+    setHref(src) {
+        this.node.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", src);
     };
 }
 
