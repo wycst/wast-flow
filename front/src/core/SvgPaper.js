@@ -108,6 +108,7 @@ export default class SvgPaper {
             x,
             y
         });
+
         return new SvgTextElementData(textNode);
     };
 

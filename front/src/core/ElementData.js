@@ -1,5 +1,8 @@
 import {bindDomEvent, pointsToPathD, unbindDomEvent} from "./util";
 
+// svg namespace
+const svgNS = "http://www.w3.org/2000/svg";
+
 /***
  * set or get prop value
  *
@@ -433,8 +436,35 @@ export class SvgImageElementData extends SvgElementData {
  */
 export class SvgTextElementData extends SvgElementData {
     constructor(node) {
+        // <text x="710.0397355974864" y="184.91479499644083" text-anchor="middle" font-family="&quot;Arial&quot;" font-size="13px" stroke="none" fill="#000000" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font-family: Arial; font-size: 13px; font-style: normal;" font-style="normal" width="3"></text>
         super(node);
         this.type = "text";
+    };
+
+    setText(text) {
+        this.node.innerHTML = `<tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="4.17">${text}</tspan>`;
+        Object.assign(this.attrs, {
+            text
+        })
+        return this;
+    };
+
+    // override attr
+    attr() {
+        let [arg0, arg1] = arguments;
+        let len = arguments.length;
+        if (arg0 == "text" && typeof arg1 == "string") {
+            return this.setText(arg1);
+        } else {
+            if (len == 1 && typeof arg0 == "object") {
+                let {text, ...props} = arg0;
+                if (text) {
+                    this.setText(text);
+                }
+                return super.attr({...props});
+            }
+            return super.attr(...arguments);
+        }
     };
 }
 
