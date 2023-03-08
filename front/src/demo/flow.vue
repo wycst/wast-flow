@@ -98,7 +98,7 @@ export default {
           console.log(this.$refs.flow2);
           this.flowInstance = wf.render(this.$refs.flow2, {
             grid: true,
-            editable: false
+            editable: true
           })
         }
       })

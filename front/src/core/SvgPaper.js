@@ -51,7 +51,7 @@ export default class SvgPaper {
             rx: radius,
             ry: radius
         };
-        let rectNode = createDomElementNs(svgNS, 'rect', this.svg,);
+        let rectNode = createDomElementNs(svgNS, 'rect', this.svg);
         let rectElementData = new SvgRectElementData(rectNode);
         rectElementData.attr(attrs);
         return rectElementData;
@@ -113,9 +113,10 @@ export default class SvgPaper {
     };
 
     /**
-     * clear
+     * clear elements
      */
     clear() {
+
     };
 
     remove() {

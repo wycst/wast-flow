@@ -393,7 +393,7 @@ const extensionTemplate = `
     </div>
     <div class="flow-wrapper" style="position: absolute;width: 100%; height: 100%;left: 0; top: 0">
        <div class="flow-wrapper-body"  style="position: relative;width: 100%;height: 100%;">
-            <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;"></div>
+            <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;z-index: 100;"></div>
        </div>
     </div>
     
@@ -461,8 +461,8 @@ class GraphicDesign {
 
         let flowWrapper = dom.querySelector(".flow-wrapper .flow-wrapper-body");
         this.flowWrapper = flowWrapper;
-        this.paper = new Raphael(flowWrapper, width, height);
-        // this.paper = new SvgPaper(flowWrapper, width, height);
+        // this.paper = new Raphael(flowWrapper, width, height);
+        this.paper = new SvgPaper(flowWrapper, width, height);
         Object.assign(this.paper.canvas.style, {
             userSelect: "none",
             cursor: "default",
@@ -630,6 +630,7 @@ class GraphicDesign {
             // stroke: this.option.settings.themeColor,
             fill: "transparent",
             "stroke-width": 1,
+            stroke: this.option.settings.themeColor,
             opacity: .5
         }).hide();
         this.connectRect.node.setAttribute("stroke-dasharray", "2 2");
@@ -1872,22 +1873,20 @@ class GraphicDesign {
 
     // reset zoom
     zoomReset() {
-        this.translateX = 0;
-        this.translateY = 0;
         this.setScale(1);
     };
 
     setScale(value) {
+        // this.translateX = 0;
+        // this.translateY = 0;
+        if(this.translateX != 0 || this.translateY != 0) {
+            this.panTo(this.translateX, this.translateY);
+        }
         if (value <= 0.01) {
             value = 0.01;
         }
         this.scaleValue = value;
         this.updateWrapperTransform();
-
-        // let elements = this.elements;
-        // for(let element of Object.values(elements)) {
-        //     element.node.style.transform = `scale(${value})`;
-        // }
     };
 
     /**
@@ -2808,7 +2807,6 @@ class GraphicDesign {
         this.translateX = x;
         this.translateY = y;
         this.updateWrapperTransform();
-
         // if(this.shiftMode) {
         //     this.paper.canvas.childNodes.forEach(child => {
         //         Object.assign(child.style, {
@@ -3597,6 +3595,17 @@ class GraphicDesign {
         if (type != "path") {
             return null;
         }
+
+        if(connect.getBBox) {
+            let {x, y, width, height} = connect.getBBox();
+            return {
+                x: x - 5,
+                y: y - 5,
+                width: width + 10,
+                height: height + 10
+            }
+        }
+
         let pathDatas = connect.attr("path");
 
         let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
@@ -5969,7 +5978,7 @@ class GraphicDesign {
      * 清除元素
      */
     clearElements() {
-        // 移除绑定
+        // remove elements
         for (let elementId in this.elements) {
             let element = this.elements[elementId];
             element.remove();

@@ -1,4 +1,4 @@
-import {bindDomEvent, pointsToPathD, unbindDomEvent} from "./util";
+import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 
 // svg namespace
 const svgNS = "http://www.w3.org/2000/svg";
@@ -132,6 +132,15 @@ export default class ElementData {
     };
 
     /**
+     * get element id
+     *
+     * @returns {string}
+     */
+    getId() {
+        return this.id;
+    };
+
+    /**
      * is svg
      * @returns {boolean}
      */
@@ -204,7 +213,10 @@ export default class ElementData {
      * @param func
      */
     click(func) {
-        bindDomEvent(this.node, "click", func);
+        let me = this;
+        bindDomEvent(this.node, "click", (event) => {
+            func.call(me, event);
+        });
         return this;
     };
 
@@ -214,7 +226,10 @@ export default class ElementData {
      * @param func
      */
     dblclick(func) {
-        bindDomEvent(this.node, "dblclick", func);
+        let me = this;
+        bindDomEvent(this.node, "dblclick", (event) => {
+            func.call(me, event);
+        });
         return this;
     };
 
@@ -246,7 +261,13 @@ export default class ElementData {
         return this;
     };
 
-    hover() {
+    hover(mouseoverFn, mouseoutFn) {
+        if (typeof mouseoverFn == "function") {
+            this.mouseover(mouseoverFn);
+        }
+        if (typeof mouseoutFn == "function") {
+            this.mouseout(mouseoutFn);
+        }
         return this;
     };
 
@@ -381,6 +402,7 @@ export class SvgRectElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "rect";
+
     };
 }
 
@@ -391,6 +413,9 @@ export class SvgPathElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "path";
+        setDomAttrs(node, {
+            fill: "none"
+        });
     };
 
     // override attr
@@ -413,7 +438,13 @@ export class SvgPathElementData extends SvgElementData {
     /** get getPointAtLength */
     getPointAtLength(lenVal) {
         return this.node.getPointAtLength(lenVal);
-    }
+    };
+
+    /** get svg rect */
+    getBBox() {
+        return this.node.getBBox();
+    };
+
 }
 
 /**
@@ -436,13 +467,12 @@ export class SvgImageElementData extends SvgElementData {
  */
 export class SvgTextElementData extends SvgElementData {
     constructor(node) {
-        // <text x="710.0397355974864" y="184.91479499644083" text-anchor="middle" font-family="&quot;Arial&quot;" font-size="13px" stroke="none" fill="#000000" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font-family: Arial; font-size: 13px; font-style: normal;" font-style="normal" width="3"></text>
         super(node);
         this.type = "text";
     };
 
     setText(text) {
-        this.node.innerHTML = `<tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="4.17">${text}</tspan>`;
+        this.node.innerHTML = `<tspan dy="4">${text}</tspan>`;
         Object.assign(this.attrs, {
             text
         })
