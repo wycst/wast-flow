@@ -461,8 +461,8 @@ class GraphicDesign {
 
         let flowWrapper = dom.querySelector(".flow-wrapper .flow-wrapper-body");
         this.flowWrapper = flowWrapper;
-        // this.paper = new Raphael(flowWrapper, width, height);
-        this.paper = new SvgPaper(flowWrapper, width, height);
+        this.paper = new Raphael(flowWrapper, width, height);
+        // this.paper = new SvgPaper(flowWrapper, width, height);
         Object.assign(this.paper.canvas.style, {
             userSelect: "none",
             cursor: "default",
