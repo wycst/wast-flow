@@ -121,23 +121,28 @@ export default class ElementData {
      * 元素数据构造函数
      */
     constructor(node) {
-        // 生成id
-        this.id = id();
         // dom节点
         this.node = node;
         // 数据属性
         this.datas = {};
         // 节点属性（可修改属性）
         this.attrs = {};
+        // 生成id
+        let elementId = id();
+        // 设置id
+        this.id = elementId;
     };
 
-    /**
-     * get element id
-     *
-     * @returns {string}
-     */
-    getId() {
-        return this.id;
+    // Change of response id
+    get id() {
+        return this._id;
+    };
+    // Change of response id
+    set id(val) {
+        this._id = val;
+        setDomAttrs(this.node, {
+            "data-element-id": val
+        });
     };
 
     /**
@@ -261,6 +266,13 @@ export default class ElementData {
         return this;
     };
 
+    /**
+     * hover组合事件
+     *
+     * @param mouseoverFn
+     * @param mouseoutFn
+     * @returns {ElementData}
+     */
     hover(mouseoverFn, mouseoutFn) {
         if (typeof mouseoverFn == "function") {
             this.mouseover(mouseoverFn);

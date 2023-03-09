@@ -22,7 +22,7 @@ export default class SvgPaper {
             width: width || "100%",
             height: height || "100%",
             version: "1.1",
-            xmlns: "http://www.w3.org/2000/svg",
+            xmlns: svgNS,
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             style: "overflow: visible; position: relative; user-select: none; cursor: default;"
         });
@@ -116,7 +116,10 @@ export default class SvgPaper {
      * clear elements
      */
     clear() {
-
+        let elements = this.canvas.querySelectorAll("*[data-element-id]");
+        elements.forEach(element => {
+            element.remove();
+        })
     };
 
     remove() {
