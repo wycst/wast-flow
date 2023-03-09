@@ -104,6 +104,7 @@ export default class SvgPaper {
      * @param y
      */
     text(x, y) {
+        // if use foreignObject ?
         let textNode = createDomElementNs(svgNS, 'text', this.svg, {
             x,
             y
