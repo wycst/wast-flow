@@ -137,6 +137,7 @@ export default class ElementData {
     get id() {
         return this._id;
     };
+
     // Change of response id
     set id(val) {
         this._id = val;
@@ -393,6 +394,43 @@ export class HtmlElementData extends ElementData {
     };
 }
 
+/**
+ * html text element data Support line break
+ */
+export class HtmlTextElementData extends HtmlElementData {
+    constructor(node) {
+        super(node);
+    };
+
+    // set text
+    setText(text) {
+        this.node.innerHTML = `<div>${text}</div>`;
+        Object.assign(this.attrs, {
+            text
+        })
+        return this;
+    };
+
+    // override attr
+    attr() {
+        let [arg0, arg1] = arguments;
+        let len = arguments.length;
+        if (arg0 == "text" && typeof arg1 == "string") {
+            return this.setText(arg1);
+        } else {
+            if (len == 1 && typeof arg0 == "object") {
+                let {text, ...props} = arg0;
+                if (text) {
+                    this.setText(text);
+                }
+                return super.attr({...props});
+            }
+            return super.attr(...arguments);
+        }
+    };
+
+}
+
 export class SvgElementData extends ElementData {
     constructor(node) {
         super(node);
@@ -471,6 +509,16 @@ export class SvgImageElementData extends SvgElementData {
     // set image xlink:href
     setHref(src) {
         this.node.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", src);
+    };
+}
+
+/**
+ * svg circle element data
+ */
+export class SvgCircleElementData extends SvgElementData {
+    constructor(node) {
+        super(node);
+        this.type = "circle";
     };
 }
 

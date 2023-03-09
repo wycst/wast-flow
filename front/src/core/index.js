@@ -1,10 +1,9 @@
 // 核心库，暂时使用Raphael过度，后续会替换为原生js
-import Raphael from 'raphael'
 // 图标库
 import imgs from "./img"
 import {bindDomEvent, browser, exportBlob, exportTextFile, preventDefault} from "./util"
 
-import {HtmlElementData} from "./ElementData"
+import {HtmlElementData, HtmlTextElementData} from "./ElementData"
 import historyActions from "./modules/history"
 import SvgPaper from "./SvgPaper";
 
@@ -1879,7 +1878,7 @@ class GraphicDesign {
     setScale(value) {
         // this.translateX = 0;
         // this.translateY = 0;
-        if(this.translateX != 0 || this.translateY != 0) {
+        if (this.translateX != 0 || this.translateY != 0) {
             this.panTo(this.translateX, this.translateY);
         }
         if (value <= 0.01) {
@@ -2128,6 +2127,33 @@ class GraphicDesign {
             height: Number(height) || 0
         });
         // this.initElement(element);
+        return element;
+    };
+
+    /**
+     * 渲染文本
+     *
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @param text
+     * @returns {HtmlTextElementData}
+     */
+    renderText(x, y, width, height, text) {
+        let domEle = document.createElement("div");
+        // 插入到指定节点
+        this.flowWrapper.appendChild(domEle);
+        domEle.style.position = "absolute";
+
+        let element = new HtmlTextElementData(domEle);
+        element.attr({
+            x: Number(x) || 0,
+            y: Number(y) || 0,
+            width: Number(width) || 0,
+            height: Number(height) || 0
+        });
+        element.attr("text", text);
         return element;
     };
 
@@ -3596,7 +3622,7 @@ class GraphicDesign {
             return null;
         }
 
-        if(connect.getBBox) {
+        if (connect.getBBox) {
             let {x, y, width, height} = connect.getBBox();
             return {
                 x: x - 5,

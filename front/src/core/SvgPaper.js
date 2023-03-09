@@ -113,6 +113,18 @@ export default class SvgPaper {
         return new SvgTextElementData(textNode);
     };
 
+    circle(x, y, r) {
+        let attrs = {
+            x,
+            y,
+            r
+        };
+        let circleNode = createDomElementNs(svgNS, 'circle', this.svg);
+        let circleElementData = new SvgCircleElementData(circleNode);
+        circleElementData.attr(attrs);
+        return circleElementData;
+    };
+
     /**
      * clear elements
      */
