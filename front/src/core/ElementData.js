@@ -531,8 +531,15 @@ export class SvgTextElementData extends SvgElementData {
         this.type = "text";
     };
 
+    /**
+     * Single-line mode. When there are more text, the appearance may not be friendly
+     *
+     * @param text
+     * @returns {SvgTextElementData}
+     */
     setText(text) {
         this.node.innerHTML = `<tspan dy="4">${text}</tspan>`;
+        // this.node.innerHTML = `<foreignObject dy="4"><div>${text}</div></foreignObject>`;
         Object.assign(this.attrs, {
             text
         })
@@ -546,7 +553,7 @@ export class SvgTextElementData extends SvgElementData {
         if (arg0 == "text" && typeof arg1 == "string") {
             return this.setText(arg1);
         } else {
-            if (len == 1 && typeof arg0 == "object") {
+            if (len == 1 && arg0 && typeof arg0 == "object") {
                 let {text, ...props} = arg0;
                 if (text) {
                     this.setText(text);

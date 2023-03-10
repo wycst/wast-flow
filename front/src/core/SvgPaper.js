@@ -1,5 +1,11 @@
 import {createDomElementNs, pointsToPathD} from "./util";
-import {SvgImageElementData, SvgPathElementData, SvgRectElementData, SvgTextElementData} from "./ElementData"
+import {
+    SvgCircleElementData,
+    SvgImageElementData,
+    SvgPathElementData,
+    SvgRectElementData,
+    SvgTextElementData
+} from "./ElementData"
 
 // svg namespace
 const svgNS = "http://www.w3.org/2000/svg";
@@ -64,12 +70,9 @@ export default class SvgPaper {
      * @returns {SvgPathElementData}
      */
     path(data) {
-        let d = pointsToPathD(data);
-        let pathNode = createDomElementNs(svgNS, 'path', this.svg, {
-            d
-        });
+        let pathNode = createDomElementNs(svgNS, 'path', this.svg);
         let pathElementData = new SvgPathElementData(pathNode);
-        pathElementData.attr("d", d);
+        pathElementData.attr("d", pointsToPathD(data));
         return pathElementData;
     };
 
@@ -105,23 +108,22 @@ export default class SvgPaper {
      */
     text(x, y) {
         // if use foreignObject ?
-        let textNode = createDomElementNs(svgNS, 'text', this.svg, {
-            x,
-            y
-        });
-
+        let textNode = createDomElementNs(svgNS, 'text', this.svg, {x,y});
         return new SvgTextElementData(textNode);
     };
 
+    /**
+     * draw svg circle
+     *
+     * @param x
+     * @param y
+     * @param r
+     * @returns {SvgCircleElementData}
+     */
     circle(x, y, r) {
-        let attrs = {
-            x,
-            y,
-            r
-        };
         let circleNode = createDomElementNs(svgNS, 'circle', this.svg);
         let circleElementData = new SvgCircleElementData(circleNode);
-        circleElementData.attr(attrs);
+        circleElementData.attr({x, y, r});
         return circleElementData;
     };
 
@@ -138,5 +140,7 @@ export default class SvgPaper {
     remove() {
         this.clear();
         this.svg.remove();
+        this.svg = this.canvas = null;
+        this._removed = true;
     };
 }
