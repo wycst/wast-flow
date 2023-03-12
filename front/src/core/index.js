@@ -1,7 +1,15 @@
 // 核心库，暂时使用Raphael过度，后续会替换为原生js
 // 图标库
 import imgs from "./img"
-import {bindDomEvent, browser, exportBlob, exportTextFile, pathDToPoints, preventDefault} from "./util"
+import {
+    bindDomEvent,
+    browser,
+    createDomElement,
+    exportBlob,
+    exportTextFile,
+    pathDToPoints,
+    preventDefault
+} from "./util"
 
 import {HtmlElementData, HtmlTextElementData} from "./ElementData"
 import historyActions from "./modules/history"
@@ -91,9 +99,10 @@ const createColorMarker = (svgDom, color) => {
     let id = `connect-arrow-${color}`;
     let marker = svgDom.querySelector("marker[id='" + id + "']");
     if (!marker) {
-        marker = document.createElement("marker");
-        marker.setAttribute("id", id);
-        svgDom.querySelector("defs").appendChild(marker);
+        // marker = document.createElement("marker");
+        // marker.setAttribute("id", id);
+        // svgDom.querySelector("defs").appendChild(marker);
+        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
         // marker.outerHTML = `
         //                     <marker id="${id}" fill="${color}" viewBox="0 0 20 20" refX="11" refY="10" markerWidth="10" markerHeight="10" orient="auto">
@@ -117,9 +126,10 @@ const createColorMarker = (svgDom, color) => {
     id = `connect-condition-${color}`;
     marker = svgDom.querySelector("marker[id='" + id + "']");
     if (!marker) {
-        marker = document.createElement("marker");
-        marker.setAttribute("id", id);
-        svgDom.querySelector("defs").appendChild(marker);
+        // marker = document.createElement("marker");
+        // marker.setAttribute("id", id);
+        // svgDom.querySelector("defs").appendChild(marker);
+        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
         marker.outerHTML = `
                             <marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto">
@@ -270,12 +280,6 @@ const defaultOption = {
      * 大纲视图上下抵消的高度
      */
     overviewOffsetHeight: 20,
-
-    // /**
-    //  * 调试模式（临时解决bug使用，bug修复后将不生效）
-    //  *
-    //  */
-    // debugMode: false,
 
     /**
      * 提示信息，默认使用window.alert
@@ -456,20 +460,15 @@ class GraphicDesign {
         this.flowWrapper = flowWrapper;
         // this.paper = new Raphael(flowWrapper, width, height);
         this.paper = new SvgPaper(flowWrapper, width, height);
-        // Object.assign(this.paper.canvas.style, {
-        //     userSelect: "none",
-        //     cursor: "default",
-        //     overflow: "visible"
-        // });
         // 连线颜色作为箭头的颜色
-        this.connectColors = [this.option.settings.themeColor];
+        this.connectColors = [this.themeColor];
         // 初始化paper
         this.initPaper();
         this.dom = dom;
         // 初始化
         this.init();
         // 设置背景图片（网格）
-        this.setStyles();
+        this.initStyles();
         // 节点和连线map
         this.elements = {};
         // 容器
@@ -480,11 +479,6 @@ class GraphicDesign {
         this.designMode = 'Simple'
         // 当前选择元素
         this.selectElement = null;
-        // id池
-        this.idPool = [];
-        // 节点绑定在element中的属性集合
-
-
         let me = this;
         let setElementUUID = (element) => {
             return me.setElementUUID(element);
@@ -506,7 +500,7 @@ class GraphicDesign {
         };
 
         this.initControlElements();
-
+        this.cnt = 0;
         this.translateX = 0;
         this.translateY = 0;
         this.offsetX = 0;
@@ -530,38 +524,39 @@ class GraphicDesign {
 
         let attr = {
             fill: "#ffffff",
-            stroke: this.option.settings.themeColor
+            stroke: this.themeColor
         }
+        let args = [0, 0, 5, 5, 2.5];
         // 控制点信息
-        let nw = this.nw = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let nw = this.nw = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'nw-resize'
         });
-        let w = this.w = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let w = this.w = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'w-resize'
         });
-        let sw = this.sw = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let sw = this.sw = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'sw-resize'
         });
-        let n = this.n = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let n = this.n = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'n-resize'
         });
-        let s = this.s = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let s = this.s = this.paper.rect(...args).attr({
             ...attr,
             cursor: 's-resize'
         });
-        let ne = this.ne = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let ne = this.ne = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'ne-resize'
         });
-        let e = this.e = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let e = this.e = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'e-resize'
         });
-        let se = this.se = this.paper.rect(0, 0, 5, 5, 2.5, 2.5).attr({
+        let se = this.se = this.paper.rect(...args).attr({
             ...attr,
             cursor: 'se-resize'
         });
@@ -604,7 +599,7 @@ class GraphicDesign {
 
         // 水平对齐线使用rect替代，只需要更新y即可
         this.horizontalLine = this.renderRect(0, 0, 0, 0.0001).attr({
-            stroke: this.option.settings.themeColor,
+            stroke: this.themeColor,
             "stroke-width": 2,
             opacity: .5
         }).hide();
@@ -612,21 +607,23 @@ class GraphicDesign {
 
         // 垂直对齐线使用rect替代，只需要更新x即可
         this.verticalLine = this.renderRect(0, 0, 0.0001, 0).attr({
-            stroke: this.option.settings.themeColor,
+            stroke: this.themeColor,
             "stroke-width": 2,
-            opacity: .5
+            opacity: .5,
+            "stroke-dasharray": "12 12"
         }).hide();
-        this.verticalLine.node.setAttribute("stroke-dasharray", "12 12");
+        // this.verticalLine.node.setAttribute("stroke-dasharray", "12 12");
 
         // 连线矩形（解决连线选择难问题）
         this.connectRect = this.renderRect(0, 0, 0, 0).attr({
-            // stroke: this.option.settings.themeColor,
+            // stroke: this.themeColor,
             fill: "transparent",
             "stroke-width": 1,
-            stroke: this.option.settings.themeColor,
-            opacity: .5
+            stroke: this.themeColor,
+            opacity: .5,
+            "stroke-dasharray": "2 2"
         }).hide();
-        this.connectRect.node.setAttribute("stroke-dasharray", "2 2");
+        // this.connectRect.node.setAttribute("stroke-dasharray", "2 2");
         this.connectRect.hover(() => {
         }, function () {
             this.hide();
@@ -644,9 +641,10 @@ class GraphicDesign {
             }
         })
 
+        let imageArgs = [0,0,16,16];
         // 工具栏
         // 连线工具（图片）
-        this.linkTool = this.paper.image(imgs.sequenceflow, 0, 0, 16, 16).hide();
+        this.linkTool = this.paper.image(imgs.sequenceflow, ...imageArgs).hide();
         this.linkTool.attr({
             opacity: .5,
             title: "拖拽到目标节点完成连线"
@@ -672,7 +670,7 @@ class GraphicDesign {
             });
 
         // 快速追加下一个任务
-        this.nextTaskTool = this.paper.image(imgs.task, 0, 0, 16, 16).attr({
+        this.nextTaskTool = this.paper.image(imgs.task, ...imageArgs).attr({
             opacity: .5,
             title: "快速追加下一个任务",
             cursor: "pointer"
@@ -689,7 +687,7 @@ class GraphicDesign {
         });
 
         // 快速追加分支任务
-        this.nextSplitTool = this.paper.image(imgs.split, 0, 0, 16, 16).attr({
+        this.nextSplitTool = this.paper.image(imgs.split, ...imageArgs).attr({
             opacity: .5,
             title: "快速追加分支任务",
             cursor: "pointer"
@@ -709,8 +707,7 @@ class GraphicDesign {
         if (this.nextEndTool) {
             this.nextEndTool.remove();
         }
-        // this.nextEndTool = this.paper.image(imgs.tool_end, 0, 0, 16, 16).attr({
-        this.nextEndTool = this.renderHTML("end", 0, 0, 16, 16).attr({
+        this.nextEndTool = this.renderHTML("end", ...imageArgs).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -729,7 +726,7 @@ class GraphicDesign {
         if (this.deleteTool) {
             this.deleteTool.remove();
         }
-        this.deleteTool = this.renderHTML("del", 0, 0, 16, 16).attr({
+        this.deleteTool = this.renderHTML("del", ...imageArgs).attr({
             opacity: .5,
             title: "删除元素",
             cursor: "pointer"
@@ -833,8 +830,6 @@ class GraphicDesign {
         let fromNode = this.nextSplitTool.data("from");
         if (!fromNode) return;
         let isAnd = fromNode.data("gateway") == "AND";
-        console.log(isAnd);
-        console.log(fromNode.data("gateway"));
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
 
@@ -881,7 +876,7 @@ class GraphicDesign {
     /**
      * 设置背景图片
      */
-    setContainerStyle(style) {
+    setWrapperStyle(style) {
         let container = this.flowWrapper;
         if (style && typeof style == 'object') {
             Object.assign(container.style, style);
@@ -891,7 +886,7 @@ class GraphicDesign {
     /**
      * 设置背景图片
      * */
-    setStyles() {
+    initStyles() {
         let parentStyle = {
             position: "relative",
             overflow: this.option.overflow || "hidden"
@@ -907,6 +902,11 @@ class GraphicDesign {
         Object.assign(this.dom.style, parentStyle);
     };
 
+    // theme color
+    get themeColor() {
+      return this.option.settings.themeColor;
+    };
+
     /** 初始化菜单 */
     initMenu(menuDom) {
         let me = this;
@@ -920,7 +920,7 @@ class GraphicDesign {
             flexDirection: "column",
             alignItems: "center",
             fontSize: "14px",
-            color: this.option.settings.themeColor,
+            color: this.themeColor,
             padding: "5px 5px 20px",
             background: "hsla(0,0%,100%,.9)",
             boxShadow: "0 1px 4px rgba(0,0,0,.3)",
@@ -1086,7 +1086,7 @@ class GraphicDesign {
                 });
             } else if (type == "exp") {
                 item.style.cursor = `pointer`;
-                //item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.themeColor;
                 item.innerHTML = DefaultHtmlTypes["exp"];
                 // 点击处理
                 bindDomEvent(item, "mousedown", function (event) {
@@ -1099,7 +1099,7 @@ class GraphicDesign {
                 });
             } else if (type == "imp") {
                 item.style.cursor = `pointer`;
-                //item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.themeColor;
                 item.innerHTML = DefaultHtmlTypes["imp"];
                 bindDomEvent(item, "mousedown", function (event) {
                     preventDefault(event);
@@ -1111,7 +1111,7 @@ class GraphicDesign {
                 });
             } else if (type == "picture") {
                 item.style.cursor = `pointer`;
-                //item.style.color = this.option.settings.themeColor;
+                //item.style.color = this.themeColor;
                 item.innerHTML = DefaultHtmlTypes["picture"];
                 bindDomEvent(item, "mousedown", function (event) {
                     preventDefault(event);
@@ -1125,7 +1125,7 @@ class GraphicDesign {
                 Object.assign(item.style, {
                     cursor: "move"
                 });
-                // item.style.color = this.option.settings.themeColor;
+                // item.style.color = this.themeColor;
                 item.innerHTML = DefaultHtmlTypes[type];
                 // 拖动处理
                 bindDomEvent(item, "mousedown", function (event) {
@@ -1560,7 +1560,6 @@ class GraphicDesign {
     initData() {
         this.elements = {};
         this.containers = {};
-        this.idPool = [];
         this.groupSelectElements = [];
     };
 
@@ -1604,7 +1603,7 @@ class GraphicDesign {
                 flexDirection: "column",
                 alignItems: "center",
                 fontSize: "14px",
-                color: this.option.settings.themeColor,
+                color: this.themeColor,
                 padding: "5px",
                 userSelect: "none",
             });
@@ -1621,7 +1620,7 @@ class GraphicDesign {
                     background: "hsla(0,0%,100%,.9)",
                     boxShadow: "0 1px 4px rgba(0,0,0,.3)",
                 });
-                // item.style.color = this.option.settings.themeColor;
+                // item.style.color = this.themeColor;
                 item.innerHTML = DefaultHtmlTypes[type];
 
                 // stop propagation
@@ -1770,7 +1769,7 @@ class GraphicDesign {
                     y,
                     width,
                     height,
-                    stroke: this.option.settings.themeColor
+                    stroke: this.themeColor
                 }).show();
             } else {
                 me.translateX = canvasDragContext.translateX + dx;
@@ -2051,11 +2050,6 @@ class GraphicDesign {
     handleClickBlank(evt) {
         this.option.clickBlank && this.option.clickBlank(evt);
         this.cancelSelect();
-        // if(!this.selectionMode) {
-        //     // 关闭圈选
-        //     this.groupSelection.hide();
-        //     this.groupSelectElements = [];
-        // }
         this.closePopwin();
     };
 
@@ -2073,14 +2067,6 @@ class GraphicDesign {
         this.option.onContextMenu && this.option.onContextMenu(evt);
         preventDefault(evt);
         return false;
-    };
-
-    setDesignMode(designMode) {
-        this.designMode = designMode;
-    };
-
-    getDesignMode() {
-        return this.designMode;
     };
 
     /**
@@ -2108,11 +2094,7 @@ class GraphicDesign {
             console.error(`html type [${type}] is not register `);
             return;
         }
-        let domEle = document.createElement("div");
-        // 插入到指定节点
-        this.flowWrapper.appendChild(domEle);
-
-        // let domEle = createDomElement("div", this.flowWrapper)
+        let domEle = createDomElement("div", this.flowWrapper);
         domEle.innerHTML = html;
         domEle.style.position = "absolute";
         let element = new HtmlElementData(domEle);
@@ -2145,9 +2127,10 @@ class GraphicDesign {
      * @returns {HtmlTextElementData}
      */
     renderHtmlText(x, y, width) {
-        let domEle = document.createElement("div");
-        // 插入到指定节点
-        this.flowWrapper.appendChild(domEle);
+        // let domEle = document.createElement("div");
+        // // 插入到指定节点
+        // this.flowWrapper.appendChild(domEle);
+        let domEle = createDomElement("div", this.flowWrapper);
         domEle.style.position = "absolute";
 
         let element = new HtmlTextElementData(domEle, !!this.option.nowrap);
@@ -2159,33 +2142,6 @@ class GraphicDesign {
         element.attr(textAttr);
         // Set width separately
         element.setWidth(width);
-        return element;
-    };
-
-    /**
-     * 渲染path文本
-     *
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     * @param text
-     * @returns {HtmlTextElementData}
-     */
-    renderPathText(x, y, width, height, text) {
-        let domEle = document.createElement("div");
-        // 插入到指定节点
-        this.flowWrapper.appendChild(domEle);
-        domEle.style.position = "absolute";
-
-        let element = new HtmlTextElementData(domEle);
-        element.attr({
-            x: Number(x) || 0,
-            y: Number(y) || 0,
-            width: Number(width) || 0,
-            height: Number(height) || 0
-        });
-        element.attr("text", text);
         return element;
     };
 
@@ -2242,6 +2198,7 @@ class GraphicDesign {
         return this.paper.path(path).attr(attrs);
     };
 
+    // get value of y
     getCoordinate(x1, y1, x2, y2, x) {
         if (x2 == x1) {
             console.error("call getCoordinate error for x2 == x1");
@@ -2251,14 +2208,13 @@ class GraphicDesign {
     };
 
     /**
-     * 获取直线的路径数据
+     * get path data
      *
      * @param elementStart
      * @param elementEnd
-     // * @param arrow
      * @returns {{}}
      */
-    getLinePathData(elementStart, elementEnd/*, arrow*/) {
+    getLinePathData(elementStart, elementEnd) {
         let pathData = {};
         let pathD = "";
 
@@ -2441,20 +2397,6 @@ class GraphicDesign {
 
         pathD += "M" + pathStart.x + "," + pathStart.y;
         pathD += "L" + pathEnd.x + "," + pathEnd.y;
-
-        // // 箭头处理
-        // if (arrow) {
-        //     let x3 = pathEnd.x, y3 = pathEnd.y, Par = 10.0, slopy = Math.atan2((pathStart.y - pathEnd.y),
-        //         (pathStart.x - pathEnd.x)), cosy = Math.cos(slopy), siny = Math.sin(slopy);
-        //
-        //     pathD += " L" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
-        //         + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
-        //
-        //     pathD += " L"
-        //         + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
-        //             / 2.0 * cosy - Par * siny)));
-        //     pathD += " L" + x3 + "," + y3;
-        // }
         pathData.data = pathD;
         pathData.start = pathStart;
         pathData.end = pathEnd;
@@ -2619,25 +2561,25 @@ class GraphicDesign {
             let elementId = targetElement.id;
 
             // 删除元素时与子流程有关的需要特殊解除关系
-            let dataType = dataObject["type"];
-            let container = dataObject["container"];
-            if (dataType == "mutiSubProcess" || dataType == "serviceGroup") {
-                // 删除的是容器，获取所有的子节点先删除
-                let containerObj = this.containers[targetElement.id];
-                let childElements = containerObj.elements;
-                for (let i in childElements) {
-                    let childElement = childElements[i];
-                    this.removeElement(childElement);
-                }
-                this.removeContainer(containerObj);
-            } else {
-                this.unregisterElement(elementId);
-            }
-            // 如果删除的元素时包含在container里面的子节点，解除关系
-            if (container) {
-                // 解除关系
-                this.unbindElementFromContainer(targetElement, container);
-            }
+            // let dataType = dataObject["type"];
+            // let container = dataObject["container"];
+            // if (dataType == "mutiSubProcess" || dataType == "serviceGroup") {
+            //     // 删除的是容器，获取所有的子节点先删除
+            //     let containerObj = this.containers[targetElement.id];
+            //     let childElements = containerObj.elements;
+            //     for (let i in childElements) {
+            //         let childElement = childElements[i];
+            //         this.removeElement(childElement);
+            //     }
+            //     this.removeContainer(containerObj);
+            // } else {
+            // }
+            this.unregisterElement(elementId);
+            // // 如果删除的元素时包含在container里面的子节点，解除关系
+            // if (container) {
+            //     // 解除关系
+            //     this.unbindElementFromContainer(targetElement, container);
+            // }
             // 最后删除元素
             targetElement.remove();
         }
@@ -3132,7 +3074,7 @@ class GraphicDesign {
     createStartNode(x, y) {
         // return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start");
         return this.createHTMLNode("start", x || 100, y || 150, 48, 48, "Start").attr({
-            color: this.option.settings.themeColor
+            color: this.themeColor
         });
     };
 
@@ -3142,7 +3084,7 @@ class GraphicDesign {
     createEndNode(x, y) {
         // return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
         return this.createHTMLNode("end", x || 100, y || 150, 48, 48, "End").attr({
-            color: this.option.settings.themeColor
+            color: this.themeColor
         });
     };
 
@@ -3151,7 +3093,7 @@ class GraphicDesign {
      */
     createSplitNode(x, y) {
         return this.createHTMLNode("xor", x || 100, y || 150, 64, 64, "Split").attr({
-            color: this.option.settings.themeColor
+            color: this.themeColor
         });
     };
 
@@ -3160,7 +3102,7 @@ class GraphicDesign {
      */
     createJoinNode(x, y) {
         return this.createHTMLNode("join", x || 100, y || 150, 64, 64, "Join").attr({
-            color: this.option.settings.themeColor
+            color: this.themeColor
         });
     };
 
@@ -3203,7 +3145,7 @@ class GraphicDesign {
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
         this.setElementUUID(rect);
         rect.attr({
-            stroke: this.option.settings.themeColor,
+            stroke: this.themeColor,
             "stroke-width": this.option.settings.nodeStrokeWith,
             title: "id:" + rect.id,
             fill: this.option.settings.nodeBackgroundColor
@@ -3277,7 +3219,7 @@ class GraphicDesign {
      */
     createBusinessNode2(x, y) {
         return this.createHTMLNode("business", x || 100, y || 150, 100, 80, NodeTypes.Business).attr({
-            borderColor: this.option.settings.themeColor
+            borderColor: this.themeColor
         });
     };
 
@@ -3329,12 +3271,6 @@ class GraphicDesign {
             // element = this.loadImageElement(node, editable);
             // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
         }
-        // if (!this.option.debugMode/*this.option.editable*/) {
-        //     nodeElement.id = id;
-        // } else {
-        //     // 只读模式
-        //     nodeElement.data("id", id);
-        // }
         nodeElement.id = id;
         if (attrs.rx) {
             // 圆角处理
@@ -3343,7 +3279,6 @@ class GraphicDesign {
         nodeElement.data("nodeType", type);
         nodeElement.attr(attrs);
         let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
-        // nodeText.id = this.getUUID();
         nodeElement.data("text", nodeText);
         nodeElement.attr("title", "id:" + id);
         this.initElement(nodeElement);
@@ -3406,12 +3341,6 @@ class GraphicDesign {
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
-        // todo if use Raphael to render, there is a bug in editable
-        // if (!this.option.debugMode/*this.option.editable*/) {
-        //     connect.id = id;
-        // } else {
-        //     connect.data("id", id);
-        // }
         connect.id = id;
         this.setConnectArrow(connect);
 
@@ -3431,12 +3360,7 @@ class GraphicDesign {
         inLines[id] = connect;
         toElement.data("in", inLines);
 
-        // // link 设置容器
-        // if (fromElement.data("container")) {
-        //     link.data("container", fromElement.data("container"));
-        // }
-
-        // 创建控制点并绑定关系
+        // create control elements
         let points = pathDToPoints(attrs.path || attrs.d);
         let len = points.length;
         let startElement, endElement;
@@ -3446,9 +3370,6 @@ class GraphicDesign {
             let point = points[i];
             let controlElement = this.createControlDragRect(point[1], point[2], connect);
             controlElement.data("controlPointIndex", -1);
-            // if (connect.data("container")) {
-            //     this.relativePosition(controlElement, connect.data("container"));
-            // }
             controlElements.push(controlElement);
             if (i == 0) {
                 startElement = controlElement;
@@ -3475,17 +3396,17 @@ class GraphicDesign {
                 connect.data("end", endElement);
             }
         }
-        // 隐藏编辑
+        // hide edit elements
         this.hideEditElements(connect);
-        // 绑定事件
+        // bind select event
         this.bindSelectEvent(connect);
         this.registerElement(connect);
         return connect;
     };
 
-    // 创建连线路径
+    // create path
     createPath(fromNode, toNode) {
-        let stroke = this.option.settings.themeColor;
+        let stroke = this.themeColor;
         let linkPath = this.paper.path("").attr({
             "stroke": stroke,
             "stroke-width": 2
@@ -3494,10 +3415,6 @@ class GraphicDesign {
         this.setElementUUID(linkPath);
         let pathStyle = this.option.pathStyle || "broken";
         linkPath.data("pathStyle", pathStyle);
-        // 同步容器
-        // if (fromNode.data("container")) {
-        //     linkPath.data("container", fromNode.data("container"));
-        // }
         linkPath.data("from", fromNode);
         linkPath.data("to", toNode);
 
@@ -3614,9 +3531,6 @@ class GraphicDesign {
         let pathText = pathElement.data("text");
         if (!pathText) {
             pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
-                // "font-size": 13,
-                // "text-anchor": "middle",
-                // "font-style": "normal",
                 text: this.option.settings.linkName || " "
             });
             pathElement.data("text", pathText);
@@ -3635,90 +3549,89 @@ class GraphicDesign {
         if (type != "path") {
             return null;
         }
-
-        if (typeof connect.getBBox == "function") {
-            let {x, y, width, height} = connect.getBBox();
-            return {
-                x: x - 5,
-                y: y - 5,
-                width: width + 10,
-                height: height + 10
-            }
-        }
-
-        let pathDatas = connect.attr("path");
-
-        let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
-        let lastX = 0, lastY = 0;
-        for (let pathData of pathDatas) {
-            let code = pathData[0];
-            let x, y;
-            let breakFlag = false;
-            switch (code) {
-                case "M":
-                case "L": {
-                    x = pathData[1];
-                    y = pathData[2];
-                    break;
-                }
-                case "H": {
-                    x = pathData[1];
-                    y = lastY;
-                    break;
-                }
-                case "V": {
-                    x = lastX;
-                    y = pathData[1];
-                    break;
-                }
-                case "h": {
-                    x = lastX + pathData[1];
-                    y = lastY;
-                    break;
-                }
-                case "v": {
-                    x = lastX;
-                    y = lastY + pathData[1];
-                    break;
-                }
-                default: {
-                    breakFlag = true;
-                }
-            }
-
-            if (breakFlag) {
-                break;
-            }
-            if (minX === undefined) {
-                minX = maxX = x;
-                minY = maxY = y;
-            } else {
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-
-                maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, y);
-            }
-            lastX = x;
-            lastY = y;
-        }
-
+        // if (typeof connect.getBBox == "function") {
+        //
+        // }
+        let {x, y, width, height} = connect.getBBox();
         return {
-            x: minX - 5,
-            y: minY - 5,
-            width: maxX - minX + 10,
-            height: maxY - minY + 10
+            x: x - 5,
+            y: y - 5,
+            width: width + 10,
+            height: height + 10
         }
+
+        // let pathDatas = connect.attr("path");
+        //
+        // let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
+        // let lastX = 0, lastY = 0;
+        // for (let pathData of pathDatas) {
+        //     let code = pathData[0];
+        //     let x, y;
+        //     let breakFlag = false;
+        //     switch (code) {
+        //         case "M":
+        //         case "L": {
+        //             x = pathData[1];
+        //             y = pathData[2];
+        //             break;
+        //         }
+        //         case "H": {
+        //             x = pathData[1];
+        //             y = lastY;
+        //             break;
+        //         }
+        //         case "V": {
+        //             x = lastX;
+        //             y = pathData[1];
+        //             break;
+        //         }
+        //         case "h": {
+        //             x = lastX + pathData[1];
+        //             y = lastY;
+        //             break;
+        //         }
+        //         case "v": {
+        //             x = lastX;
+        //             y = lastY + pathData[1];
+        //             break;
+        //         }
+        //         default: {
+        //             breakFlag = true;
+        //         }
+        //     }
+        //
+        //     if (breakFlag) {
+        //         break;
+        //     }
+        //     if (minX === undefined) {
+        //         minX = maxX = x;
+        //         minY = maxY = y;
+        //     } else {
+        //         minX = Math.min(minX, x);
+        //         minY = Math.min(minY, y);
+        //
+        //         maxX = Math.max(maxX, x);
+        //         maxY = Math.max(maxY, y);
+        //     }
+        //     lastX = x;
+        //     lastY = y;
+        // }
+        //
+        // return {
+        //     x: minX - 5,
+        //     y: minY - 5,
+        //     width: maxX - minX + 10,
+        //     height: maxY - minY + 10
+        // }
     };
 
     createControlDragRect(x, y, pathElement) {
         let controlDragRect = this.renderRect(x - 2.5, y - 2.5, 5,
             5, 2.5, 2.5).attr({
             fill: "#ffffff",
-            stroke: this.option.settings.themeColor,
+            stroke: this.themeColor,
             cursor: 'move'
         });
-        // controlDragRect.id = this.getUUID();
         controlDragRect.data("type", "center");
         if (pathElement) {
             controlDragRect.data("host", pathElement);
@@ -3745,10 +3658,10 @@ class GraphicDesign {
         let type = controlRect.data("type");
         let host = controlRect.data("host");
 
-        if (host.data("container")) {
-            // 更新相对位置
-            this.relativePosition(controlRect, host.data("container"));
-        }
+        // if (host.data("container")) {
+        //     // 更新相对位置
+        //     this.relativePosition(controlRect, host.data("container"));
+        // }
 
         if (type == "start") {
             // 解决zindex导致move事件不响应问题
@@ -3859,22 +3772,6 @@ class GraphicDesign {
         this.dragingLine = null;
     };
 
-    // getArrowPathData(x1, y1, x3, y3) {
-    //
-    //     let Par = 10.0;
-    //     let slopy = Math.atan2((y1 - y3),
-    //         (x1 - x3));
-    //     let cosy = Math.cos(slopy);
-    //     let siny = Math.sin(slopy);
-    //     let pathD = "M" + (Number(x3) + Number(Par * cosy - (Par / 2.0 * siny)))
-    //         + "," + (Number(y3) + Number(Par * siny + (Par / 2.0 * cosy)));
-    //     pathD += " L"
-    //         + (Number(x3) + Number(Par * cosy + Par / 2.0 * siny) + "," + (Number(y3) - Number(Par
-    //             / 2.0 * cosy - Par * siny)));
-    //     pathD += " L" + x3 + "," + y3;
-    //     return pathD;
-    // };
-
     /**
      * 设置元素可以拖动
      *
@@ -3936,7 +3833,7 @@ class GraphicDesign {
     };
 
     /**
-     *
+     * align lines
      */
     handleAlignLines(target) {
         if (this.option.disableAlignLine || !target) {
@@ -4024,33 +3921,11 @@ class GraphicDesign {
     };
 
     elementDragMove(element, dx, dy) {
-
         let scaleValue = this.scaleValue;
         let location = {
             x: element.ox + dx / scaleValue,
             y: element.oy + dy / scaleValue
         };
-        // if (location.x < 0 || location.y < 0) {
-        //     return;
-        // }
-
-        // // 判断元素是否在容器内，如果在容器内的元素禁止拖到容器外
-        // let container = element.data("container");
-        // if (container) {
-        //     let outContainerBoundary = this.isOutContainerBoundary(element.ox + dx, element.oy + dy, element.attr("width"), element.attr("height"), container);
-        //     if (!outContainerBoundary) {
-        //         element.attr(location);
-        //         // 如果么有越过边界，记录位置
-        //         element.data("location", location);
-        //     } else {
-        //         return;
-        //         // 越过边界后还原location
-        //         // location = element.data("location");
-        //         // element.attr(location);
-        //     }
-        // } else {
-        //     // 非容器里面的节点暂时不进行碰撞校验
-        // }
 
         // set position
         element.attr(location);
@@ -4094,19 +3969,19 @@ class GraphicDesign {
             width = Math.abs(rect.attr("x") - diagonal.attr("x")) - 10;
             height = Math.abs(rect.attr("y") - diagonal.attr("y")) - 10;
 
-            // 子流程设置最小宽高 300 150
-            if (selectRect.data("type") == "mutiSubProcess") {
-                // 获取容器边界信息
-                let boundary = this.getContainerBoundary(selectRect.id);
-                if (boundary) {
-                    width = Math.max(width, (boundary.boundaryX - newx));
-                    height = Math.max(height, (boundary.boundaryY - newy));
-                }
-            } else {
-                // 其他默认最小 80 30
-                width = Math.max(width, 80);
-                height = Math.max(height, 30);
-            }
+            // // 子流程设置最小宽高 300 150
+            // if (selectRect.data("type") == "mutiSubProcess") {
+            //     // 获取容器边界信息
+            //     let boundary = this.getContainerBoundary(selectRect.id);
+            //     if (boundary) {
+            //         width = Math.max(width, (boundary.boundaryX - newx));
+            //         height = Math.max(height, (boundary.boundaryY - newy));
+            //     }
+            // } else {
+            // }
+            // 其他默认最小 80 30
+            width = Math.max(width, 80);
+            height = Math.max(height, 30);
 
             var direction = rect.data("direction");
             if (direction == "w" || direction == "e") {
@@ -4162,14 +4037,11 @@ class GraphicDesign {
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
-                "stroke": this.option.settings.themeColor,
+                "stroke": this.themeColor,
                 "stroke-width": 2,
-                "fill": this.option.settings.themeColor
+                "fill": this.themeColor,
+                "stroke-dasharray": "2 2"
             });
-            if (virtualPath.node) {
-                virtualPath.node.setAttribute("stroke-dasharray", "2 2");
-            }
-            // virtualPath.id = this.getUUID();
             linkTool.data("virtualPath", virtualPath);
         } else {
             virtualPath.attr("path", virtualData.data);
@@ -4191,7 +4063,6 @@ class GraphicDesign {
         } else {
             // alert(" error catch !");
         }
-        // debug("drop / " + this.dropNode);
         let dropNode = this.dropNode;
         if (dropNode) {
 
@@ -4269,17 +4140,17 @@ class GraphicDesign {
 
     validateDropLink(pathElement, reverse) {
 
-        let standardMode = this.designMode != "Simple";
+        let standardMode = false; // this.designMode != "Simple";
         let me = this, dropNode = me.dropNode;
         if (dropNode) {
 
-            let isSameContainer = function (fromElement, toElement) {
-                let sameContainer = fromElement.data("container") == toElement.data("container");
-                if (!sameContainer) {
-                    dropNode.attr("cursor", "not-allowed");
-                }
-                return sameContainer;
-            };
+            // let isSameContainer = function (fromElement, toElement) {
+            //     let sameContainer = fromElement.data("container") == toElement.data("container");
+            //     if (!sameContainer) {
+            //         dropNode.attr("cursor", "not-allowed");
+            //     }
+            //     return sameContainer;
+            // };
 
             // 除去分支节点外，其他节点只能单出
             let from = pathElement.data("from");
@@ -4287,17 +4158,17 @@ class GraphicDesign {
 
             let fromDataType = from.data("type");
             let dateType = dropNode.data("type");
-            // 开始节点只能单出
-            if (dateType == "start" && !reverse) {
-                dropNode.attr("cursor", "not-allowed");
-                return false;
-            }
+            // // 开始节点只能单出
+            // if (dateType == "start" && !reverse) {
+            //     dropNode.attr("cursor", "not-allowed");
+            //     return false;
+            // }
 
-            // 如果2个容器不一致，直接禁用
-            let sameContainer = reverse ? isSameContainer(dropNode, to) : isSameContainer(from, dropNode);
-            if (!sameContainer) {
-                return false;
-            }
+            // // 如果2个容器不一致，直接禁用
+            // let sameContainer = reverse ? isSameContainer(dropNode, to) : isSameContainer(from, dropNode);
+            // if (!sameContainer) {
+            //     return false;
+            // }
 
             // 判断from和to2个点之间是否已经存在了连线
             // 遍历from的out即可
@@ -4319,57 +4190,57 @@ class GraphicDesign {
                 return true;
             }
 
-            // 如果reverse为true说明是反向连接，dropNode即将是pathElement的from端
-            if (reverse) {
-                // 判断pathElement是否本来就是dropNode的from（连线的开始点拉出来后又还原回去），如果是返回true
-                if (from == dropNode) {
-                    // 还原
-                    return true;
-                }
-                // 除去分支节点外，其他节点只能单出
-                if (dateType != "diverage") {
-                    let outLines = dropNode.data("out");
-                    let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
-                    if (len > 0) {
-                        dropNode.attr("cursor", "not-allowed");
-                        return false;
-                    }
-                }
-                // end节点不能作为from端
-                if (dateType == "end") {
-                    dropNode.attr("cursor", "not-allowed");
-                    return false;
-                }
-                from = dropNode;
-            } else {
-                // 除去聚合节点外，其他节点只能单进
-                if (dateType != "converge") {
-                    if (to == dropNode) {
-                        // 还原
-                        return true;
-                    }
-                    let inLines = dropNode.data("in");
-                    let len = 0 || (inLines && Object.getOwnPropertyNames(inLines).length);
-                    if (len > 0) {
-                        dropNode.attr("cursor", "not-allowed");
-                        return false;
-                    }
-                }
-
-                if (fromDataType != "diverage") {
-                    if (to) {
-                        // 如果to存在说明是已经存在的link,当前操作可能是变更连接to端，而非virthPath
-                        return isSameContainer(from, dropNode);
-                    }
-                    let outLines = from.data("out");
-                    let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
-                    if (len > 0) {
-                        dropNode.attr("cursor", "not-allowed");
-                        return false;
-                    }
-                }
-
-            }
+            // // 如果reverse为true说明是反向连接，dropNode即将是pathElement的from端
+            // if (reverse) {
+            //     // 判断pathElement是否本来就是dropNode的from（连线的开始点拉出来后又还原回去），如果是返回true
+            //     if (from == dropNode) {
+            //         // 还原
+            //         return true;
+            //     }
+            //     // // 除去分支节点外，其他节点只能单出
+            //     // if (dateType != "diverage") {
+            //     //     let outLines = dropNode.data("out");
+            //     //     let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
+            //     //     if (len > 0) {
+            //     //         dropNode.attr("cursor", "not-allowed");
+            //     //         return false;
+            //     //     }
+            //     // }
+            //     // // end节点不能作为from端
+            //     // if (dateType == "end") {
+            //     //     dropNode.attr("cursor", "not-allowed");
+            //     //     return false;
+            //     // }
+            //     from = dropNode;
+            // } else {
+            //     // 除去聚合节点外，其他节点只能单进
+            //     if (dateType != "converge") {
+            //         if (to == dropNode) {
+            //             // 还原
+            //             return true;
+            //         }
+            //         let inLines = dropNode.data("in");
+            //         let len = 0 || (inLines && Object.getOwnPropertyNames(inLines).length);
+            //         if (len > 0) {
+            //             dropNode.attr("cursor", "not-allowed");
+            //             return false;
+            //         }
+            //     }
+            //
+            //     if (fromDataType != "diverage") {
+            //         // if (to) {
+            //         //     // 如果to存在说明是已经存在的link,当前操作可能是变更连接to端，而非virthPath
+            //         //     return isSameContainer(from, dropNode);
+            //         // }
+            //         let outLines = from.data("out");
+            //         let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
+            //         if (len > 0) {
+            //             dropNode.attr("cursor", "not-allowed");
+            //             return false;
+            //         }
+            //     }
+            //
+            // }
         }
         return true;
     };
@@ -4508,11 +4379,6 @@ class GraphicDesign {
                     y: hiddenPathStartY - 5
                 }).data("host", targetElement).show();
             }
-
-            // dropNw.attr("path", "M" + (hiddenPathStartX + 5) + "," + hiddenPathStartY + "H" + hiddenPathStartX + "V" + (hiddenPathStartY + 5));
-            // dropNe.attr("path","M" + (hiddenPathEndX - 5) + "," + hiddenPathStartY + "H" + hiddenPathEndX + "V" + (hiddenPathStartY + 5));
-            // dropSw.attr("path","M" + (hiddenPathStartX + 5) + "," + hiddenPathEndY + "H" + hiddenPathStartX + "V" + (hiddenPathEndY - 5));
-            // dropSe.attr("path","M" + (hiddenPathEndX - 5) + "," + hiddenPathEndY + "H" + hiddenPathEndX + "V" + (hiddenPathEndY - 5));
         } else if (type == "path") {
             // 连线
             let startElement = targetElement.data("start");
@@ -4524,11 +4390,6 @@ class GraphicDesign {
                 leftRect.show();
                 nextElement = nextElement.data("right");
             }
-
-            // let connectRect = this.connectRect;
-            // let {x, y, width, height} = connectRect.attrs;
-            // let dx = x + width / 2;
-            // let dy = y + height / 2;
             let {x, y} = targetElement.getPointAtLength(1);
             this.deleteTool.attr({x, y}).data("host", targetElement).show();
         }
@@ -4583,7 +4444,7 @@ class GraphicDesign {
             let fromElementRight = startElement.data("right");
 
             let isToNode = endElement == fromElementRight && endElement.data("toNode") != null;
-            let linePathData = this.getLinePathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight, false);
+            let linePathData = this.getLinePathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight);
             let pathStartPoint = linePathData.start;
             startElement.attr({
                 x: pathStartPoint.x - 2.5,
@@ -4614,9 +4475,9 @@ class GraphicDesign {
                 y: pathEndPoint.y - 2.5
             });
 
-            if (hostElement.data("container")) {
-                this.relativePosition(endElement, hostElement.data("container"));
-            }
+            // if (hostElement.data("container")) {
+            //     this.relativePosition(endElement, hostElement.data("container"));
+            // }
 
             // 更新rightrect的位置
             let leftControlRect = endElement.data("leftRect");
@@ -4708,15 +4569,15 @@ class GraphicDesign {
                 x: (leftElement.attr("x") + rightElement.attr("x")) / 2,
                 y: (leftElement.attr("y") + rightElement.attr("y")) / 2
             });
-            if (hostElement.data("container")) {
-                this.relativePosition(controlElement, hostElement.data("container"));
-            }
+            // if (hostElement.data("container")) {
+            //     this.relativePosition(controlElement, hostElement.data("container"));
+            // }
             return;
         }
 
         if (leftElement && leftElement.data("fromNode")) {
             let fromElement = leftElement.data("fromNode");
-            let linePathData = this.getLinePathData(fromElement, controlElement, false);
+            let linePathData = this.getLinePathData(fromElement, controlElement);
             let pathStartPoint = linePathData.start;
             leftElement.attr({
                 x: pathStartPoint.x - 2.5,
@@ -4729,15 +4590,15 @@ class GraphicDesign {
 
         if (rightElement && rightElement.data("toNode")) {
             let toElement = rightElement.data("toNode");
-            let linePathData = this.getLinePathData(controlElement, toElement, false);
+            let linePathData = this.getLinePathData(controlElement, toElement);
             let pathEndPoint = linePathData.end;
             rightElement.attr({
                 x: pathEndPoint.x - 2.5,
                 y: pathEndPoint.y - 2.5
             });
-            if (hostElement.data("container")) {
-                this.relativePosition(rightElement, hostElement.data("container"));
-            }
+            // if (hostElement.data("container")) {
+            //     this.relativePosition(rightElement, hostElement.data("container"));
+            // }
         }
 
         if (controlPointIndex == -1) {
@@ -4887,36 +4748,36 @@ class GraphicDesign {
 
     };
 
-    getContainerBoundary(containerId) {
-
-        // 获取容器2个点的理想坐标(容器的坐标点(x，y)及对角线点(boundaryX,boundaryY))
-        let x, y, boundaryX, boundaryY;
-        let childElements = this.containers[containerId].elements;
-        let containerElement = this.containers[containerId].target;
-
-        x = containerElement.attr("x");
-        y = containerElement.attr("y");
-        // 设置边界控制容器的初始最小宽高300 150
-        boundaryX = containerElement.attr("x") + 300;
-        boundaryY = containerElement.attr("y") + 150;
-
-        // 根据容器中的元素，设置容器的最小边界
-        for (let childElementId in childElements) {
-            let childElement = childElements[childElementId];
-            let childElementX = childElement.attr("x");
-            let childElementY = childElement.attr("y");
-            let width = childElement.attr("width");
-            let height = childElement.attr("height");
-            boundaryX = Math.max(boundaryX, childElementX + width + 10);
-            boundaryY = Math.max(boundaryY, childElementY + height + 10);
-        }
-        return {
-            x: x,
-            y: y,
-            boundaryX: boundaryX,
-            boundaryY: boundaryY
-        };
-    };
+    // getContainerBoundary(containerId) {
+    //
+    //     // 获取容器2个点的理想坐标(容器的坐标点(x，y)及对角线点(boundaryX,boundaryY))
+    //     let x, y, boundaryX, boundaryY;
+    //     let childElements = this.containers[containerId].elements;
+    //     let containerElement = this.containers[containerId].target;
+    //
+    //     x = containerElement.attr("x");
+    //     y = containerElement.attr("y");
+    //     // 设置边界控制容器的初始最小宽高300 150
+    //     boundaryX = containerElement.attr("x") + 300;
+    //     boundaryY = containerElement.attr("y") + 150;
+    //
+    //     // 根据容器中的元素，设置容器的最小边界
+    //     for (let childElementId in childElements) {
+    //         let childElement = childElements[childElementId];
+    //         let childElementX = childElement.attr("x");
+    //         let childElementY = childElement.attr("y");
+    //         let width = childElement.attr("width");
+    //         let height = childElement.attr("height");
+    //         boundaryX = Math.max(boundaryX, childElementX + width + 10);
+    //         boundaryY = Math.max(boundaryY, childElementY + height + 10);
+    //     }
+    //     return {
+    //         x: x,
+    //         y: y,
+    //         boundaryX: boundaryX,
+    //         boundaryY: boundaryY
+    //     };
+    // };
 
     /**
      * 检测元素是否在容器范围（圈选）
@@ -4939,34 +4800,27 @@ class GraphicDesign {
     autoContainerSelect(targetElement) {
     };
 
-    isOutContainerBoundary(x, y, w, h, containerElement) {
-        let containerX = containerElement.attr("x");
-        let containerY = containerElement.attr("y");
-        let containerW = containerElement.attr("width");
-        let containerH = containerElement.attr("height");
-        if (x > containerX + 5 && x + w < containerX + containerW - 5
-            && y > containerY + 5 && y + h < containerY + containerH - 5) {
-            // 在容器内
-            return false;
-        } else {
-            return true;
-        }
-    };
+    // isOutContainerBoundary(x, y, w, h, containerElement) {
+    //     let containerX = containerElement.attr("x");
+    //     let containerY = containerElement.attr("y");
+    //     let containerW = containerElement.attr("width");
+    //     let containerH = containerElement.attr("height");
+    //     if (x > containerX + 5 && x + w < containerX + containerW - 5
+    //         && y > containerY + 5 && y + h < containerY + containerH - 5) {
+    //         // 在容器内
+    //         return false;
+    //     } else {
+    //         return true;
+    //     }
+    // };
 
-    relativePosition(targetElement, containerElement) {
-        let position = {
-            x: targetElement.attr("x") - containerElement.attr("x"),
-            y: targetElement.attr("y") - containerElement.attr("y")
-        };
-        targetElement.data("relativePosition", position);
-    };
-
-    /*=========data 操作区============*/
-    initIdPond(start, end) {
-        for (let i = start; i < end; i++) {
-            this.idPool.push(i);
-        }
-    };
+    // relativePosition(targetElement, containerElement) {
+    //     let position = {
+    //         x: targetElement.attr("x") - containerElement.attr("x"),
+    //         y: targetElement.attr("y") - containerElement.attr("y")
+    //     };
+    //     targetElement.data("relativePosition", position);
+    // };
 
     /**
      * 下一个id
@@ -4974,58 +4828,36 @@ class GraphicDesign {
      * @returns {*}
      */
     nextId() {
-        if (this.idPool.length == 0) {
-            this.initIdPond(1, 100);
-        }
-        if (this.idPool.length == 1) {
-            let lastId = this.idPool[0];
-            this.initIdPond(lastId + 1, lastId + 100);
-        }
-        return this.idPool.shift();
+        return ++this.cnt;
     };
 
-    /**
-     * 字符串ID
-     *
-     * @param id
-     * @returns {string}
-     */
-    toElementId(id) {
-        return id.toString();
-    };
+    // /**
+    //  * 字符串ID
+    //  *
+    //  * @param id
+    //  * @returns {string}
+    //  */
+    // toElementId(id) {
+    //     return id.toString();
+    // };
 
-    // 回收id
-    recoveryId(id) {
-        let idPool = this.idPool;
-        if (idPool.includes(id)) {
-            idPool.unshift(id);
-        }
-        // 排序
-        idPool.sort(function (a, b) {
-            return a - b;
-        });
-    };
+    // unbindElementFromContainer(targetElement, container) {
+    //     let containerObj = this.containers[container.id];
+    //     delete containerObj.elements[targetElement.id];
+    // };
 
-    unbindElementFromContainer(targetElement, container) {
-        let containerObj = this.containers[container.id];
-        delete containerObj.elements[targetElement.id];
-    };
-
-    /**删除一个容器 */
-    removeContainer(container) {
-        // 删除容器里面的所有元素
-        let containerId = container.target.id;
-        delete container.elements;
-        delete container.target;
-        this.unregisterElement(containerId);
-        delete this.containers[containerId];
-    };
+    // /**删除一个容器 */
+    // removeContainer(container) {
+    //     // 删除容器里面的所有元素
+    //     let containerId = container.target.id;
+    //     delete container.elements;
+    //     delete container.target;
+    //     this.unregisterElement(containerId);
+    //     delete this.containers[containerId];
+    // };
 
     /** 反注册元素（删除）*/
     unregisterElement(id) {
-        if (typeof (id) == "number") {
-            this.recoveryId(id);
-        }
         this.elements[id] = null;
         delete this.elements[id];
     };
@@ -5297,25 +5129,25 @@ class GraphicDesign {
             switch (type) {
                 case "Start": {
                     // element = this.loadImageElement(id, imgs.start, component, "Start");
-                    element = this.loadHTMLElement(id, "start", component, "Start"); //.attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "start", component, "Start"); //.attr({color: this.themeColor});
                     this.setElementDatas(element, this.nodeDatas, elementData);
                     break;
                 }
                 case "End": {
                     // element = this.loadImageElement(id, imgs.end, component, "End");
-                    element = this.loadHTMLElement(id, "end", component, "End"); //.attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "end", component, "End"); //.attr({color: this.themeColor});
                     this.setElementDatas(element, this.nodeDatas, elementData);
                     break;
                 }
                 case "Split": {
                     // 网关类型gateway： xor, or, and
                     let splitType = gateway.toLowerCase();
-                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.themeColor});
                     this.setElementDatas(element, this.nodeDatas, elementData);
                     break;
                 }
                 case "Join": {
-                    element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.option.settings.themeColor});
+                    element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.themeColor});
                     this.setElementDatas(element, this.nodeDatas, elementData);
                     break;
                 }
@@ -5391,7 +5223,7 @@ class GraphicDesign {
             this.fromElementData(connect);
         }
 
-        this.setElementsColor(this.option.settings.themeColor);
+        this.setElementsColor(this.themeColor);
     };
 
     /**
