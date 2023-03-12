@@ -73,12 +73,62 @@ export const setDomAttrs = function (dom, attrs) {
 }
 
 /**
- * 将二维路径数据转化为points数据
+ * 将路径d数据转化为points数据
  *
  * @param pathD
  */
 export const pathDToPoints = function (pathD) {
+    if (Array.isArray(pathD)) {
+        return pathD;
+    }
+    // example: M225.51392757660167,141L265.5,471L598.3565459610028,383L558.8636330931555,157
+    let points = [];
+    try {
+        if (typeof pathD == "string") {
+            let symbol = null, value = [];
+            let offset = -1;
+            for (let i = 0, len = pathD.length; i < len; ++i) {
+                let code = pathD.charAt(i);
+                switch (code) {
+                    case "M":
+                    case "L":
+                    case "H":
+                    case "V":
+                    case "h":
+                    case "v": {
+                        if (symbol) {
+                            value.push(parseFloat(pathD.substring(offset, i).trim()));
+                            points.push([
+                                symbol,
+                                ...value
+                            ])
+                        }
+                        value = [];
+                        symbol = code;
+                        offset = i + 1;
+                        break;
+                    }
+                    case ",": {
+                        value.push(parseFloat(pathD.substring(offset, i).trim()));
+                        offset = i + 1;
+                        break;
+                    }
+                    default: {
+                    }
+                }
+            }
+            if (symbol) {
+                value.push(parseFloat(pathD.substring(offset).trim()));
+                let point = [symbol];
+                point.push(...value);
+                points.push(point);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
 
+    return points;
 }
 
 /**
@@ -98,6 +148,7 @@ export const pointsToPathD = function (points) {
             pathD.push(v3);
         }
     }
+    console.log(pathD);
     return pathD.join("");
 }
 

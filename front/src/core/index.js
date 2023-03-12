@@ -1,7 +1,7 @@
 // 核心库，暂时使用Raphael过度，后续会替换为原生js
 // 图标库
 import imgs from "./img"
-import {bindDomEvent, browser, exportBlob, exportTextFile, preventDefault} from "./util"
+import {bindDomEvent, pathDToPoints, browser, exportBlob, exportTextFile, preventDefault} from "./util"
 
 import {HtmlElementData, HtmlTextElementData} from "./ElementData"
 import historyActions from "./modules/history"
@@ -3185,7 +3185,6 @@ class GraphicDesign {
             "width": 3,
             text: this.option.settings.nodeName + " " + this.nextId()
         });
-        // text.id = me.getUUID();
         rect.data("text", text);
         onNodeCreated(rect, this);
 
@@ -3409,7 +3408,7 @@ class GraphicDesign {
         // }
 
         // 创建控制点并绑定关系
-        let points = attrs.path;
+        let points = pathDToPoints(attrs.path || attrs.d);
         let len = points.length;
         let startElement, endElement;
 
@@ -3622,7 +3621,7 @@ class GraphicDesign {
             return null;
         }
 
-        if (connect.getBBox) {
+        if (typeof connect.getBBox == "function") {
             let {x, y, width, height} = connect.getBBox();
             return {
                 x: x - 5,
@@ -4632,7 +4631,7 @@ class GraphicDesign {
                 // let arrowPathStart = startElement;
                 let nextElement = startElement.data("right");
                 while (nextElement) {
-                    let temp = nextElement;
+                    // let temp = nextElement;
                     // if (hostElement.data("container")) {
                     //     let containerElement = hostElement.data("container");
                     //     let relativePosition = nextElement.data("relativePosition");
@@ -4651,7 +4650,7 @@ class GraphicDesign {
                     //         });
                     //     }
                     // }
-                    pathData += " L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5) + " ";
+                    pathData += "L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5);
                     nextElement = nextElement.data("right");
                     // if (nextElement != null) {
                     //     arrowPathStart = temp;

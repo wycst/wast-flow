@@ -94,18 +94,18 @@ let seq = 0;
  *
  * @returns {string}
  */
-function id() {
+export function id() {
     let time = Date.now();
     let seconds = time - time % 1000;
     if (lastSeconds == seconds) {
-        if (seq == 1000) {
+        if (seq == 999) {
             while (lastSeconds == seconds) {
                 time = Date.now();
                 seconds = time - time % 1000;
             }
             seq = 0;
         }
-        return (seconds + seq++).toString(36);
+        return (seconds + ++seq).toString(36);
     }
     seq = 0;
     lastSeconds = seconds;
