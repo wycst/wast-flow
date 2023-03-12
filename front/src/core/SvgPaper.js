@@ -137,10 +137,13 @@ export default class SvgPaper {
         })
     };
 
+    /**
+     * remove
+     */
     remove() {
         this.clear();
         this.svg.remove();
         this.svg = this.canvas = null;
-        this._removed = true;
+        this.removed = true;
     };
 }

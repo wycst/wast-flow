@@ -1,7 +1,7 @@
 // 核心库，暂时使用Raphael过度，后续会替换为原生js
 // 图标库
 import imgs from "./img"
-import {bindDomEvent, pathDToPoints, browser, exportBlob, exportTextFile, preventDefault} from "./util"
+import {bindDomEvent, browser, exportBlob, exportTextFile, pathDToPoints, preventDefault} from "./util"
 
 import {HtmlElementData, HtmlTextElementData} from "./ElementData"
 import historyActions from "./modules/history"
@@ -221,6 +221,14 @@ const defaultOption = {
     pathStyle: "broken",
 
     /**
+     * path中文本最大宽度（像素）
+     */
+    maxPathTextWidth: 100,
+
+    /** 如果配置了true,文本将不会换行，超出宽度范围将使用省略号截断,默认false */
+    nowrap: false,
+
+    /**
      * 是否支持平移
      */
     panable: true,
@@ -265,11 +273,11 @@ const defaultOption = {
      */
     overviewOffsetHeight: 20,
 
-    /**
-     * 调试模式（临时解决bug使用，bug修复后将不生效）
-     *
-     */
-    debugMode: false,
+    // /**
+    //  * 调试模式（临时解决bug使用，bug修复后将不生效）
+    //  *
+    //  */
+    // debugMode: false,
 
     /**
      * 提示信息，默认使用window.alert
@@ -821,7 +829,7 @@ class GraphicDesign {
         if (!fromNode) return;
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
-        let nextNode = this.createNode(x + width + 100, y);
+        let nextNode = this.createNode(x + width + 150, y);
         nextNode.data("nodeType", NodeTypes.Business);
         let {height: h2} = nextNode.attrs;
         // 对齐
@@ -844,7 +852,7 @@ class GraphicDesign {
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
 
-        let nextOneNode = this.createNode(x + width + 100, y);
+        let nextOneNode = this.createNode(x + width + 150, y);
         nextOneNode.data("nodeType", NodeTypes.Business);
         let {height: h1} = nextOneNode.attrs;
         // 对齐
@@ -857,7 +865,7 @@ class GraphicDesign {
         }
         this.hideEditElements(connect);
 
-        let nextTwoNode = this.createNode(x + width + 100, y);
+        let nextTwoNode = this.createNode(x + width + 150, y);
         nextTwoNode.data("nodeType", NodeTypes.Business);
         let {height: h2} = nextTwoNode.attrs;
         // 对齐
@@ -876,7 +884,7 @@ class GraphicDesign {
         if (!fromNode) return;
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
-        let nextNode = this.createEndNode(x + width + 100, y);
+        let nextNode = this.createEndNode(x + width + 150, y);
         let {height: h2} = nextNode.attrs;
         // 对齐
         nextNode.attr({y: centerY - h2 / 2});
@@ -2131,7 +2139,43 @@ class GraphicDesign {
     };
 
     /**
-     * 渲染文本
+     * 渲染svg text
+     *
+     * @param x
+     * @param y
+     * @returns {SvgTextElementData}
+     */
+    renderSvgText(x, y) {
+        return this.paper.text(x, y);
+    };
+
+    /**
+     * 渲染html文本
+     *
+     * @param rect
+     * @param text
+     * @returns {HtmlTextElementData}
+     */
+    renderHtmlText(x, y, maxWidth) {
+        let domEle = document.createElement("div");
+        // 插入到指定节点
+        this.flowWrapper.appendChild(domEle);
+        domEle.style.position = "absolute";
+
+        // Never set the width and height
+        // The maximum width can be set according to the requirement configuration to realize line break
+        let element = new HtmlTextElementData(domEle, !!this.option.nowrap);
+        let textAttr = {
+            x: Number(x) || 0,
+            y: Number(y) || 0
+        }
+        textAttr["max-width"] = `${maxWidth}px`;
+        element.attr(textAttr);
+        return element;
+    };
+
+    /**
+     * 渲染path文本
      *
      * @param x
      * @param y
@@ -2140,7 +2184,7 @@ class GraphicDesign {
      * @param text
      * @returns {HtmlTextElementData}
      */
-    renderText(x, y, width, height, text) {
+    renderPathText(x, y, width, height, text) {
         let domEle = document.createElement("div");
         // 插入到指定节点
         this.flowWrapper.appendChild(domEle);
@@ -3166,9 +3210,10 @@ class GraphicDesign {
      * @returns {*}
      */
     createNode(x, y, width, height) {
+        width = width || 100;
+        height = height || 80;
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
         this.setElementUUID(rect);
-        // rect.id = this.createElementId();
         rect.attr({
             stroke: this.option.settings.themeColor,
             "stroke-width": this.option.settings.nodeStrokeWith,
@@ -3178,11 +3223,10 @@ class GraphicDesign {
         rect.data("handler", {});
 
         // create text
-        let text = this.paper.text(0, 0).attr({
-            "font-size": 13,
-            "text-anchor": "middle",
-            "font-style": "normal",
-            "width": 3,
+        let text = this.renderHtmlText(0, 0, width * 0.8).attr({
+            // "font-size": 13,
+            // "text-anchor": "middle",
+            // "font-style": "normal",
             text: this.option.settings.nodeName + " " + this.nextId()
         });
         rect.data("text", text);
@@ -3297,20 +3341,20 @@ class GraphicDesign {
             // element = this.loadImageElement(node, editable);
             // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
         }
-        // todo if use Raphael to render, there is a bug in editable
-        if (!this.option.debugMode/*this.option.editable*/) {
-            nodeElement.id = id;
-        } else {
-            // 只读模式
-            nodeElement.data("id", id);
-        }
+        // if (!this.option.debugMode/*this.option.editable*/) {
+        //     nodeElement.id = id;
+        // } else {
+        //     // 只读模式
+        //     nodeElement.data("id", id);
+        // }
+        nodeElement.id = id;
         if (attrs.rx) {
             // 圆角处理
             nodeElement.attrs.r = attrs.rx;
         }
         nodeElement.data("nodeType", type);
         nodeElement.attr(attrs);
-        let nodeText = this.paper.text("").attr(textAttrs);
+        let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
         // nodeText.id = this.getUUID();
         nodeElement.data("text", nodeText);
         nodeElement.attr("title", "id:" + id);
@@ -3375,19 +3419,16 @@ class GraphicDesign {
 
         let connect = this.paper.path("").attr(attrs);
         // todo if use Raphael to render, there is a bug in editable
-        if (!this.option.debugMode/*this.option.editable*/) {
-            connect.id = id;
-        } else {
-            connect.data("id", id);
-        }
+        // if (!this.option.debugMode/*this.option.editable*/) {
+        //     connect.id = id;
+        // } else {
+        //     connect.data("id", id);
+        // }
+        connect.id = id;
         this.setConnectArrow(connect);
 
-        // // 箭头
-        // let arrow = this.paper.path("").attr(arrowAttrs);
-        // connect.data("arrow", arrow);
-
-        // 文本 
-        let pathText = this.paper.text("").attr(textAttrs);
+        // text
+        let pathText = this.renderHtmlText(0, 0, this.option.maxPathTextWidth || 100).attr(textAttrs);
         connect.data("text", pathText);
 
         // 绑定数据关系
@@ -3584,30 +3625,16 @@ class GraphicDesign {
         // 文本
         let pathText = pathElement.data("text");
         if (!pathText) {
-            pathText = this.paper.text(centerX - 2.5 - 10, centerY - 2.5 - 10).attr({
-                "font-size": 13,
-                "text-anchor": "middle",
-                "font-style": "normal",
+            pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
+                // "font-size": 13,
+                // "text-anchor": "middle",
+                // "font-style": "normal",
                 text: this.option.settings.linkName || " "
             });
             pathElement.data("text", pathText);
         } else {
             pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
         }
-
-        // 创建箭头
-        // let arrowPathData = this.getArrowPathData(startX, startY, endX, endY);
-        // let arrowPath = pathElement.data("arrow");
-        // if (!arrowPath) {
-        //     arrowPath = this.paper.path(arrowPathData).attr({
-        //         "stroke": this.option.settings.themeColor,
-        //         "stroke-width": 2,
-        //         "fill": this.option.settings.themeColor
-        //     });
-        //     pathElement.data("arrow", arrowPath);
-        // } else {
-        //     arrowPath.attr("path", arrowPathData);
-        // }
     };
 
     /**

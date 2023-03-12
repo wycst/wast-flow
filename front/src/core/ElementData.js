@@ -2,6 +2,8 @@ import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 
 // svg namespace
 const svgNS = "http://www.w3.org/2000/svg";
+// default text font style
+const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
 
 /***
  * set or get prop value
@@ -29,7 +31,9 @@ function getOrSetValue(target, args) {
 }
 
 // 维护样式key
-const stylePropSet = ["x", "y", "width", "height", "cursor", "text-anchor", "font-family", "font-size", "font-style", "left", "top", "width", "height", "opacity", "color", "borderColor"];
+const stylePropSet = [
+    "x", "y", "width", "height", "cursor", "text-anchor", "font-family", "font-size", "font-style", "left", "top", "width", "height", "opacity", "color", "borderColor", "max-width", "max-height"
+];
 
 /**
  * dom设置属性（移除属性）
@@ -368,6 +372,9 @@ export default class ElementData {
      * 移除元素,并释放内存
      */
     remove() {
+        if (this.data("text")) {
+            this.data("text").remove();
+        }
         this.node.remove();
         this.attrs = null;
         this.datas = null;
@@ -398,17 +405,39 @@ export class HtmlElementData extends ElementData {
  * html text element data Support line break
  */
 export class HtmlTextElementData extends HtmlElementData {
-    constructor(node) {
+    constructor(node, nowrap) {
         super(node);
+        this.nowrap = nowrap;
     };
 
     // set text
     setText(text) {
-        this.node.innerHTML = `<div>${text}</div>`;
+        this.node.innerHTML = `<div title="${text}" style="transform: translate(-50%, -50%);overflow: hidden;word-break: break-all;box-sizing: border-box;${textStyle}">${text}</div>`;
         Object.assign(this.attrs, {
             text
-        })
+        });
+        this.setNowrap(this.nowrap);
         return this;
+    };
+
+    setNowrap(nowrap) {
+        let innerHtmlNode = this.node.childNodes[0];
+        if(!innerHtmlNode) return;
+        if (nowrap) {
+            Object.assign(innerHtmlNode.style, {
+                maxWidth: "100%",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap"
+            })
+        } else {
+            Object.assign(innerHtmlNode.style, {
+                maxWidth: null,
+                textOverflow: null,
+                overflow: null,
+                whiteSpace: null
+            })
+        }
     };
 
     // override attr
@@ -419,7 +448,8 @@ export class HtmlTextElementData extends HtmlElementData {
             return this.setText(arg1);
         } else {
             if (len == 1 && typeof arg0 == "object") {
-                let {text, ...props} = arg0;
+                // excludes width and height
+                let {text, width, height, ...props} = arg0;
                 if (text) {
                     this.setText(text);
                 }

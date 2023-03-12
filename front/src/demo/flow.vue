@@ -48,6 +48,8 @@ export default {
       // background: "lightblue",
       panable: true,
 
+      nowrap: false,
+
       /** 默认条件类型 */
       defaultConditionType: "HandlerCall",
 
