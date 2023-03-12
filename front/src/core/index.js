@@ -172,8 +172,6 @@ const DefaultSettings = {
     nodeBackgroundColor: "#fff",
     nodeStrokeWith: "3",
     themeColor: "#409eff",
-
-    // 完成api样式配置
     // 环节执行完成设置背景色默认浅绿色
     completeColor: "green",
     // 完成状态的连线背景色默认浅绿色
@@ -364,29 +362,17 @@ const extensionTemplate = `
     <div class="flow-menu" style="display:none;z-index: 100;">
         <div class="menu-item" data-type="select" draggable="true" title="圈选，可使用快捷键按住ctrl替代"></div>
         <div class="menu-item" data-type="start" draggable="true" title="开始"></div>
-<!--        <div>开始</div>-->
         <div class="menu-item" data-type="task" draggable="true" title="任务节点"></div>
-<!--        <div>任务</div>-->
         <div class="menu-item" data-type="end" draggable="true" title="结束"></div>
-        <!--        <div>结束</div>-->
         <div style="border: 1px dashed #dcdfe6; width: 40%;margin: 8px;opacity: .7;"></div>
         <div class="menu-item" data-type="xor" draggable="true" title="有且仅有一个满足条件的分支通过"></div>
-<!--        <div>分支</div>-->
         <div class="menu-item" data-type="or" draggable="true" title="至少一个满足条件的分支通过,与汇聚网关组合使用"></div>
-<!--        <div>分支</div>-->
         <div class="menu-item" data-type="and" draggable="true" title="所有分支强制通过,与汇聚网关组合使用"></div>
-<!--        <div>分支</div>-->
         <div class="menu-item" data-type="join" draggable="true" title="汇聚网关"></div>
         <div style="border: 1px dashed #dcdfe6; width: 40%;margin: 8px;opacity: .7;"></div>
-<!--        <div>聚合</div>-->
-<!--        <div class="menu-item" data-type="selection"></div>-->
-<!--        <div>圈选</div>-->
         <div class="menu-item" data-type="reset" title="重置"></div>
-<!--        <div>重置</div>-->
         <div class="menu-item" data-type="imp" title="导入"></div>
-<!--        <div>导入</div>-->
         <div class="menu-item" data-type="exp" title="导出"></div>
-<!--        <div>导出</div>-->
 <!--        <div class="menu-item" data-type="picture" title="导出图片"></div>-->
 <!--        <div>图片</div>-->
     </div>
@@ -470,11 +456,11 @@ class GraphicDesign {
         this.flowWrapper = flowWrapper;
         // this.paper = new Raphael(flowWrapper, width, height);
         this.paper = new SvgPaper(flowWrapper, width, height);
-        Object.assign(this.paper.canvas.style, {
-            userSelect: "none",
-            cursor: "default",
-            overflow: "visible"
-        });
+        // Object.assign(this.paper.canvas.style, {
+        //     userSelect: "none",
+        //     cursor: "default",
+        //     overflow: "visible"
+        // });
         // 连线颜色作为箭头的颜色
         this.connectColors = [this.option.settings.themeColor];
         // 初始化paper
@@ -2125,6 +2111,8 @@ class GraphicDesign {
         let domEle = document.createElement("div");
         // 插入到指定节点
         this.flowWrapper.appendChild(domEle);
+
+        // let domEle = createDomElement("div", this.flowWrapper)
         domEle.innerHTML = html;
         domEle.style.position = "absolute";
         let element = new HtmlElementData(domEle);
@@ -2156,21 +2144,21 @@ class GraphicDesign {
      * @param text
      * @returns {HtmlTextElementData}
      */
-    renderHtmlText(x, y, maxWidth) {
+    renderHtmlText(x, y, width) {
         let domEle = document.createElement("div");
         // 插入到指定节点
         this.flowWrapper.appendChild(domEle);
         domEle.style.position = "absolute";
 
-        // Never set the width and height
-        // The maximum width can be set according to the requirement configuration to realize line break
         let element = new HtmlTextElementData(domEle, !!this.option.nowrap);
         let textAttr = {
             x: Number(x) || 0,
             y: Number(y) || 0
         }
-        textAttr["max-width"] = `${maxWidth}px`;
+        // textAttr["width"] = `${width}px`;
         element.attr(textAttr);
+        // Set width separately
+        element.setWidth(width);
         return element;
     };
 
@@ -4219,13 +4207,13 @@ class GraphicDesign {
                 return;
             }
             // 创建link之前判断是否from和to是否连通（不一定是直接相连）
-            let isConnect = this.isConnect(fromNode, dropNode, true);
+            let isConnected = this.isConnected(fromNode, dropNode, true);
             let outPath = this.createPath(fromNode, dropNode);
             this.dropNode = null;
             this.dragingLine = null;
 
             // 如果from和to已经连通，有可能是回退或新增的分支连线，处理用户体验方面的问题（连线被遮住）
-            if (isConnect) {
+            if (isConnected) {
                 // 移动中央控制点，终点位置取fromNode和dropNode连线线段的2点做中垂线，偏离2点的15度角度
                 let x1 = outPath.data("start").attr("x");
                 let y1 = outPath.data("start").attr("y");
@@ -4565,10 +4553,11 @@ class GraphicDesign {
         let text = targetElement.data("text");
         if (text) {
             let {x, y, width, height} = targetElement.attrs;
-            let textX = x + width / 2;
-            let textY = y + height / 2;
-            // 更新text位置
-            text.attr("x", textX).attr("y", textY);
+            text.attr({
+                x: x + width / 2,
+                y: y + height / 2
+            });
+            text.setWidth(width * 0.8);
         }
         if (targetElement.data("in")) {
             let inLines = targetElement.data("in");
@@ -4995,10 +4984,6 @@ class GraphicDesign {
         return this.idPool.shift();
     };
 
-    createElementId() {
-        return this.toElementId(this.nextId());
-    };
-
     /**
      * 字符串ID
      *
@@ -5007,15 +4992,6 @@ class GraphicDesign {
      */
     toElementId(id) {
         return id.toString();
-    };
-
-    getNumberBy(elementId) {
-        let splitIndex = elementId.indexOf('#');
-        if (splitIndex > -1) {
-            return Number(elementId.substring(0, splitIndex));
-        } else {
-            return elementId;
-        }
     };
 
     // 回收id
@@ -5064,16 +5040,7 @@ class GraphicDesign {
         this.elements[id] = target;
     };
 
-    /** 注册容器*/
-    registerContainer(target) {
-        this.containers = this.containers || {};
-        this.containers[target.id] = {
-            elements: {},
-            target: target
-        };
-    };
-
-    isConnect(fromElement, toElement, reverse) {
+    isConnected(fromElement, toElement, reverse) {
         let temp = {};
         let outLines = fromElement.data("out");
         temp[fromElement.id] = fromElement;
@@ -5102,7 +5069,7 @@ class GraphicDesign {
         }
         // 双向判断
         if (reverse) {
-            return this.isConnect(toElement, fromElement, false);
+            return this.isConnected(toElement, fromElement, false);
         }
 
         return false;

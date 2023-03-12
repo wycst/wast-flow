@@ -412,7 +412,7 @@ export class HtmlTextElementData extends HtmlElementData {
 
     // set text
     setText(text) {
-        this.node.innerHTML = `<div title="${text}" style="transform: translate(-50%, -50%);overflow: hidden;word-break: break-all;box-sizing: border-box;${textStyle}">${text}</div>`;
+        this.node.innerHTML = `<div title="${text}" style="transform: translate(-50%, -50%);text-align: center;overflow: hidden;word-break: break-all;box-sizing: border-box;${textStyle}">${text}</div>`;
         Object.assign(this.attrs, {
             text
         });
@@ -420,9 +420,15 @@ export class HtmlTextElementData extends HtmlElementData {
         return this;
     };
 
+    // set width
+    setWidth(width) {
+        this.attr("width", width);
+    };
+
+    // set whiteSpace if nowrap
     setNowrap(nowrap) {
         let innerHtmlNode = this.node.childNodes[0];
-        if(!innerHtmlNode) return;
+        if (!innerHtmlNode) return;
         if (nowrap) {
             Object.assign(innerHtmlNode.style, {
                 maxWidth: "100%",
@@ -461,6 +467,9 @@ export class HtmlTextElementData extends HtmlElementData {
 
 }
 
+/**
+ * svg element data
+ */
 export class SvgElementData extends ElementData {
     constructor(node) {
         super(node);
@@ -482,7 +491,6 @@ export class SvgRectElementData extends SvgElementData {
     constructor(node) {
         super(node);
         this.type = "rect";
-
     };
 }
 

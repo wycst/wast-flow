@@ -250,11 +250,6 @@ estree-walker@^2.0.2:
   resolved "http://192.168.1.113:8181/repository/npm-public/estree-walker/-/estree-walker-2.0.2.tgz#52f010178c2a4c117a7757cfe942adb7d2da4cac"
   integrity sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==
 
-eve-raphael@0.5.0:
-  version "0.5.0"
-  resolved "http://192.168.1.113:8181/repository/npm-public/eve-raphael/-/eve-raphael-0.5.0.tgz#17c754b792beef3fa6684d79cf5a47c63c4cda30"
-  integrity sha512-jrxnPsCGqng1UZuEp9DecX/AuSyAszATSjf4oEcRxvfxa1Oux4KkIPKBAAWWnpdwfARtr+Q0o9aPYWjsROD7ug==
-
 events@^3.3.0:
   version "3.3.0"
   resolved "http://192.168.1.113:8181/repository/npm-public/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
@@ -375,13 +370,6 @@ proxy-from-env@^1.1.0:
   version "1.1.0"
   resolved "http://192.168.1.113:8181/repository/npm-public/proxy-from-env/-/proxy-from-env-1.1.0.tgz#e102f16ca355424865755d2c9e8ea4f24d58c3e2"
   integrity sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==
-
-raphael@^2.3.0:
-  version "2.3.0"
-  resolved "http://192.168.1.113:8181/repository/npm-public/raphael/-/raphael-2.3.0.tgz#eabeb09dba861a1d4cee077eaafb8c53f3131f89"
-  integrity sha512-w2yIenZAQnp257XUWGni4bLMVxpUpcIl7qgxEgDIXtmSypYtlNxfXWpOBxs7LBTps5sDwhRnrToJrMUrivqNTQ==
-  dependencies:
-    eve-raphael "0.5.0"
 
 resolve@^1.19.0:
   version "1.22.1"
