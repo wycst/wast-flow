@@ -515,8 +515,11 @@ export class SvgPathElementData extends SvgElementData {
         } else {
             if (typeof arg0 == "object" && arg0 && len == 1) {
                 let {path, ...props} = arg0;
-                let d = pointsToPathD(path);
-                return super.attr({d, ...props});
+                if(path) {
+                    let d = pointsToPathD(path);
+                    return super.attr({d, ...props});
+                }
+                return super.attr({...props});
             } else {
                 return super.attr(...arguments);
             }

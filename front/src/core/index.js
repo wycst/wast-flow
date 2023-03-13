@@ -5656,6 +5656,50 @@ class GraphicDesign {
         return id ? id : element.id
     };
 
+    /***
+     * 获取前置节点列表(可达当前元素)
+     *
+     * @param target
+     */
+    getFrontNodes(target) {
+        let elements = [];
+        try {
+            let element = null;
+            if(typeof target == "string") {
+                element = this.getElementById(target);
+            } else {
+                element = target;
+            }
+            if(!element) return elements;
+            if(element.type == "path") {
+                element = element.data("to");
+            }
+            if(!element) return elements;
+            // find front nodes
+            let findFrontNodes = (ele, includes) => {
+                let inLines = ele.data && ele.data("in");
+                if(inLines) {
+                    for (let lineId in inLines || {}) {
+                        if (!includes.includes(lineId)) {
+                            includes.push(lineId);
+                            let connect = inLines[lineId];
+                            let from = connect.data("from");
+                            if(from != element && !elements.includes(from)) {
+                                elements.unshift(from);
+                                findFrontNodes(from, includes);
+                            }
+                        }
+                    }
+                }
+            }
+            findFrontNodes(element, []);
+            return elements.map(ele => this.toElementData(ele));
+        } catch(err) {
+            console.error(err);
+        }
+        return elements;
+    };
+
     /**
      * 完成一条路径
      *
