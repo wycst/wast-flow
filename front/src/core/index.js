@@ -9,12 +9,13 @@ import {
     preventDefault
 } from "./util"
 
-import {svgNS, HtmlElementData, HtmlTextElementData} from "./ElementData"
+import {HtmlElementData, HtmlTextElementData, svgNS} from "./ElementData"
 import historyActions from "./modules/history"
 import SvgPaper from "./SvgPaper";
 
 const xmlns = `xmlns="${svgNS}"`;
 const fitStyle = "width: 100%;height: 100%;";
+const {sqrt, min, max, abs, sin, cos, tan, floor, random, atan} = Math;
 const appendSvgInner = (inner) => {
     return `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" ${xmlns}>
                 ${inner}
@@ -45,7 +46,7 @@ const DefaultHtmlTypes = {
 };
 
 const defs = `
-    <path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="connect-arrow-path" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+    <path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="connect-arrow-path"></path>
 `
 
 // 创建指定颜色的marker
@@ -59,8 +60,8 @@ const createColorMarker = (svgDom, color) => {
         marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
         marker.outerHTML = `
-                             <marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
-                                <use xlink:href="#connect-arrow-path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1.0000" stroke="none" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use>
+                             <marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5">
+                                <use xlink:href="#connect-arrow-path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use>
                              </marker>
                         `;
     }
@@ -326,19 +327,19 @@ const extensionTemplate = `
         ${mr('imp', 0, '导入')}
         ${mr('exp', 0, '导出')}
     </div>
-    <div class="flow-popwin" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);z-index: 100;">
-       <div><span class="close-handle" style="color:red;float: right;cursor: pointer;" title="关闭">x</span><h4>基本属性</h4></div>
+    <div class="flow-pop" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);z-index: 100;">
+       <div><span class="close-handle" style="color:red;float: right;cursor: pointer;">x</span><h4>基本属性</h4></div>
        <form class="flow-property-form"></form>
     </div>
     <div class="flow-wrapper" style="position: absolute;width: 100%; height: 100%;left: 0; top: 0">
        <div class="flow-wrapper-body"  style="position: relative;${fitStyle}">
-            <div class="flow-edit-input" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;z-index: 100;"></div>
+            <div class="text-editor" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;z-index: 100;"></div>
        </div>
     </div>
     <div class="flow-tools" style="display:none;z-index: 100;">
         ${tr('overview', '大纲，全貌视图') + tr('zoomReset', '初始大小') + tr('zoomIn', '放大') + tr('zoomOut', '缩小')}
     </div>
-    <input class="flow-import-input" type="file" accept=".json" style="display:none;opacity: 0;width: 0;"/>
+    <input class="flow-import-file" type="file" accept=".json" style="display:none;opacity: 0;width: 0;"/>
 `
 
 // 连接创建时触发钩子
@@ -369,7 +370,6 @@ class GraphicDesign {
      * @param option 配置项
      */
     constructor(dom, option) {
-        // 平移：canvas.style.transform = "translate(100px, 10px)"
         if (typeof dom == "string") {
             dom = document.querySelector(dom);
         }
@@ -389,11 +389,11 @@ class GraphicDesign {
         if (this.option.menu) {
             this.initMenu(dom.children[0]);
         }
-        this.initInput(dom.querySelector(".flow-edit-input"));
-        this.initPopwin(dom.querySelector(".flow-popwin"));
-        this.initFileInput(dom.querySelector(".flow-import-input"));
+        this.initInput(dom.querySelector(".text-editor"));
+        this.initPopwin(dom.querySelector(".flow-pop"));
+        this.initFileInput(dom.querySelector(".flow-import-file"));
 
-        let flowWrapper = dom.querySelector(".flow-wrapper .flow-wrapper-body");
+        let flowWrapper = dom.querySelector(".flow-wrapper-body");
         this.flowWrapper = flowWrapper;
         this.paper = new SvgPaper(flowWrapper, width, height);
         // 连线颜色作为箭头的颜色
@@ -412,27 +412,27 @@ class GraphicDesign {
         // 圈选记录
         this.groupSelectElements = [];
         // 设计模式
-        this.designMode = 'Simple'
+        // this.designMode = 'Simple'
         // 当前选择元素
         this.selectElement = null;
         let me = this;
-        let setElementUUID = (element) => {
-            return me.setElementUUID(element);
+        let setUUID = (element) => {
+            return me.setUUID(element);
         }
         this.nodeDatas = {
-            "gateway": "XOR",
-            "handler": {},
-            "uuid": setElementUUID,
-            "meta": {}
+            gateway: "XOR",
+            handler: {},
+            uuid: setUUID,
+            meta: {}
         };
         // 连线绑定在element中的属性集合
         this.connectDatas = {
-            "priority": 0,
-            "conditionType": "Script",
-            "script": "",
-            "uuid": setElementUUID,
-            "meta": {},
-            "pathStyle": "broken"
+            priority: 0,
+            conditionType: "Script",
+            script: "",
+            uuid: setUUID,
+            meta: {},
+            pathStyle: "broken"
         };
 
         this.initControlElements();
@@ -508,7 +508,7 @@ class GraphicDesign {
 
         // drop active path elements
         attr = {
-            "stroke": "#1DC967",
+            stroke: "#1DC967",
             "stroke-width": 2
         };
         this.dropNw = this.paper.path("").attr({...attr}).hide();
@@ -842,8 +842,8 @@ class GraphicDesign {
         this.menu = menuDom;
         Object.assign(menuDom.style, {
             position: "absolute",
-            left: "0px",
-            top: "0px",
+            left: 0,
+            top: 0,
             width: "64px",
             display: "flex",
             flexDirection: "column",
@@ -1828,10 +1828,10 @@ class GraphicDesign {
                 maxEndx = x + width;
                 maxEndy = y + height;
             } else {
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                maxEndx = Math.max(maxEndx, x + width);
-                maxEndy = Math.max(maxEndy, y + height);
+                minX = min(minX, x);
+                minY = min(minY, y);
+                maxEndx = max(maxEndx, x + width);
+                maxEndy = max(maxEndy, y + height);
             }
         }
 
@@ -1850,7 +1850,7 @@ class GraphicDesign {
         let viewWidth = width - 2 * offsetW, viewHeight = height - 2 * offsetH;
         let scale = 1;
         if (viewWidth < elementsBoundingWidth || viewHeight < elementsBoundingHeight) {
-            scale = Math.min(viewWidth / (elementsBoundingWidth || 1), viewHeight / (elementsBoundingHeight || 1));
+            scale = min(viewWidth / (elementsBoundingWidth || 1), viewHeight / (elementsBoundingHeight || 1));
         }
         let dx = (targetCenter.x - center.x) * scale;
         let dy = (targetCenter.y - center.y) * scale;
@@ -2004,7 +2004,7 @@ class GraphicDesign {
         let s = [];
         let hexDigits = "0123456789abcdef";
         for (var i = 0; i < 36; i++) {
-            s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+            s[i] = hexDigits.substr(floor(random() * 0x10), 1);
         }
         s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
         s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
@@ -2057,7 +2057,7 @@ class GraphicDesign {
         let domEle = createDomElement("div", this.flowWrapper);
         domEle.style.position = "absolute";
         let element = new HtmlTextElementData(domEle, !!this.option.nowrap);
-        element.attr({x,y});
+        element.attr({x, y});
         // Set width separately
         element.setWidth(width);
         return element;
@@ -2068,7 +2068,7 @@ class GraphicDesign {
      *
      * @param element
      */
-    setElementUUID(element) {
+    setUUID(element) {
         if (element && this.option.uuid) {
             let uuid = this.uuid();
             element.data("uuid", uuid);
@@ -2132,7 +2132,7 @@ class GraphicDesign {
      * @param elementEnd
      * @returns {{}}
      */
-    getLinePathData(elementStart, elementEnd) {
+    getPathData(elementStart, elementEnd) {
         let pathData = {};
         let pathD = "";
 
@@ -2323,13 +2323,13 @@ class GraphicDesign {
 
     distanceFromPointToLine(x0, y0, x1, y1, x2, y2) {
         // 求3个边长
-        let a = Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
-        let b = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-        let c = Math.sqrt((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
+        let a = sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
+        let b = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        let c = sqrt((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
         // 根据海伦公式求3个点围成的面积
         // S=√[p(p-a)(p-b)(p-c)]
         let halfP = (a + b + c) / 2;
-        let s = Math.sqrt(halfP * (halfP - a) * (halfP - b) * (halfP - c));
+        let s = sqrt(halfP * (halfP - a) * (halfP - b) * (halfP - c));
         let h = 2 * s / b;
         return h;
     };
@@ -3037,7 +3037,7 @@ class GraphicDesign {
     createHTMLNode(type, x, y, w, h, nodeType) {
         let htmlElement = this.renderHTML(type, x, y, w, h);
         if (!htmlElement) return null;
-        this.setElementUUID(htmlElement);
+        this.setUUID(htmlElement);
         onNodeCreated(htmlElement, this);
         htmlElement.data("handler", {});
         htmlElement.data("nodeType", nodeType);
@@ -3060,7 +3060,7 @@ class GraphicDesign {
         width = width || 100;
         height = height || 80;
         let rect = this.renderRect(x, y, width || 100, height || 80, 4);
-        this.setElementUUID(rect);
+        this.setUUID(rect);
         rect.attr({
             stroke: this.themeColor,
             "stroke-width": this.option.settings.nodeStrokeWith,
@@ -3326,7 +3326,7 @@ class GraphicDesign {
             "stroke-width": 2
         });
         this.setConnectArrow(linkPath, stroke);
-        this.setElementUUID(linkPath);
+        this.setUUID(linkPath);
         let pathStyle = this.option.pathStyle || "broken";
         linkPath.data("pathStyle", pathStyle);
         linkPath.data("from", fromNode);
@@ -3383,7 +3383,7 @@ class GraphicDesign {
         // reset pathElement
         this.removePathRelationRects(pathElement);
         // 直线数据
-        let linePathData = this.getLinePathData(fromElement, toElement);
+        let linePathData = this.getPathData(fromElement, toElement);
         let pathStartPoint = linePathData.start;
         let pathEndPoint = linePathData.end;
 
@@ -3876,24 +3876,24 @@ class GraphicDesign {
         let selectRect = rect.data("host");
         if (dgl) {
 
-            newx = Math.min(rect.attr("x"), dgl.attr("x")) + 7.5;
-            newy = Math.min(rect.attr("y"), dgl.attr("y")) + 7.5;
-            width = Math.abs(rect.attr("x") - dgl.attr("x")) - 10;
-            height = Math.abs(rect.attr("y") - dgl.attr("y")) - 10;
+            newx = min(rect.attr("x"), dgl.attr("x")) + 7.5;
+            newy = min(rect.attr("y"), dgl.attr("y")) + 7.5;
+            width = abs(rect.attr("x") - dgl.attr("x")) - 10;
+            height = abs(rect.attr("y") - dgl.attr("y")) - 10;
 
             // // 子流程设置最小宽高 300 150
             // if (selectRect.data("type") == "mutiSubProcess") {
             //     // 获取容器边界信息
             //     let boundary = this.getContainerBoundary(selectRect.id);
             //     if (boundary) {
-            //         width = Math.max(width, (boundary.boundaryX - newx));
-            //         height = Math.max(height, (boundary.boundaryY - newy));
+            //         width = max(width, (boundary.boundaryX - newx));
+            //         height = max(height, (boundary.boundaryY - newy));
             //     }
             // } else {
             // }
             // 其他默认最小 80 30
-            width = Math.max(width, 80);
-            height = Math.max(height, 30);
+            width = max(width, 80);
+            height = max(height, 30);
 
             var dtn = rect.data("dtn");
             if (dtn == "w" || dtn == "e") {
@@ -3946,7 +3946,7 @@ class GraphicDesign {
                 y: my
             });
         }
-        let virtualData = this.getLinePathData(element, dropEndRect);
+        let virtualData = this.getPathData(element, dropEndRect);
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
@@ -4009,23 +4009,23 @@ class GraphicDesign {
                 if (y1 == y2) {
                     // 同一水平线上
                     x0 = (x1 + x2) / 2;
-                    len = Math.abs(x2 - x1);
-                    y0 = y1 - len / 2 * Math.tan(15 / 180 * PI);
-                    y0 = Math.max(y0, 1);
+                    len = abs(x2 - x1);
+                    y0 = y1 - len / 2 * tan(15 / 180 * PI);
+                    y0 = max(y0, 1);
                 } else if (x1 == x2) {
                     // 暂时不处理
                 } else {
-                    len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                    let h = len / 2 * Math.tan(15 / 180 * PI);
+                    len = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                    let h = len / 2 * tan(15 / 180 * PI);
 
                     let centerX = (x1 + x2) / 2;
                     let centerY = (y1 + y2) / 2;
 
                     // 中垂线斜率 = -1/k',k' = (y2 - y1 / x2 - x1)
                     let k = -(x2 - x1) / (y2 - y1);
-                    let angle = Math.atan(k);
-                    let sinValue = Math.sin(angle);
-                    let cosValue = Math.cos(angle);
+                    let angle = atan(k);
+                    let sinValue = sin(angle);
+                    let cosValue = cos(angle);
 
                     let dy = h * sinValue;
                     let dx = h * cosValue;
@@ -4357,7 +4357,7 @@ class GraphicDesign {
             let fromElementRight = startElement.data("right");
 
             let isToNode = endElement == fromElementRight && endElement.data("toNode") != null;
-            let linePathData = this.getLinePathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight);
+            let linePathData = this.getPathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight);
             let pathStartPoint = linePathData.start;
             startElement.attr({
                 x: pathStartPoint.x - 2.5,
@@ -4381,7 +4381,7 @@ class GraphicDesign {
             let toElementLeft = endElement.data("left");
 
             let isFromNode = startElement == toElementLeft && startElement.data("fromNode") != null;
-            let linePathData = this.getLinePathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement);
+            let linePathData = this.getPathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement);
             let pathEndPoint = linePathData.end;
             endElement.attr({
                 x: pathEndPoint.x - 2.5,
@@ -4490,7 +4490,7 @@ class GraphicDesign {
 
         if (leftElement && leftElement.data("fromNode")) {
             let fromElement = leftElement.data("fromNode");
-            let linePathData = this.getLinePathData(fromElement, controlElement);
+            let linePathData = this.getPathData(fromElement, controlElement);
             let pathStartPoint = linePathData.start;
             leftElement.attr({
                 x: pathStartPoint.x - 2.5,
@@ -4503,7 +4503,7 @@ class GraphicDesign {
 
         if (rightElement && rightElement.data("toNode")) {
             let toElement = rightElement.data("toNode");
-            let linePathData = this.getLinePathData(controlElement, toElement);
+            let linePathData = this.getPathData(controlElement, toElement);
             let pathEndPoint = linePathData.end;
             rightElement.attr({
                 x: pathEndPoint.x - 2.5,
@@ -4625,7 +4625,7 @@ class GraphicDesign {
             t = toNode;
         }
 
-        let linePathData = this.getLinePathData(f, t);
+        let linePathData = this.getPathData(f, t);
         let pathStartPoint = linePathData.start;
 
         startElement.attr({
@@ -4648,7 +4648,7 @@ class GraphicDesign {
             f = fromNode;
         }
         t = toNode;
-        let endLinePathData = this.getLinePathData(f, t);
+        let endLinePathData = this.getPathData(f, t);
         let pathEndPoint = endLinePathData.end;
         endElement.attr({
             x: pathEndPoint.x - 2.5,
@@ -5271,7 +5271,7 @@ class GraphicDesign {
                     continueLoop = true;
                     break;
                 }
-                maxIndex = Math.max(maxIndex, joinIndex);
+                maxIndex = max(maxIndex, joinIndex);
             }
             if (continueLoop) continue;
             matchedElements.push({

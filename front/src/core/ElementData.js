@@ -66,22 +66,23 @@ function setAndRemoveAttr(domElement, attrKey, attrValue) {
  */
 function setAndRemoveStyle(domElement, styleKey, styleValue) {
     let val = `${styleValue}px`;
+    let style = domElement.style;
     switch (styleKey) {
         case 'x': {
-            domElement.style.left = val;
+            style.left = val;
             break;
         }
         case 'y': {
-            domElement.style.top = val;
+            style.top = val;
             break;
         }
         case 'width':
         case 'height': {
-            domElement.style[styleKey] = val;
+            style[styleKey] = val;
             break;
         }
         default: {
-            domElement.style[styleKey] = styleValue ? styleValue.toString() : null;
+            style[styleKey] = styleValue;
         }
     }
 }
