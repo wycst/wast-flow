@@ -81,7 +81,6 @@ export const pathDToPoints = function (pathD) {
     if (Array.isArray(pathD)) {
         return pathD;
     }
-    // example: M225.51392757660167,141L265.5,471L598.3565459610028,383L558.8636330931555,157
     let points = [];
     try {
         if (typeof pathD == "string") {
