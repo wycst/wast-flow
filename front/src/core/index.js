@@ -3955,9 +3955,10 @@ class GraphicDesign {
     };
 
     resizeOnMove(rect, dx, dy, x, y) {
+        let scaleValue = this.scaleValue || 1;
         rect.attr({
-            x: rect.ox + dx,
-            y: rect.oy + dy
+            x: rect.ox + dx / scaleValue,
+            y: rect.oy + dy / scaleValue
         });
         let newx, newy, width, height;
         let diagonal = rect.data("diagonal");
