@@ -1,5 +1,6 @@
 import {createDomElementNs, pointsToPathD} from "./util";
 import {
+    svgNS,
     SvgCircleElementData,
     SvgImageElementData,
     SvgPathElementData,
@@ -8,7 +9,7 @@ import {
 } from "./ElementData"
 
 // svg namespace
-const svgNS = "http://www.w3.org/2000/svg";
+
 /**
  * svg paper
  *

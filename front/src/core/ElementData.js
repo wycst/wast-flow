@@ -1,7 +1,7 @@
 import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 
 // svg namespace
-const svgNS = "http://www.w3.org/2000/svg";
+export const svgNS = "http://www.w3.org/2000/svg";
 // default text font style
 const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
 
