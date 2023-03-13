@@ -5625,7 +5625,7 @@ class GraphicDesign {
     };
 
     completeFrontLines(element, completeColor) {
-        console.log(" completeFrontLines ", this.completeRecords);
+        // console.log(" completeFrontLines ", this.completeRecords);
         if (!element) return;
         if (!this.completeRecords) {
             this.completeRecords = [];
@@ -5767,12 +5767,12 @@ class GraphicDesign {
         if (files && files.length > 0) {
             let file = files[0];
             let name = file.name;
-            console.log(name);
+            // console.log(name);
             if (!name.toLowerCase().endsWith(".json")) {
                 this.alertMessage("只支持JSON格式文件", 5);
                 return;
             }
-            console.log(file);
+            // console.log(file);
             // new FileReader().re
             let fileReader = new FileReader();
             fileReader.readAsText(file, "utf-8");
@@ -5801,7 +5801,7 @@ class GraphicDesign {
                 </foreignObject>
              </svg>`;
 
-        console.log(content);
+        // console.log(content);
         const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(htmlSvgcontent)))}`;
         const img = new Image();
         img.src = src;

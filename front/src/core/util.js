@@ -148,7 +148,6 @@ export const pointsToPathD = function (points) {
             pathD.push(v3);
         }
     }
-    console.log(pathD);
     return pathD.join("");
 }
 
