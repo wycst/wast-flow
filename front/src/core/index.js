@@ -3322,7 +3322,7 @@ class GraphicDesign {
     createPath(fromNode, toNode) {
         let stroke = this.themeColor;
         let linkPath = this.paper.path("").attr({
-            "stroke": stroke,
+            stroke,
             "stroke-width": 2
         });
         this.setConnectArrow(linkPath, stroke);
@@ -3539,7 +3539,7 @@ class GraphicDesign {
     createControlDragRect(x, y, pathElement) {
         let controlDragRect = this.renderRect(x - 2.5, y - 2.5, 5,
             5, 2.5, 2.5).attr({
-            fill: "#ffffff",
+            fill: "#fff",
             stroke: this.themeColor,
             cursor: 'move'
         });
@@ -3899,22 +3899,22 @@ class GraphicDesign {
             if (dtn == "w" || dtn == "e") {
                 // 水平移动
                 selectRect.attr({
-                    "x": newx,
-                    "width": width
+                    x: newx,
+                    width
                 });
             } else if (dtn == "n" || dtn == "s") {
                 // 垂 直移动
                 selectRect.attr({
-                    "y": newy,
-                    "height": height
+                    y: newy,
+                    height
                 });
             } else {
                 // 对角移动
                 selectRect.attr({
-                    "x": newx,
-                    "y": newy,
-                    "width": width,
-                    "height": height
+                    x: newx,
+                    y: newy,
+                    width,
+                    height
                 });
             }
         }
@@ -3950,9 +3950,9 @@ class GraphicDesign {
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
-                "stroke": this.themeColor,
+                stroke: this.themeColor,
                 "stroke-width": 2,
-                "fill": this.themeColor,
+                fill: this.themeColor,
                 "stroke-dasharray": "2 2"
             });
             linkTool.data("virtualPath", virtualPath);
