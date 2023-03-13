@@ -3383,7 +3383,7 @@ class GraphicDesign {
         // reset pathElement
         this.removePathRelationRects(pathElement);
         // 直线数据
-        let linePathData = this.getLinePathData(fromElement, toElement, false);
+        let linePathData = this.getLinePathData(fromElement, toElement);
         let pathStartPoint = linePathData.start;
         let pathEndPoint = linePathData.end;
 
@@ -3946,7 +3946,7 @@ class GraphicDesign {
                 y: my
             });
         }
-        let virtualData = this.getLinePathData(element, dropEndRect, true);
+        let virtualData = this.getLinePathData(element, dropEndRect);
         let virtualPath = linkTool.data("virtualPath");
         if (virtualPath == null) {
             virtualPath = this.paper.path(virtualData.data).attr({
@@ -4381,7 +4381,7 @@ class GraphicDesign {
             let toElementLeft = endElement.data("left");
 
             let isFromNode = startElement == toElementLeft && startElement.data("fromNode") != null;
-            let linePathData = this.getLinePathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement, false);
+            let linePathData = this.getLinePathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement);
             let pathEndPoint = linePathData.end;
             endElement.attr({
                 x: pathEndPoint.x - 2.5,
@@ -4625,7 +4625,7 @@ class GraphicDesign {
             t = toNode;
         }
 
-        let linePathData = this.getLinePathData(f, t, false);
+        let linePathData = this.getLinePathData(f, t);
         let pathStartPoint = linePathData.start;
 
         startElement.attr({
@@ -4648,7 +4648,7 @@ class GraphicDesign {
             f = fromNode;
         }
         t = toNode;
-        let endLinePathData = this.getLinePathData(f, t, false);
+        let endLinePathData = this.getLinePathData(f, t);
         let pathEndPoint = endLinePathData.end;
         endElement.attr({
             x: pathEndPoint.x - 2.5,
@@ -5822,8 +5822,8 @@ class GraphicDesign {
 
 // 针对流程图的指定动作做历史管理
 // 创建元素（节点/连线）, 拖拽位置变化, 删除元素， 整体平移， 属性设置等
-let {properties, methods} = historyActions;
-Object.assign(GraphicDesign.prototype, properties);
+let {props, methods} = historyActions;
+Object.assign(GraphicDesign.prototype, props);
 Object.assign(GraphicDesign.prototype, methods);
 
 /**

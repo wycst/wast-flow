@@ -4,7 +4,7 @@ import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 export const svgNS = "http://www.w3.org/2000/svg";
 // default text font style
 const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
-
+const functionType = "function";
 /***
  * set or get prop value
  *
@@ -65,21 +65,19 @@ function setAndRemoveAttr(domElement, attrKey, attrValue) {
  * @param styleValue
  */
 function setAndRemoveStyle(domElement, styleKey, styleValue) {
+    let val = `${styleValue}px`;
     switch (styleKey) {
         case 'x': {
-            domElement.style.left = `${styleValue}px`;
+            domElement.style.left = val;
             break;
         }
         case 'y': {
-            domElement.style.top = `${styleValue}px`;
+            domElement.style.top = val;
             break;
         }
-        case 'width': {
-            domElement.style.width = `${styleValue}px`;
-            break;
-        }
+        case 'width':
         case 'height': {
-            domElement.style.height = `${styleValue}px`;
+            domElement.style[styleKey] = val;
             break;
         }
         default: {
@@ -99,13 +97,13 @@ let seq = 0;
  * @returns {string}
  */
 export function id() {
-    let time = Date.now();
-    let seconds = time - time % 1000;
+    let time = Date.now(), n = 1000;
+    let seconds = time - time % n;
     if (lastSeconds == seconds) {
         if (seq == 999) {
             while (lastSeconds == seconds) {
                 time = Date.now();
-                seconds = time - time % 1000;
+                seconds = time - time % n;
             }
             seq = 0;
         }
@@ -119,7 +117,7 @@ export function id() {
 /**
  * 元素数据类定义对象
  */
-export default class ElementData {
+class ElementData {
 
     /**
      * 元素数据构造函数
@@ -131,10 +129,8 @@ export default class ElementData {
         this.datas = {};
         // 节点属性（可修改属性）
         this.attrs = {};
-        // 生成id
-        let elementId = id();
         // 设置id
-        this.id = elementId;
+        this.id = id();
     };
 
     // Change of response id
@@ -174,13 +170,13 @@ export default class ElementData {
         const onDragStart = (event) => {
             const {pageX, pageY} = event;
             Object.assign(dragContext, {pageX, pageY})
-            if (typeof startFn == 'function') {
+            if (typeof startFn == functionType) {
                 startFn.call(me, event);
             }
         }
         // move
         const onDragMove = (event) => {
-            if (typeof moveFn == 'function') {
+            if (typeof moveFn == functionType) {
                 // computer dx, dy
                 const {pageX, pageY} = event;
                 let {pageX: x1, pageY: y1} = dragContext;
@@ -189,7 +185,7 @@ export default class ElementData {
         }
         // up(end)
         const onDragUp = (event) => {
-            if (typeof upFn == 'function') {
+            if (typeof upFn == functionType) {
                 upFn.call(me, event);
             }
             delete dragContext.pageX;
@@ -279,10 +275,10 @@ export default class ElementData {
      * @returns {ElementData}
      */
     hover(mouseoverFn, mouseoutFn) {
-        if (typeof mouseoverFn == "function") {
+        if (typeof mouseoverFn == functionType) {
             this.mouseover(mouseoverFn);
         }
-        if (typeof mouseoutFn == "function") {
+        if (typeof mouseoutFn == functionType) {
             this.mouseout(mouseoutFn);
         }
         return this;
