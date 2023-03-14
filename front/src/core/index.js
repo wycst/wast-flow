@@ -16,6 +16,7 @@ import SvgPaper from "./SvgPaper";
 const xmlns = `xmlns="${svgNS}"`;
 const fitStyle = "width: 100%;height: 100%;";
 const {sqrt, min, max, abs, sin, cos, tan, floor, random, atan} = Math;
+const {assign, keys, values} = Object;
 const appendSvgInner = (inner) => {
     return `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" ${xmlns}>
                 ${inner}
@@ -373,18 +374,18 @@ class GraphicDesign {
         if (typeof dom == "string") {
             dom = document.querySelector(dom);
         }
-        this.option = Object.assign({}, defaultOption, option || {});
+        this.option = assign({}, defaultOption, option || {});
         if (!this.option.settings) {
             this.option.settings = DefaultSettings;
         } else {
-            this.option.settings = Object.assign({}, DefaultSettings, this.option.settings);
+            this.option.settings = assign({}, DefaultSettings, this.option.settings);
         }
         let {width = '100%', height = '100%'} = this.option;
         let rootStyle = {
             position: "relative",
             overflow: this.option.overflow || "hidden"
         };
-        Object.assign(dom.style, rootStyle);
+        assign(dom.style, rootStyle);
         dom.innerHTML = extensionTemplate;
         if (this.option.menu) {
             this.initMenu(dom.children[0]);
@@ -808,7 +809,7 @@ class GraphicDesign {
     setWrapperStyle(style) {
         let container = this.flowWrapper;
         if (style && typeof style == 'object') {
-            Object.assign(container.style, style);
+            assign(container.style, style);
         }
     };
 
@@ -828,7 +829,7 @@ class GraphicDesign {
         }
         // 设置bg图片
         // this.setContainerStyle(parentStyle);
-        Object.assign(this.dom.style, parentStyle);
+        assign(this.dom.style, parentStyle);
     };
 
     // theme color
@@ -840,7 +841,7 @@ class GraphicDesign {
     initMenu(menuDom) {
         let me = this;
         this.menu = menuDom;
-        Object.assign(menuDom.style, {
+        assign(menuDom.style, {
             position: "absolute",
             left: 0,
             top: 0,
@@ -904,7 +905,7 @@ class GraphicDesign {
                 let newLeft = left + dx <= 0 ? 0 : left + dx;
                 let newTop = top + dy <= 0 ? 0 : top + dy;
                 // 更新菜单的位置
-                Object.assign(menuDom.style, {
+                assign(menuDom.style, {
                     left: `${newLeft}px`,
                     top: `${newTop}px`,
                 });
@@ -966,7 +967,7 @@ class GraphicDesign {
 
         // 支持菜单拖拽移动
         if (typeof this.option.menu == "object" && this.option.menu.draggable) {
-            Object.assign(menuDom.style, {
+            assign(menuDom.style, {
                 cursor: "move"
             });
             // 拖动处理
@@ -985,7 +986,7 @@ class GraphicDesign {
             if (type == "or" || type == "xor" || type == "and" || type == "join") {
                 width = height = 45;
             }
-            Object.assign(item.style, {
+            assign(item.style, {
                 width: `${width}px`,
                 height: `${height}px`,
                 margin: "10px 0 4px 0"
@@ -1050,7 +1051,7 @@ class GraphicDesign {
                     preventDefault(event);
                 });
             } else {
-                Object.assign(item.style, {
+                assign(item.style, {
                     cursor: "move"
                 });
                 // item.style.color = this.themeColor;
@@ -1084,7 +1085,7 @@ class GraphicDesign {
             style = {};
         }
         if (this.menu) {
-            Object.assign(this.menu.style, style || {});
+            assign(this.menu.style, style || {});
         }
     };
 
@@ -1098,7 +1099,7 @@ class GraphicDesign {
             style = {};
         }
         if (this.flowToolsDom) {
-            Object.assign(this.flowToolsDom.style, style || {});
+            assign(this.flowToolsDom.style, style || {});
         }
     };
 
@@ -1128,7 +1129,7 @@ class GraphicDesign {
     initPopwin(popwinDom) {
         let me = this;
         this.popwin = popwinDom;
-        Object.assign(popwinDom.style, {
+        assign(popwinDom.style, {
             // display: "none",
             top: "150px",
             padding: "0 20px 20px",
@@ -1191,7 +1192,7 @@ class GraphicDesign {
             ];
             if (type == "path") {
                 let fromElementOutPaths = element.data("from").data("out");
-                let uniqueConnect = Object.keys(fromElementOutPaths).length == 1;
+                let uniqueConnect = keys(fromElementOutPaths).length == 1;
                 propertyModels.push({
                     label: "元素名称",
                     value: element.data("text").attr("text") || "",
@@ -1382,7 +1383,7 @@ class GraphicDesign {
         this.propertyForm.innerHTML = htmlCodes.join("");
         // 样式设置,事件处理
         this.propertyForm.querySelectorAll(".flow-form-item").forEach(item => {
-            Object.assign(item.style, {
+            assign(item.style, {
                 display: "flex",
                 flexDirection: "column",
                 margin: "8px",
@@ -1390,7 +1391,7 @@ class GraphicDesign {
             });
 
             let inputDom = item.children[1];
-            Object.assign(inputDom.style, {
+            assign(inputDom.style, {
                 height: "28px",
                 lineHeight: "28px",
                 border: "1px solid #dcdfe6"
@@ -1450,7 +1451,7 @@ class GraphicDesign {
             // 给input赋值
             this.input.innerHTML = textValue;
             // 设置input的位置
-            Object.assign(this.input.style, {
+            assign(this.input.style, {
                 // left: x + this.translateX + "px",
                 // top: y + this.translateY + "px",
                 left: x + "px",
@@ -1521,7 +1522,7 @@ class GraphicDesign {
             let me = this;
             let flowToolsDom = this.dom.querySelector(".flow-tools");
             this.flowToolsDom = flowToolsDom;
-            Object.assign(flowToolsDom.style, {
+            assign(flowToolsDom.style, {
                 position: "absolute",
                 right: "5px",
                 top: "75%",
@@ -1540,7 +1541,7 @@ class GraphicDesign {
             flowToolsDom.querySelectorAll(".tool-item").forEach(item => {
                 let type = item.dataset.type;
                 let width = 36, height = 36;
-                Object.assign(item.style, {
+                assign(item.style, {
                     width: `${width}px`,
                     height: `${height}px`,
                     margin: "2px 0",
@@ -1813,7 +1814,7 @@ class GraphicDesign {
      * 返回大纲视图（全节点视图）
      */
     overview() {
-        let elementValues = Object.values(this.elements);
+        let elementValues = values(this.elements);
         // 设置一个矩形边界使所有的节点都在矩形范围内
         let minX = 0, minY = 0;
         let maxEndx = 0, maxEndy = 0, onceFlag = true;
@@ -2187,13 +2188,8 @@ class GraphicDesign {
             }
 
         } else if (endCenterX < startCenterX && endCenterY == startCenterY) {
-
-            pathStart.x = startX;
-            pathStart.y = startCenterY;
-
-            pathEnd.x = endX + endWidth;
-            pathEnd.y = endCenterY;
-
+            assign(pathStart, {x: startX, y: startCenterY});
+            assign(pathEnd, {x: endX + endWidth, y: endCenterY});
         } else if (endCenterX < startCenterX && endCenterY > startCenterY) {
 
             let horizontalStartPoint = {};
@@ -2224,23 +2220,12 @@ class GraphicDesign {
                     endCenterX, endCenterY, verticalEndPoint.x);
                 pathEnd = verticalEndPoint;
             }
-
         } else if (endCenterX == startCenterX && endCenterY < startCenterY) {
-
-            pathStart.x = startCenterX;
-            pathStart.y = startY;
-
-            pathEnd.x = endCenterX;
-            pathEnd.y = endY + endHeight;
-
+            assign(pathStart, {x: startCenterX, y: startY});
+            assign(pathEnd, {x: endCenterX, y: endY + endHeight});
         } else if (endCenterX == startCenterX && endCenterY > startCenterY) {
-
-            pathStart.x = startCenterX;
-            pathStart.y = startY + startHeight;
-
-            pathEnd.x = endCenterX;
-            pathEnd.y = endY;
-
+            assign(pathStart, {x: startCenterX, y: startY + startHeight});
+            assign(pathEnd, {x: endCenterX, y: endY});
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
 
             let horizontalStartPoint = {};
@@ -2271,16 +2256,9 @@ class GraphicDesign {
                     endCenterX, endCenterY, verticalEndPoint.x);
                 pathEnd = verticalEndPoint;
             }
-
-
         } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
-
-            pathStart.x = startX + startWidth;
-            pathStart.y = endCenterY;
-
-            pathEnd.x = endX;
-            pathEnd.y = endCenterY;
-
+            assign(pathStart, {x: startX + startWidth, y: endCenterY});
+            assign(pathEnd, {x: endX, y: endCenterY});
         } else {
             // endCenterX > startCenterX && endCenterY > startCenterY
             let horizontalStartPoint = {};
@@ -2379,7 +2357,7 @@ class GraphicDesign {
             if (this.enableHistory()) {
                 let {in: inlines = {}, out: outLines = {}} = element.data();
                 let type = element.type;
-                if (type == "path" || (Object.keys(inlines).length == 0 && Object.keys(outLines).length == 0)) {
+                if (type == "path" || (keys(inlines).length == 0 && keys(outLines).length == 0)) {
                     let elementId = element.id;
                     let elementData = this.toElementData(element);
                     action = {
@@ -2727,7 +2705,7 @@ class GraphicDesign {
         this.updateWrapperTransform();
         // if(this.shiftMode) {
         //     this.paper.canvas.childNodes.forEach(child => {
-        //         Object.assign(child.style, {
+        //         assign(child.style, {
         //             transform: `translate(${x}px, ${y}px)`
         //         });
         //     });
@@ -2736,7 +2714,7 @@ class GraphicDesign {
         //     for (let elementId in this.elements) {
         //         let element = this.elements[elementId];
         //         if (element.type == "html") {
-        //             Object.assign(element.node.style, {
+        //             assign(element.node.style, {
         //                 transform: `translate(${x}px, ${y}px)`
         //             });
         //         }
@@ -2751,7 +2729,7 @@ class GraphicDesign {
         let y = this.translateY;
         let scaleValue = this.scaleValue || 1;
         // flow wrapper
-        Object.assign(this.flowWrapper.style, {
+        assign(this.flowWrapper.style, {
             transform: `translate(${x}px, ${y}px) scale(${scaleValue})`,
             // minWidth: `${newWidth}px`,
             // minHeight: `${newHeight}px`,
@@ -2768,7 +2746,7 @@ class GraphicDesign {
         // }
 
         // // offset
-        // Object.assign(wrapperParent.style, {
+        // assign(wrapperParent.style, {
         //     transform: `translate(${ox}px, ${oy}px)`
         // });
 
@@ -3183,7 +3161,7 @@ class GraphicDesign {
         } else if (componentType == "image") {
             //
             // element = this.loadImageElement(node, editable);
-            // element.data("meta", Object.assign(node.meta, element.data("meta") || {}));
+            // element.data("meta", assign(node.meta, element.data("meta") || {}));
         }
         nodeElement.id = id;
         if (attrs.rx) {
@@ -3338,7 +3316,7 @@ class GraphicDesign {
 
         let fromNodeType = fromNode.data("nodeType");
         let isFromAnd = fromNode.data("gateway") == "AND";
-        let conditionTypeFlag = Object.keys(outLines).length > 1 && !isFromAnd;
+        let conditionTypeFlag = keys(outLines).length > 1 && !isFromAnd;
         if (!conditionTypeFlag) {
             if (fromNodeType == "Split" && !isFromAnd) {
                 conditionTypeFlag = true;
@@ -3736,7 +3714,7 @@ class GraphicDesign {
     getVisibleNodes() {
         let elements = this.elements;
         let nodes = [];
-        for (let element of Object.values(elements)) {
+        for (let element of values(elements)) {
             if (element.type == "path") continue;
             nodes.push(element);
         }
@@ -4790,15 +4768,15 @@ class GraphicDesign {
         let outLines = fromElement.data("out");
         temp[fromElement.id] = fromElement;
         let testCount = 0;
-        while (outLines && Object.getOwnPropertyNames(outLines).length) {
-            var nextErgodicLines = {};
-            for (var i in outLines) {
-                var link = outLines[i];
-                var to = link.data("to");
+        while (outLines && keys(outLines).length) {
+            let nextErgodicLines = {};
+            for (let i in outLines) {
+                let link = outLines[i];
+                let to = link.data("to");
                 if (to != toElement) {
                     if (!temp[to.id]) {
-                        var nextOutLines = to.data("out");
-                        for (var j in nextOutLines) {
+                        let nextOutLines = to.data("out");
+                        for (let j in nextOutLines) {
                             nextErgodicLines[j] = nextOutLines[j];
                         }
                     }
@@ -4878,7 +4856,7 @@ class GraphicDesign {
         let type = connect.type;
         if (type != "path") return null;
         let source = connect.data("from");
-        return source && Object.keys(source.data("out")).length == 1;
+        return source && keys(source.data("out")).length == 1;
     };
 
     /**
@@ -4992,7 +4970,7 @@ class GraphicDesign {
                 delete component.textAttrs;
             }
             // node
-            Object.assign(node, {
+            assign(node, {
                 id: element.id,
                 name: textEle && textEle.attr("text"),
                 type: nodeType,
@@ -5171,25 +5149,25 @@ class GraphicDesign {
                 let outLines = element.data("out") || {};
                 if (nodeType == "Start") {
                     startNodeIds.push(id);
-                    if (Object.keys(outLines).length == 0) {
+                    if (keys(outLines).length == 0) {
                         this.setSelectElement(element);
                         return "开始节点没有定义出口";
                     }
                 } else if (nodeType == "End") {
                     endNodeIds.push(id);
-                    if (Object.keys(inLines).length == 0) {
+                    if (keys(inLines).length == 0) {
                         this.setSelectElement(element);
                         return "结束节点没有定义入口";
                     }
                 } else {
                     // 没有定义入口
-                    if (Object.keys(inLines).length == 0) {
+                    if (keys(inLines).length == 0) {
                         this.setSelectElement(element);
                         return `节点[id=${id},name=${name}]没有定义入口`
                     }
                     // 判断是否有出口
                     let outLineKeys = [];
-                    if ((outLineKeys = Object.keys(outLines)).length == 0) {
+                    if ((outLineKeys = keys(outLines)).length == 0) {
                         this.setSelectElement(element);
                         return `节点[id=${id},name=${name}]没有定义出口`
                     }
@@ -5301,7 +5279,7 @@ class GraphicDesign {
             return [[nodeElement.id]];
         }
         let outLines = nodeElement.data("out");
-        if (!outLines || Object.keys(outLines).length == 0) {
+        if (!outLines || keys(outLines).length == 0) {
             // 理论上代码不可达，没有出口的节点视为出口
             return [[nodeElement.id]];
         }
@@ -5310,8 +5288,7 @@ class GraphicDesign {
         for (let lineId in outLines) {
             let toElement = outLines[lineId].data("to");
             if (!excludeKeys.includes(lineId)) {
-                let keys = [...excludeKeys, lineId];
-                let outExitPaths = this.getExitPaths(toElement, keys);
+                let outExitPaths = this.getExitPaths(toElement, [...excludeKeys, lineId]);
                 for (let outExitPath of outExitPaths) {
                     outExitPath.unshift(nodeElement.id);
                     exitPaths.push(outExitPath);
@@ -5340,7 +5317,7 @@ class GraphicDesign {
                 historyIds.push(id);
             }
             let outLines = element.data("out") || {};
-            if (Object.keys(outLines).length == 0) {
+            if (keys(outLines).length == 0) {
                 return false;
             }
             for (let lineId in outLines) {
@@ -5382,7 +5359,7 @@ class GraphicDesign {
      */
     getElementByUUID(uuid) {
         if (!uuid) return null;
-        let elementValues = Object.values(this.elements);
+        let elementValues = values(this.elements);
         for (let elementValue of elementValues) {
             let data = elementValue.data();
             if (data.uuid == uuid) {
@@ -5729,8 +5706,6 @@ class GraphicDesign {
                 this.alertMessage("只支持JSON格式文件", 5);
                 return;
             }
-            // console.log(file);
-            // new FileReader().re
             let fileReader = new FileReader();
             fileReader.readAsText(file, "utf-8");
             fileReader.onload = (evt) => {
@@ -5823,8 +5798,8 @@ class GraphicDesign {
 // 针对流程图的指定动作做历史管理
 // 创建元素（节点/连线）, 拖拽位置变化, 删除元素， 整体平移， 属性设置等
 let {props, methods} = historyActions;
-Object.assign(GraphicDesign.prototype, props);
-Object.assign(GraphicDesign.prototype, methods);
+assign(GraphicDesign.prototype, props);
+assign(GraphicDesign.prototype, methods);
 
 /**
  * 简化构建实例api

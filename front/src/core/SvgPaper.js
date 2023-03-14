@@ -24,7 +24,6 @@ export default class SvgPaper {
         } else {
             parentNode = selector;
         }
-        this.$parent = parentNode;
         let svg = createDomElementNs(svgNS, 'svg', parentNode, {
             width: width || "100%",
             height: height || "100%",
