@@ -20,8 +20,8 @@ export const browser = {
  */
 export const createDomElement = function (tagName, parent, attrs) {
     let dom = document.createElement(tagName);
-    parent.appendChild(dom);
     setDomAttrs(dom, attrs)
+    parent.appendChild(dom);
     return dom;
 }
 
@@ -35,8 +35,8 @@ export const createDomElement = function (tagName, parent, attrs) {
  */
 export const createDomElementNs = function (ns, tagName, parent, attrs) {
     let dom = document.createElementNS(ns, tagName);
-    parent.appendChild(dom);
     setDomAttrs(dom, attrs)
+    parent.appendChild(dom);
     return dom;
 }
 
