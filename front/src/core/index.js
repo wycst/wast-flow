@@ -3,10 +3,12 @@ import {
     bindDomEvent,
     browser,
     createDomElement,
+    distanceToLine,
     exportBlob,
     exportTextFile,
     pathDToPoints,
-    preventDefault
+    preventDefault,
+    uuid
 } from "./util"
 
 import {HtmlElementData, HtmlTextElementData, svgNS} from "./ElementData"
@@ -15,7 +17,7 @@ import SvgPaper from "./SvgPaper";
 
 const xmlns = `xmlns="${svgNS}"`;
 const fitStyle = "width: 100%;height: 100%;";
-const {sqrt, min, max, abs, sin, cos, tan, floor, random, atan} = Math;
+const {sqrt, min, max, abs, sin, cos, tan, atan} = Math;
 const {assign, keys, values} = Object;
 const appendSvgInner = (inner) => {
     return `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" ${xmlns}>
@@ -540,10 +542,10 @@ class GraphicDesign {
             "stroke-dasharray": "12 12"
         };
         // 水平对齐线使用rect替代，只需要更新y即可
-        this.horizontalLine = this.renderRect(0, 0, 0, 0.0001).attr(lineAttr).hide();
+        this.horizontalLine = this.renderRect(0, 0, 0, 0.0001).attr({...lineAttr}).hide();
 
         // 垂直对齐线使用rect替代，只需要更新x即可
-        this.verticalLine = this.renderRect(0, 0, 0.0001, 0).attr(lineAttr).hide();
+        this.verticalLine = this.renderRect(0, 0, 0.0001, 0).attr({...lineAttr}).hide();
 
         // 连线矩形（解决连线选择难问题）
         this.connectRect = this.renderRect(0, 0, 0, 0).attr({
@@ -1999,22 +2001,6 @@ class GraphicDesign {
     };
 
     /**
-     * 生成UUID
-     */
-    uuid() {
-        let s = [];
-        let hexDigits = "0123456789abcdef";
-        for (var i = 0; i < 36; i++) {
-            s[i] = hexDigits.substr(floor(random() * 0x10), 1);
-        }
-        s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
-        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
-        s[8] = s[13] = s[18] = s[23] = "-";
-        let uuid = s.join("");
-        return uuid;
-    };
-
-    /**
      * 根据html创建节点（以div作为容器）
      */
     renderHTML(type, x, y, width, height) {
@@ -2071,9 +2057,9 @@ class GraphicDesign {
      */
     setUUID(element) {
         if (element && this.option.uuid) {
-            let uuid = this.uuid();
-            element.data("uuid", uuid);
-            return uuid;
+            let val = uuid();
+            element.data("uuid", val);
+            return val;
         }
         return null;
     };
@@ -2134,9 +2120,6 @@ class GraphicDesign {
      * @returns {{}}
      */
     getPathData(elementStart, elementEnd) {
-        let pathData = {};
-        let pathD = "";
-
         let startX = elementStart.attr("x") - 5;
         let startY = elementStart.attr("y") - 5;
         let startWidth = elementStart.attr("width") + 10;
@@ -2154,8 +2137,8 @@ class GraphicDesign {
         let endCenterX = endX + endWidth / 2;
         let endCenterY = endY + endHeight / 2;
 
-        let pathStart = {};
-        let pathEnd = {};
+        let start = {};
+        let end = {};
         if (endCenterX < startCenterX && endCenterY < startCenterY) {
 
             let horizontalStartPoint = {};
@@ -2164,13 +2147,13 @@ class GraphicDesign {
                 this.getCoordinate(startCenterY, startCenterX, endCenterY, endCenterX, horizontalStartPoint.y);
 
             if (horizontalStartPoint.x >= startX) {
-                pathStart = horizontalStartPoint;
+                start = horizontalStartPoint;
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
-                pathStart = verticalStartPoint;
+                start = verticalStartPoint;
             }
 
             let horizontalEndPoint = {};
@@ -2178,18 +2161,18 @@ class GraphicDesign {
             horizontalEndPoint.x = this.getCoordinate(startCenterY, startCenterX,
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX && horizontalEndPoint.x <= endX + endWidth) {
-                pathEnd = horizontalEndPoint;
+                end = horizontalEndPoint;
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX + endWidth;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
-                pathEnd = verticalEndPoint;
+                end = verticalEndPoint;
             }
 
         } else if (endCenterX < startCenterX && endCenterY == startCenterY) {
-            assign(pathStart, {x: startX, y: startCenterY});
-            assign(pathEnd, {x: endX + endWidth, y: endCenterY});
+            assign(start, {x: startX, y: startCenterY});
+            assign(end, {x: endX + endWidth, y: endCenterY});
         } else if (endCenterX < startCenterX && endCenterY > startCenterY) {
 
             let horizontalStartPoint = {};
@@ -2198,13 +2181,13 @@ class GraphicDesign {
                 this.getCoordinate(startCenterY, startCenterX, endCenterY, endCenterX, horizontalStartPoint.y);
 
             if (horizontalStartPoint.x >= startX) {
-                pathStart = horizontalStartPoint;
+                start = horizontalStartPoint;
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
-                pathStart = verticalStartPoint;
+                start = verticalStartPoint;
             }
 
             let horizontalEndPoint = {};
@@ -2212,20 +2195,20 @@ class GraphicDesign {
             horizontalEndPoint.x = this.getCoordinate(startCenterY, startCenterX,
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX && horizontalEndPoint.x <= endX + endWidth) {
-                pathEnd = horizontalEndPoint;
+                end = horizontalEndPoint;
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX + endWidth;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
-                pathEnd = verticalEndPoint;
+                end = verticalEndPoint;
             }
         } else if (endCenterX == startCenterX && endCenterY < startCenterY) {
-            assign(pathStart, {x: startCenterX, y: startY});
-            assign(pathEnd, {x: endCenterX, y: endY + endHeight});
+            assign(start, {x: startCenterX, y: startY});
+            assign(end, {x: endCenterX, y: endY + endHeight});
         } else if (endCenterX == startCenterX && endCenterY > startCenterY) {
-            assign(pathStart, {x: startCenterX, y: startY + startHeight});
-            assign(pathEnd, {x: endCenterX, y: endY});
+            assign(start, {x: startCenterX, y: startY + startHeight});
+            assign(end, {x: endCenterX, y: endY});
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
 
             let horizontalStartPoint = {};
@@ -2234,13 +2217,13 @@ class GraphicDesign {
                 this.getCoordinate(startCenterY, startCenterX, endCenterY, endCenterX, horizontalStartPoint.y);
 
             if (horizontalStartPoint.x <= startX + startWidth) {
-                pathStart = horizontalStartPoint;
+                start = horizontalStartPoint;
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX + startWidth;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
-                pathStart = verticalStartPoint;
+                start = verticalStartPoint;
             }
 
             let horizontalEndPoint = {};
@@ -2248,17 +2231,17 @@ class GraphicDesign {
             horizontalEndPoint.x = this.getCoordinate(startCenterY, startCenterX,
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX) {
-                pathEnd = horizontalEndPoint;
+                end = horizontalEndPoint;
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
-                pathEnd = verticalEndPoint;
+                end = verticalEndPoint;
             }
         } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
-            assign(pathStart, {x: startX + startWidth, y: endCenterY});
-            assign(pathEnd, {x: endX, y: endCenterY});
+            assign(start, {x: startX + startWidth, y: endCenterY});
+            assign(end, {x: endX, y: endCenterY});
         } else {
             // endCenterX > startCenterX && endCenterY > startCenterY
             let horizontalStartPoint = {};
@@ -2267,13 +2250,13 @@ class GraphicDesign {
                 this.getCoordinate(startCenterY, startCenterX, endCenterY, endCenterX, horizontalStartPoint.y);
 
             if (horizontalStartPoint.x <= startX + startWidth) {
-                pathStart = horizontalStartPoint;
+                start = horizontalStartPoint;
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX + startWidth;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
-                pathStart = verticalStartPoint;
+                start = verticalStartPoint;
             }
 
             let horizontalEndPoint = {};
@@ -2281,35 +2264,16 @@ class GraphicDesign {
             horizontalEndPoint.x = this.getCoordinate(startCenterY, startCenterX,
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX) {
-                pathEnd = horizontalEndPoint;
+                end = horizontalEndPoint;
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
-                pathEnd = verticalEndPoint;
+                end = verticalEndPoint;
             }
         }
-
-        pathD += "M" + pathStart.x + "," + pathStart.y;
-        pathD += "L" + pathEnd.x + "," + pathEnd.y;
-        pathData.data = pathD;
-        pathData.start = pathStart;
-        pathData.end = pathEnd;
-        return pathData;
-    };
-
-    distanceFromPointToLine(x0, y0, x1, y1, x2, y2) {
-        // 求3个边长
-        let a = sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
-        let b = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-        let c = sqrt((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
-        // 根据海伦公式求3个点围成的面积
-        // S=√[p(p-a)(p-b)(p-c)]
-        let halfP = (a + b + c) / 2;
-        let s = sqrt(halfP * (halfP - a) * (halfP - b) * (halfP - c));
-        let h = 2 * s / b;
-        return h;
+        return {data: "M" + start.x + "," + start.y + "L" + end.x + "," + end.y, start, end};
     };
 
     /**
@@ -2610,10 +2574,10 @@ class GraphicDesign {
         let hiddenPathEndX = x + width + 5;
         let hiddenPathEndY = y + height + 5;
 
-        dropNw.attr("path", "M" + (hiddenPathStartX + 5) + "," + hiddenPathStartY + "H" + hiddenPathStartX + "V" + (hiddenPathStartY + 5)).show();
-        dropNe.attr("path", "M" + (hiddenPathEndX - 5) + "," + hiddenPathStartY + "H" + hiddenPathEndX + "V" + (hiddenPathStartY + 5)).show();
-        dropSw.attr("path", "M" + (hiddenPathStartX + 5) + "," + hiddenPathEndY + "H" + hiddenPathStartX + "V" + (hiddenPathEndY - 5)).show();
-        dropSe.attr("path", "M" + (hiddenPathEndX - 5) + "," + hiddenPathEndY + "H" + hiddenPathEndX + "V" + (hiddenPathEndY - 5)).show();
+        dropNw.attr("d", "M" + (hiddenPathStartX + 5) + "," + hiddenPathStartY + "H" + hiddenPathStartX + "V" + (hiddenPathStartY + 5)).show();
+        dropNe.attr("d", "M" + (hiddenPathEndX - 5) + "," + hiddenPathStartY + "H" + hiddenPathEndX + "V" + (hiddenPathStartY + 5)).show();
+        dropSw.attr("d", "M" + (hiddenPathStartX + 5) + "," + hiddenPathEndY + "H" + hiddenPathStartX + "V" + (hiddenPathEndY - 5)).show();
+        dropSe.attr("d", "M" + (hiddenPathEndX - 5) + "," + hiddenPathEndY + "H" + hiddenPathEndX + "V" + (hiddenPathEndY - 5)).show();
     };
 
     hideDropRect() {
@@ -3366,7 +3330,7 @@ class GraphicDesign {
         let pathEndPoint = linePathData.end;
 
         // 暂时设置至直线数据
-        pathElement.attr("path", linePathData.data);
+        pathElement.attr("d", linePathData.data);
         pathElement.data("pathStyle", pathStyle);
 
         // centerDragRect.attr("x") - 10, centerDragRect.attr("y") - 10
@@ -3449,7 +3413,7 @@ class GraphicDesign {
             height: height + 10
         }
 
-        // let pathDatas = connect.attr("path");
+        // let pathDatas = connect.attr("d");
         //
         // let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
         // let lastX = 0, lastY = 0;
@@ -3935,7 +3899,7 @@ class GraphicDesign {
             });
             linkTool.data("virtualPath", virtualPath);
         } else {
-            virtualPath.attr("path", virtualData.data);
+            virtualPath.attr("d", virtualData.data);
         }
         virtualPath.show();
 
@@ -4031,8 +3995,8 @@ class GraphicDesign {
 
     validateDropLink(pathElement, reverse) {
 
-        let standardMode = false; // this.designMode != "Simple";
-        let me = this, dropNode = me.dropNode;
+        // let standardMode = false; // this.designMode != "Simple";
+        let dropNode = this.dropNode;
         if (dropNode) {
 
             // let isSameContainer = function (fromElement, toElement) {
@@ -4076,11 +4040,7 @@ class GraphicDesign {
                 }
             }
 
-            // 如果使用的open模式不进行后续的校验，直接通过
-            if (!standardMode) {
-                return true;
-            }
-
+            return true;
             // // 如果reverse为true说明是反向连接，dropNode即将是pathElement的from端
             // if (reverse) {
             //     // 判断pathElement是否本来就是dropNode的from（连线的开始点拉出来后又还原回去），如果是返回true
@@ -4425,12 +4385,12 @@ class GraphicDesign {
                     // }
                 }
                 //console.log(pathData);
-                pathElement.attr("path", pathData);
+                pathElement.attr("d", pathData);
 
                 // // 绘制箭头
                 // let arrowPath = pathElement.data("arrow");
                 // let arrowPathData = this.getArrowPathData(arrowPathStart.attr("x") + 2.5, arrowPathStart.attr("y") + 2.5, arrowPathEnd.attr("x") + 2.5, arrowPathEnd.attr("y") + 2.5);
-                // arrowPath.attr("path", arrowPathData);
+                // arrowPath.attr("d", arrowPathData);
                 break;
             }
             case "straight": {
@@ -4522,12 +4482,7 @@ class GraphicDesign {
                 let x0 = controlElement.attr("x"), y0 = controlElement.attr("y"),
                     x1 = leftElement.attr("x"), y1 = leftElement.attr("y"),
                     x2 = rightElement.attr("x"), y2 = rightElement.attr("y");
-
-                let h = this.distanceFromPointToLine(
-                    x0, y0,
-                    x1, y1,
-                    x2, y2
-                );
+                let h = distanceToLine(x0, y0, x1, y1, x2, y2);
                 let isOutBoundLine = (x0 - x1) * (x0 - x2) > 0 && (y0 - y1) * (y0 - y2) > 0;
                 if (h <= 3 && !isOutBoundLine) {
                     leftDragRect.remove();

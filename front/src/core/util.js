@@ -10,6 +10,18 @@ export const browser = {
     isIE: userAgent.indexOf("MSIE") > -1,
     isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1
 }
+const {floor, random} = Math;
+export const uuid = () => {
+    let s = [];
+    let hexDigits = "0123456789abcdef";
+    for (var i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(floor(random() * 0x10), 1);
+    }
+    s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+    s[8] = s[13] = s[18] = s[23] = "-";
+    return s.join("");
+}
 
 /**
  * create dom element
@@ -224,6 +236,30 @@ export const exportBlob = (blob, filename) => {
         URL.revokeObjectURL(url);
     }
 }
+
+/**
+ * 计算点（x0,y0）到line(x1, y1, x2, y2)的垂直距离
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @returns {number}
+ */
+export const distanceToLine = (x0, y0, x1, y1, x2, y2) => {
+    // 求3个边长
+    let a = sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
+    let b = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    let c = sqrt((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
+    // 根据海伦公式求3个点围成的面积
+    // S=√[p(p-a)(p-b)(p-c)]
+    let halfP = (a + b + c) / 2;
+    let s = sqrt(halfP * (halfP - a) * (halfP - b) * (halfP - c));
+    let h = 2 * s / b;
+    return h;
+};
 
 /**
  * 阻止事件冒泡
