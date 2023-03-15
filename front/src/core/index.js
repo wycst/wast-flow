@@ -2403,7 +2403,7 @@ class GraphicDesign {
 
             let elementId = targetElement.id;
             targetElement.remove();
-            this.unregisterElement(elementId);
+            this.unregister(elementId);
         } else {
             // 元素，注意需要移除关联的连线
             for (let i in dataObject) {
@@ -2434,7 +2434,7 @@ class GraphicDesign {
             //     this.removeContainer(containerObj);
             // } else {
             // }
-            this.unregisterElement(elementId);
+            this.unregister(elementId);
             // // 如果删除的元素时包含在container里面的子节点，解除关系
             // if (container) {
             //     // 解除关系
@@ -3256,7 +3256,7 @@ class GraphicDesign {
         this.hideEditElements(connect);
         // bind select event
         this.bindSelectEvent(connect);
-        this.registerElement(connect);
+        this.register(connect);
         return connect;
     };
 
@@ -3306,7 +3306,7 @@ class GraphicDesign {
         // 选中
         this.selectElement = linkPath;
         // 注册连线
-        this.registerElement(linkPath);
+        this.register(linkPath);
         // 可撤销
         this.handleElementAction(linkPath);
         // return
@@ -3770,7 +3770,7 @@ class GraphicDesign {
         // 绑定鼠标over和out事件
         this.bindMouseOverOutEvent(target);
         // 注册
-        this.registerElement(target);
+        this.register(target);
     };
 
     elementDragMove(element, dx, dy) {
@@ -4698,21 +4698,20 @@ class GraphicDesign {
     //     let containerId = container.target.id;
     //     delete container.elements;
     //     delete container.target;
-    //     this.unregisterElement(containerId);
+    //     this.unregister(containerId);
     //     delete this.containers[containerId];
     // };
 
     /** 反注册元素（删除）*/
-    unregisterElement(id) {
+    unregister(id) {
         this.elements[id] = null;
         delete this.elements[id];
     };
 
     /** 注册元素*/
-    registerElement(target) {
+    register(target) {
         let id = target.id;
         if (!id) {
-            this.alertMessage("error: id is null!");
             return;
         }
         this.elements[id] = target;
@@ -4722,7 +4721,7 @@ class GraphicDesign {
         let temp = {};
         let outLines = fromElement.data("out");
         temp[fromElement.id] = fromElement;
-        let testCount = 0;
+        // let testCount = 0;
         while (outLines && keys(outLines).length) {
             let nextErgodicLines = {};
             for (let i in outLines) {
@@ -4740,10 +4739,10 @@ class GraphicDesign {
                 }
             }
             outLines = nextErgodicLines;
-            if (testCount++ > 1000) {
-                console.log(" maybe bug happen ! ");
-                return false;
-            }
+            // if (testCount++ > 1000) {
+            //     console.log(" maybe bug happen ! ");
+            //     return false;
+            // }
         }
         // 双向判断
         if (reverse) {
