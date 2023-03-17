@@ -1,6 +1,7 @@
 import {createDomElementNs, pointsToPathD} from "./util";
 import {
     svgNS,
+    xlinkNS,
     SvgCircleElementData,
     SvgImageElementData,
     SvgPathElementData,
@@ -29,14 +30,13 @@ export default class SvgPaper {
             height: height || "100%",
             version: "1.1",
             xmlns: svgNS,
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "xmlns:xlink": xlinkNS,
             style: "overflow: visible; position: relative; user-select: none; cursor: default;"
         });
         createDomElementNs(svgNS, "defs", svg)
         // create svg dom
         // let svg = createDomElement("svg", parentNode, );
-        this.svg = svg;
-        this.canvas = svg;
+        this.node = svg;
     };
 
     /**
@@ -57,7 +57,7 @@ export default class SvgPaper {
             rx: radius,
             ry: radius
         };
-        let rectNode = createDomElementNs(svgNS, 'rect', this.svg);
+        let rectNode = createDomElementNs(svgNS, 'rect', this.node);
         let rectElementData = new SvgRectElementData(rectNode);
         rectElementData.attr(attrs);
         return rectElementData;
@@ -70,7 +70,7 @@ export default class SvgPaper {
      * @returns {SvgPathElementData}
      */
     path(data) {
-        let pathNode = createDomElementNs(svgNS, 'path', this.svg);
+        let pathNode = createDomElementNs(svgNS, 'path', this.node);
         let pathElementData = new SvgPathElementData(pathNode);
         pathElementData.attr("d", pointsToPathD(data));
         return pathElementData;
@@ -95,7 +95,7 @@ export default class SvgPaper {
             ry: radius
         };
         // let imageNode = createDomElementNs("http://www.w3.org/1999/xlink", 'image', this.svg, attrs);
-        let imageNode = createDomElementNs(svgNS, 'image', this.svg, attrs);
+        let imageNode = createDomElementNs(svgNS, 'image', this.node, attrs);
         let imageElementData = new SvgImageElementData(imageNode);
         imageElementData.setHref(src);
         return imageElementData;
@@ -108,7 +108,7 @@ export default class SvgPaper {
      */
     text(x, y) {
         // if use foreignObject ?
-        let textNode = createDomElementNs(svgNS, 'text', this.svg, {x,y});
+        let textNode = createDomElementNs(svgNS, 'text', this.node, {x,y});
         return new SvgTextElementData(textNode);
     };
 
@@ -121,7 +121,7 @@ export default class SvgPaper {
      * @returns {SvgCircleElementData}
      */
     circle(x, y, r) {
-        let circleNode = createDomElementNs(svgNS, 'circle', this.svg);
+        let circleNode = createDomElementNs(svgNS, 'circle', this.node);
         let circleElementData = new SvgCircleElementData(circleNode);
         circleElementData.attr({x, y, r});
         return circleElementData;
@@ -131,7 +131,7 @@ export default class SvgPaper {
      * clear elements
      */
     clear() {
-        let elements = this.canvas.querySelectorAll("*[data-id]");
+        let elements = this.node.querySelectorAll("*[data-id]");
         elements.forEach(element => {
             element.remove();
         })
@@ -142,8 +142,8 @@ export default class SvgPaper {
      */
     remove() {
         this.clear();
-        this.svg.remove();
-        this.svg = this.canvas = null;
+        this.node.remove();
+        this.node = null;
         this.removed = true;
     };
 }

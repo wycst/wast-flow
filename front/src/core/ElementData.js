@@ -2,9 +2,11 @@ import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 
 // svg namespace
 export const svgNS = "http://www.w3.org/2000/svg";
+export const xlinkNS = "http://www.w3.org/1999/xlink";
 // default text font style
 const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
 const functionType = "function";
+
 /***
  * set or get prop value
  *
@@ -114,6 +116,58 @@ export function id() {
     lastSeconds = seconds;
     return seconds.toString(36);
 }
+
+/**
+ * 获取节点上绑定的默认数据
+ *
+ * @param element
+ * @param datas 默认数据项
+ * @returns {{}}
+ */
+export function getElementDatas(element, datas) {
+    let elementDatas = {};
+    for (let i in datas) {
+        let value = element.data(i);
+        if (!value) {
+            let defaultValue = datas[i];
+            let defaultType = typeof defaultValue;
+            if (defaultType == "object") {
+                value = {};
+            } else if (defaultType == "function") {
+                value = defaultValue(element);
+            } else {
+                value = defaultValue;
+            }
+        }
+        elementDatas[i] = value;
+    }
+    return elementDatas;
+};
+
+/**
+ * 设置节点上绑定的指定数据
+ *
+ * @param element
+ * @param datas 指定数据
+ * @param node
+ */
+export function setElementDatas(element, datas, node) {
+    for (let i in datas) {
+        let value = node[i];
+        if (!value) {
+            let defaultValue = datas[i];
+            let defaultType = typeof defaultValue;
+            if (defaultType == "object") {
+                value = {};
+            } else if (defaultType == "function") {
+                value = defaultValue(element);
+            } else {
+                value = defaultValue;
+            }
+        }
+        element.data(i, value);
+    }
+};
 
 /**
  * 元素数据类定义对象
@@ -320,9 +374,10 @@ class ElementData {
      * 元素（节点属性）属性设置获取读取,并更新节点的属性列表
      */
     attr() {
-        let len = arguments.length;
-        let p1 = arguments[0];
-        let p2 = arguments[1];
+        let args = arguments;
+        let len = args.length;
+        let p1 = args[0];
+        let p2 = args[1];
         let type = typeof p1;
         let setterMode = false;
         if (len == 1) {
@@ -341,7 +396,7 @@ class ElementData {
                 setterMode = true;
             }
         }
-        let result = getOrSetValue(this.attrs || (this.attrs = {}), arguments);
+        let result = getOrSetValue(this.attrs || (this.attrs = {}), args);
         return setterMode ? this : result;
     };
 
@@ -349,10 +404,11 @@ class ElementData {
      * 数据属性设置或者读取
      */
     data() {
-        let len = arguments.length;
-        let p1 = arguments[0];
+        let args = arguments;
+        let len = args.length;
+        let p1 = args[0];
         let setterMode = len > 1 || (p1 && typeof p1 == "object");
-        let result = getOrSetValue(this.datas || (this.datas = {}), arguments);
+        let result = getOrSetValue(this.datas || (this.datas = {}), args);
         return setterMode ? this : result;
     };
 
@@ -445,8 +501,9 @@ export class HtmlTextElementData extends HtmlElementData {
 
     // override attr
     attr() {
-        let [arg0, arg1] = arguments;
-        let len = arguments.length;
+        let args = arguments;
+        let [arg0, arg1] = args;
+        let len = args.length;
         if (arg0 == "text" && typeof arg1 == "string") {
             return this.setText(arg1);
         } else {
@@ -458,7 +515,7 @@ export class HtmlTextElementData extends HtmlElementData {
                 }
                 return super.attr({...props});
             }
-            return super.attr(...arguments);
+            return super.attr(...args);
         }
     };
 
@@ -505,20 +562,21 @@ export class SvgPathElementData extends SvgElementData {
 
     // override attr
     attr() {
-        let [arg0, arg1] = arguments;
-        let len = arguments.length;
+        let args = arguments;
+        let [arg0, arg1] = args;
+        let len = args.length;
         if (arg0 == "path" && typeof arg1 == "string") {
             return super.attr("d", arg1);
         } else {
             if (typeof arg0 == "object" && arg0 && len == 1) {
                 let {path, ...props} = arg0;
-                if(path) {
+                if (path) {
                     let d = pointsToPathD(path);
                     return super.attr({d, ...props});
                 }
                 return super.attr({...props});
             } else {
-                return super.attr(...arguments);
+                return super.attr(...args);
             }
         }
     };
@@ -546,7 +604,7 @@ export class SvgImageElementData extends SvgElementData {
 
     // set image xlink:href
     setHref(src) {
-        this.node.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", src);
+        this.node.setAttributeNS(xlinkNS, "xlink:href", src);
     };
 }
 
@@ -586,8 +644,9 @@ export class SvgTextElementData extends SvgElementData {
 
     // override attr
     attr() {
-        let [arg0, arg1] = arguments;
-        let len = arguments.length;
+        let args = arguments;
+        let [arg0, arg1] = args;
+        let len = args.length;
         if (arg0 == "text" && typeof arg1 == "string") {
             return this.setText(arg1);
         } else {
@@ -598,7 +657,7 @@ export class SvgTextElementData extends SvgElementData {
                 }
                 return super.attr({...props});
             }
-            return super.attr(...arguments);
+            return super.attr(...args);
         }
     };
 }

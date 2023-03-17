@@ -10,7 +10,13 @@ export const browser = {
     isIE: userAgent.indexOf("MSIE") > -1,
     isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1
 }
-const {floor, random} = Math;
+const {floor, random, sqrt} = Math;
+
+/**
+ * 自定义uuid生成函数
+ *
+ * @returns {string}
+ */
 export const uuid = () => {
     let s = [];
     let hexDigits = "0123456789abcdef";
@@ -59,11 +65,11 @@ export const createDomElementNs = function (ns, tagName, parent, attrs) {
  * @param attrs
  */
 export const setDomAttrs = function (dom, attrs) {
-
-    let argsLen = arguments.length;
+    let args = arguments;
+    let argsLen = args.length;
     if (argsLen == 3) {
-        let key = arguments[1];
-        let value = arguments[2];
+        let key = args[1];
+        let value = args[2];
         if (key) {
             if (value) {
                 dom.setAttribute(key, value);
@@ -227,12 +233,13 @@ export const exportBlob = (blob, filename) => {
     } else {
         const url = window.URL.createObjectURL(new Blob([blob]));
         const a = document.createElement("a");
+        let body = document.body;
         a.style.display = "none";
         a.download = filename;
         a.href = url;
-        document.body.appendChild(a);
+        body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 }
@@ -266,7 +273,7 @@ export const distanceToLine = (x0, y0, x1, y1, x2, y2) => {
  *
  * @param evt
  */
-export const preventDefault = (evt) => {
+export const eventStop = (evt) => {
     // 阻止默认行为
     evt.preventDefault();
     // 阻止冒泡
