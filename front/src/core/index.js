@@ -21,9 +21,7 @@ const {sqrt, min, max, abs, sin, cos, tan, atan} = Math;
 const {removeEventListener, addEventListener} = document;
 const {assign, keys, values} = Object;
 const appendSvgInner = (inner) => {
-    return `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" ${xmlns}>
-                ${inner}
-            </svg>`;
+    return `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" ${xmlns}>${inner}</svg>`;
 }
 
 // 内置html块
@@ -50,9 +48,7 @@ const DefaultHtmlTypes = {
 };
 
 const connectArrowPrefix = "connect-arrow-";
-const defs = `
-    <path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>
-`
+const defs = `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>`
 
 // 创建指定颜色的marker
 const createColorMarker = (svgDom, color) => {
@@ -64,11 +60,7 @@ const createColorMarker = (svgDom, color) => {
     if (!marker) {
         marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
-        marker.outerHTML = `
-                             <marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5">
-                                <use xlink:href="#${connectArrowPrefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use>
-                             </marker>
-                        `;
+        marker.outerHTML = `<marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5"><use xlink:href="#${connectArrowPrefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use></marker>`;
     }
 
     // 条件连线样式
@@ -77,11 +69,7 @@ const createColorMarker = (svgDom, color) => {
     if (!marker) {
         marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
-        marker.outerHTML = `
-                            <marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto">
-                                <path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" fill="#fff" stroke="${color}"  stroke-width="1"></path>
-                            </marker>
-                        `;
+        marker.outerHTML = `<marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" fill="#fff" stroke="${color}"  stroke-width="1"></path></marker>`;
     }
 }
 
