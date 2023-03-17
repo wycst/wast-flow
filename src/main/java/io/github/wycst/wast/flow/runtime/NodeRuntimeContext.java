@@ -18,6 +18,10 @@ class NodeRuntimeContext implements NodeContext {
     private int loopCount;
     private int loopIndex;
 
+    private boolean retryMode;
+    private int retryCount;
+    private int indexOfRetry;
+
     static NodeRuntimeContext of(NodeInstance nodeInstance) {
         return new NodeRuntimeContext(nodeInstance);
     }
@@ -71,6 +75,33 @@ class NodeRuntimeContext implements NodeContext {
     @Override
     public int loopIndex() {
         return loopIndex;
+    }
+
+    void setRetryMode(boolean retryMode) {
+        this.retryMode = retryMode;
+    }
+
+    void setIndexOfRetry(int indexOfRetry) {
+        this.indexOfRetry = indexOfRetry;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    @Override
+    public boolean isRetryMode() {
+        return retryMode;
+    }
+
+    @Override
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    @Override
+    public int getIndexOfRetry() {
+        return indexOfRetry;
     }
 
     @Override

@@ -377,17 +377,22 @@ public class RuntimeNode extends Node {
         if (iterate <= 1) {
             int count = 1;
             int retryCount = handlerOption.getRetryCount();
-            if (handlerOption.isRetryOnError() && retryCount > 1) {
-                count = Math.min(retryCount, 10);
+            if (handlerOption.isRetryOnError() && retryCount > 0) {
+                // 默认执行1次，实际最多执行次数为1 + retryCount
+                count = Math.min(retryCount + 1, 10);
                 log.info("enable retry, retryCount {}", retryCount);
+                nodeContext.setRetryMode(true);
+                nodeContext.setRetryCount(retryCount);
             }
-            int actualRetryCount = 0;
+            int actualCount = 0;
             boolean successFlag = false;
             Exception exception = null;
             // 重试处理
             while (count-- > 0 && !successFlag) {
-                if (++actualRetryCount > 1) {
-                    log.info(String.format("Error: 正在进行第%d次重试", actualRetryCount));
+                // log Retry index
+                nodeContext.setIndexOfRetry(actualCount);
+                if (++actualCount > 1) {
+                    log.info(String.format("Error: 正在进行第%d次重试", actualCount - 1));
                     long delay = handlerOption.getDelay();
                     if (delay > 0) {
                         log.debug("{}, about to sleep for {} s", nodeToString, delay);

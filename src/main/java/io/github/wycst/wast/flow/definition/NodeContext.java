@@ -44,6 +44,28 @@ public interface NodeContext {
     public ProcessInstance getProcessInstance();
 
     /**
+     * 是否重试
+     *
+     * @return
+     */
+    public boolean isRetryMode();
+
+    /**
+     * 重试次数
+     *
+     * @return
+     */
+    public int getRetryCount();
+
+
+    /**
+     * 当前第几次重试
+     *
+     * @return
+     */
+    public int getIndexOfRetry();
+
+    /**
      * 是否迭代
      *
      * @return

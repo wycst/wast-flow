@@ -139,12 +139,14 @@ public class WastFlowTest {
 //
 //                Object obj = nodeContext.getCustomContext();
 //
-//                String name = nodeContext.getNode().getName();
+                String name = nodeContext.getNode().getName();
 //                nodeContext.isDebugMode();
-//                if("n6".equals(name)) {
-//                    System.out.println(nodeContext.getNode().getUuid());
-//                    throw new RuntimeException("error");
-//                }
+                if("n6".equals(name)) {
+                    System.out.println(nodeContext.getNode().getUuid());
+                    System.out.println("第几次重试：" + nodeContext.getIndexOfRetry());
+                    System.out.println("重试次数：" +nodeContext.getRetryCount());
+                    throw new RuntimeException("error");
+                }
 //                Thread.sleep(1000);
             }
         });
@@ -184,7 +186,7 @@ public class WastFlowTest {
         vars.put("a", 11);
 
         // 流程标识
-        String processId = "sample";
+        String processId = "a";
         System.out.println("processID " + processId);
 
         Connect connect = null;
@@ -198,7 +200,7 @@ public class WastFlowTest {
 
         long l1 = System.currentTimeMillis();
         System.out.println();
-        for(int i = 0 ; i < 1000000; i++) {
+        for(int i = 0 ; i < 1; i++) {
             flowEngine.startProcess(processId, vars);
         }
         long l2 = System.currentTimeMillis();

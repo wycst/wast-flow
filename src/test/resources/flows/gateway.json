@@ -104,6 +104,8 @@
             "type": "Business",
             "gateway": "XOR",
             "handler": {
+                "retryOnError": true,
+                "retryCount": 3,
                 "policy": "Continue"
             },
             "uuid": "b80a89aa-2ef9-4b9a-af09-d953baf68122",
