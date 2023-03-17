@@ -14,6 +14,7 @@ import {
 import {getElementDatas, HtmlElementData, HtmlTextElementData, setElementDatas, svgNS} from "./ElementData"
 import historyActions from "./modules/history"
 import SvgPaper from "./SvgPaper";
+
 const {isChrome} = browser;
 const xmlns = `xmlns="${svgNS}"`;
 const fitStyle = "width: 100%;height: 100%;";
@@ -316,10 +317,6 @@ const extensionTemplate = `
         ${mr('imp', 0, '导入')}
         ${mr('exp', 0, '导出')}
     </div>
-    <div class="flow-pop" style="display:none;font-size: 12px; position: fixed;background: #fff; right: 40px; width: 300px; overflow: auto;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);z-index: 100;">
-       <div><span class="close-handle" style="color:red;float: right;cursor: pointer;">x</span><h4>基本属性</h4></div>
-       <form class="flow-property-form"></form>
-    </div>
     <div class="flow-wrapper" style="position: absolute;width: 100%; height: 100%;left: 0; top: 0">
        <div class="flow-wrapper-body"  style="position: relative;${fitStyle}">
             <div class="text-editor" contenteditable style="min-width: 50px; height: 24px; display: none;position: absolute;font-size: 13px;background: #fff;transform: translate(-50%, -50%);outline: 1px solid transparent;z-index: 100;"></div>
@@ -379,7 +376,6 @@ class GraphicDesign {
             this.initMenu(dom.children[0]);
         }
         this.initInput(dom.querySelector(".text-editor"));
-        this.initPopwin(dom.querySelector(".flow-pop"));
         this.initFileInput(dom.querySelector(".flow-import-file"));
 
         let flowWrapper = dom.querySelector(".flow-wrapper-body");
@@ -1122,303 +1118,303 @@ class GraphicDesign {
         this.textElement = null;
     };
 
-    // 弹出框设计
-    initPopwin(popwinDom) {
-        let me = this;
-        this.popwin = popwinDom;
-        assign(popwinDom.style, {
-            // display: "none",
-            top: "150px",
-            padding: "0 20px 20px",
-            minHeight: "350px",
-            display: "none"
-        });
-
-        // 关闭事件
-        bindDomEvent(popwinDom.querySelector(".close-handle"), "click", function () {
-            me.closePopwin();
-        });
-
-        // mousedown事件阻止冒泡（传播）
-        bindDomEvent(popwinDom, "mousedown", function (evt) {
-            evt.stopPropagation();
-        });
-
-        // 表单dom
-        this.propertyForm = popwinDom.querySelector(".flow-property-form");
-    };
+    // // 弹出框设计
+    // initPopwin(popwinDom) {
+    //     let me = this;
+    //     this.popwin = popwinDom;
+    //     assign(popwinDom.style, {
+    //         // display: "none",
+    //         top: "150px",
+    //         padding: "0 20px 20px",
+    //         minHeight: "350px",
+    //         display: "none"
+    //     });
+    //
+    //     // 关闭事件
+    //     bindDomEvent(popwinDom.querySelector(".close-handle"), "click", function () {
+    //         me.closePopwin();
+    //     });
+    //
+    //     // mousedown事件阻止冒泡（传播）
+    //     bindDomEvent(popwinDom, "mousedown", function (evt) {
+    //         evt.stopPropagation();
+    //     });
+    //
+    //     // 表单dom
+    //     // this.propertyForm = popwinDom.querySelector(".flow-property-form");
+    // };
 
     /** 打开元素的属性编辑窗口 */
     openElementPropertyPop(element) {
         if (!this.option.editable) return;
-        let me = this;
-        let propertyModels = [];
-        // 双击空白区域可维护流程信息
-        if (!element) {
-            propertyModels.push({
-                label: "流程标识",
-                value: me.processId || "",
-                event: "input",
-                key: "processId",
-                html: `<input data-key="processId" placeholder="流程id"/>`,
-                callback(value) {
-                    me.processId = value;
-                }
-            }, {
-                label: "流程名称",
-                value: me.processName || "",
-                event: "input",
-                key: "processName",
-                html: `<input data-key="processName" placeholder="流程名称"/>`,
-                callback(value) {
-                    me.processName = value;
-                }
-            });
-        } else {
-            let type = element.type;
-            let nodeType = element.data("nodeType");
-            propertyModels = [
-                {
-                    label: "元素ID",
-                    value: element.id,
-                    event: "input",
-                    readonly: true,
-                    key: "id",
-                    html: `<input data-key="id"/>`,
-                }
-            ];
-            if (type == "path") {
-                let fromElementOutPaths = element.data("from").data("out");
-                let uniqueConnect = keys(fromElementOutPaths).length == 1;
-                propertyModels.push({
-                    label: "元素名称",
-                    value: element.data("text").attr("text") || "",
-                    event: "input",
-                    key: "name",
-                    html: `<input data-key="name" placeholder="请输入元素名称"/>`,
-                    callback(value) {
-                        me.setElementName(element, value);
-                    }
-                }, {
-                    label: "连线样式",
-                    value: element.data("pathStyle") || "",
-                    event: "input",
-                    key: "pathStyle",
-                    html: `<select data-key="pathStyle">
-                           <option value="broken">折线</option>
-                           <option value="straight">直线</option>
-<!--                           <option value="h2v">h2v</option>-->
-<!--                           <option value="v2h">v2h</option>-->
-<!--                           <option value="curve">曲线</option>-->
-                       </select>`,
-                    callback(value) {
-                        if (value != element.data("pathStyle")) {
-                            me.resetConnectPathData(element, value);
-                            element.data("pathStyle", value);
-                        }
-                        // update path
-                    }
-                }, {
-                    label: "分支策略",
-                    value: element.data("conditionType") || "Script",
-                    event: "change",
-                    // readonly: uniqueConnect,
-                    key: "conditionType",
-                    html: `<select data-key="conditionType">
-                           <option value="Always">Always</option>
-                           <option value="Script">Script</option>
-                           <option value="HandlerCall">HandlerCall</option>
-                       </select>`,
-                    callback(value) {
-                        me.setConnectType(element, value);
-                    }
-                }, {
-                    label: "脚本表达式",
-                    value: element.data("script") || "",
-                    event: "input",
-                    key: "script",
-                    html: `<textarea data-key="script"></textarea>`,
-                    readonly: uniqueConnect,
-                    callback(value) {
-                        element.data("script", value);
-                    }
-                }, {
-                    label: "优先级",
-                    value: element.data("priority") || 0,
-                    event: "input",
-                    key: "priority",
-                    html: `<input data-key="priority" type="number"/>`,
-                    readonly: uniqueConnect,
-                    callback(value) {
-                        element.data("priority", !value ? 0 : Number(value));
-                    }
-                });
-            } else {
-                // 节点
-                switch (nodeType) {
-                    case "Start":
-                    case "End":
-                    case "Join": {
-                        break;
-                    }
-                    case "Split": {
-                        propertyModels.push({
-                            label: "网关类型",
-                            value: element.data("gateway") || "XOR",
-                            event: "change",
-                            key: "gateway",
-                            html: `<select data-key="gateway">
-                               <option value="XOR">条件</option>
-                               <option value="OR">条件并行</option>
-                               <option value="AND">并行</option>
-                           </select>`,
-                            callback(value) {
-                                element.updateHTML(DefaultHtmlTypes[value.toLowerCase()]);
-                                element.data("gateway", value);
-                            }
-                        });
-                        break;
-                    }
-                    default: {
-                        let handler = element.data("handler");
-                        if (!handler) {
-                            element.data("handler", handler = {});
-                        }
-                        if (element.data("text")) {
-                            propertyModels.push({
-                                label: "元素名称",
-                                value: element.data("text").attr("text") || "",
-                                event: "input",
-                                key: "name",
-                                html: `<input data-key="name" placeholder="请输入元素名称"/>`,
-                                callback(value) {
-                                    element.data("text").attr("text", value);
-                                }
-                            })
-                        }
-                        propertyModels.push({
-                            label: "任务类型",
-                            value: element.data("nodeType") || "Business",
-                            event: "change",
-                            key: "nodeType",
-                            html: `<select data-key="nodeType">
-                               <option value="Business">Business</option>
-                               <option value="Service">Service</option>
-                               <option value="Script">Script</option>
-                               <option value="Manual">Manual</option>
-                           </select>`,
-                            callback(value) {
-                                element.data("nodeType", value);
-                            }
-                        }, {
-                            label: "是否异步执行",
-                            value: handler.asynchronous || false,
-                            event: "change",
-                            key: "asynchronous",
-                            checkbox: true,
-                            html: `<input data-key="asynchronous" type="checkbox">`,
-                            callback(value) {
-                                handler.asynchronous = value;
-                            }
-                        }, {
-                            label: "超时设置",
-                            value: handler.timeout || 0,
-                            event: "input",
-                            key: "timeout",
-                            html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
-                            callback(value) {
-                                handler.timeout = !value ? 0 : Number(value);
-                            }
-                        }, {
-                            label: "延迟设置",
-                            value: handler.delay || 0,
-                            event: "input",
-                            key: "delay",
-                            html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
-                            callback(value) {
-                                handler.delay = !value ? 0 : Number(value);
-                            }
-                        }, {
-                            label: "循环迭代次数",
-                            value: handler.iterate || 0,
-                            event: "input",
-                            key: "iterate",
-                            html: `<input data-key="iterate" type="number"/>`,
-                            callback(value) {
-                                handler.iterate = !value ? 0 : Number(value);
-                            }
-                        }, {
-                            label: "失败策略",
-                            value: handler.policy || "Stop",
-                            event: "change",
-                            key: "policy",
-                            html: `<select data-key="policy">
-                                       <option value="Stop">终止</option>
-                                       <option value="Continue">继续</option>
-                                   </select>`,
-                            callback(value) {
-                                handler.policy = value;
-                            }
-                        });
-                    }
-                }
-            }
-        }
-
-        let htmlCodes = [];
-        let propertyModelMap = {}
-        for (let propertyModel of propertyModels) {
-            let {label, html, key} = propertyModel;
-            htmlCodes.push(`
-                 <div class="flow-form-item">
-                    <div>${label}</div>
-                    ${html}
-                 </div>
-            `);
-            propertyModelMap[key] = propertyModel;
-        }
-        this.propertyForm.innerHTML = htmlCodes.join("");
-        // 样式设置,事件处理
-        this.propertyForm.querySelectorAll(".flow-form-item").forEach(item => {
-            assign(item.style, {
-                display: "flex",
-                flexDirection: "column",
-                margin: "8px",
-                lineHeight: "28px"
-            });
-
-            let inputDom = item.children[1];
-            assign(inputDom.style, {
-                height: "28px",
-                lineHeight: "28px",
-                border: "1px solid #dcdfe6"
-            });
-            let key = inputDom.dataset.key;
-            let propertyModel = propertyModelMap[key];
-
-            if (propertyModel.checkbox) {
-                if (propertyModel.value) {
-                    inputDom.checked = true;
-                }
-            } else {
-                inputDom["value"] = propertyModel.value;
-            }
-            if (propertyModel.readonly) {
-                inputDom.setAttribute("disabled", "disabled");
-            } else {
-                bindDomEvent(inputDom, propertyModel.event, function (evt) {
-                    let value = null;
-                    if (propertyModel.checkbox) {
-                        value = !!evt.target.checked;
-                    } else {
-                        value = evt.target.value;
-                    }
-                    propertyModel.callback(value);
-                });
-            }
-        });
-        this.popwin.style.display = "block";
-        this.disablePan = true;
+//         let me = this;
+//         let propertyModels = [];
+//         // 双击空白区域可维护流程信息
+//         if (!element) {
+//             propertyModels.push({
+//                 label: "流程标识",
+//                 value: me.processId || "",
+//                 event: "input",
+//                 key: "processId",
+//                 html: `<input data-key="processId" placeholder="流程id"/>`,
+//                 callback(value) {
+//                     me.processId = value;
+//                 }
+//             }, {
+//                 label: "流程名称",
+//                 value: me.processName || "",
+//                 event: "input",
+//                 key: "processName",
+//                 html: `<input data-key="processName" placeholder="流程名称"/>`,
+//                 callback(value) {
+//                     me.processName = value;
+//                 }
+//             });
+//         } else {
+//             let type = element.type;
+//             let nodeType = element.data("nodeType");
+//             propertyModels = [
+//                 {
+//                     label: "元素ID",
+//                     value: element.id,
+//                     event: "input",
+//                     readonly: true,
+//                     key: "id",
+//                     html: `<input data-key="id"/>`,
+//                 }
+//             ];
+//             if (type == "path") {
+//                 let fromElementOutPaths = element.data("from").data("out");
+//                 let uniqueConnect = keys(fromElementOutPaths).length == 1;
+//                 propertyModels.push({
+//                     label: "元素名称",
+//                     value: element.data("text").attr("text") || "",
+//                     event: "input",
+//                     key: "name",
+//                     html: `<input data-key="name" placeholder="请输入元素名称"/>`,
+//                     callback(value) {
+//                         me.setElementName(element, value);
+//                     }
+//                 }, {
+//                     label: "连线样式",
+//                     value: element.data("pathStyle") || "",
+//                     event: "input",
+//                     key: "pathStyle",
+//                     html: `<select data-key="pathStyle">
+//                            <option value="broken">折线</option>
+//                            <option value="straight">直线</option>
+// <!--                           <option value="h2v">h2v</option>-->
+// <!--                           <option value="v2h">v2h</option>-->
+// <!--                           <option value="curve">曲线</option>-->
+//                        </select>`,
+//                     callback(value) {
+//                         if (value != element.data("pathStyle")) {
+//                             me.resetConnectPathData(element, value);
+//                             element.data("pathStyle", value);
+//                         }
+//                         // update path
+//                     }
+//                 }, {
+//                     label: "分支策略",
+//                     value: element.data("conditionType") || "Script",
+//                     event: "change",
+//                     // readonly: uniqueConnect,
+//                     key: "conditionType",
+//                     html: `<select data-key="conditionType">
+//                            <option value="Always">Always</option>
+//                            <option value="Script">Script</option>
+//                            <option value="HandlerCall">HandlerCall</option>
+//                        </select>`,
+//                     callback(value) {
+//                         me.setConnectType(element, value);
+//                     }
+//                 }, {
+//                     label: "脚本表达式",
+//                     value: element.data("script") || "",
+//                     event: "input",
+//                     key: "script",
+//                     html: `<textarea data-key="script"></textarea>`,
+//                     readonly: uniqueConnect,
+//                     callback(value) {
+//                         element.data("script", value);
+//                     }
+//                 }, {
+//                     label: "优先级",
+//                     value: element.data("priority") || 0,
+//                     event: "input",
+//                     key: "priority",
+//                     html: `<input data-key="priority" type="number"/>`,
+//                     readonly: uniqueConnect,
+//                     callback(value) {
+//                         element.data("priority", !value ? 0 : Number(value));
+//                     }
+//                 });
+//             } else {
+//                 // 节点
+//                 switch (nodeType) {
+//                     case "Start":
+//                     case "End":
+//                     case "Join": {
+//                         break;
+//                     }
+//                     case "Split": {
+//                         propertyModels.push({
+//                             label: "网关类型",
+//                             value: element.data("gateway") || "XOR",
+//                             event: "change",
+//                             key: "gateway",
+//                             html: `<select data-key="gateway">
+//                                <option value="XOR">条件</option>
+//                                <option value="OR">条件并行</option>
+//                                <option value="AND">并行</option>
+//                            </select>`,
+//                             callback(value) {
+//                                 element.updateHTML(DefaultHtmlTypes[value.toLowerCase()]);
+//                                 element.data("gateway", value);
+//                             }
+//                         });
+//                         break;
+//                     }
+//                     default: {
+//                         let handler = element.data("handler");
+//                         if (!handler) {
+//                             element.data("handler", handler = {});
+//                         }
+//                         if (element.data("text")) {
+//                             propertyModels.push({
+//                                 label: "元素名称",
+//                                 value: element.data("text").attr("text") || "",
+//                                 event: "input",
+//                                 key: "name",
+//                                 html: `<input data-key="name" placeholder="请输入元素名称"/>`,
+//                                 callback(value) {
+//                                     element.data("text").attr("text", value);
+//                                 }
+//                             })
+//                         }
+//                         propertyModels.push({
+//                             label: "任务类型",
+//                             value: element.data("nodeType") || "Business",
+//                             event: "change",
+//                             key: "nodeType",
+//                             html: `<select data-key="nodeType">
+//                                <option value="Business">Business</option>
+//                                <option value="Service">Service</option>
+//                                <option value="Script">Script</option>
+//                                <option value="Manual">Manual</option>
+//                            </select>`,
+//                             callback(value) {
+//                                 element.data("nodeType", value);
+//                             }
+//                         }, {
+//                             label: "是否异步执行",
+//                             value: handler.asynchronous || false,
+//                             event: "change",
+//                             key: "asynchronous",
+//                             checkbox: true,
+//                             html: `<input data-key="asynchronous" type="checkbox">`,
+//                             callback(value) {
+//                                 handler.asynchronous = value;
+//                             }
+//                         }, {
+//                             label: "超时设置",
+//                             value: handler.timeout || 0,
+//                             event: "input",
+//                             key: "timeout",
+//                             html: `<input type="number" data-key="timeout" placeholder="单位为毫秒"/>`,
+//                             callback(value) {
+//                                 handler.timeout = !value ? 0 : Number(value);
+//                             }
+//                         }, {
+//                             label: "延迟设置",
+//                             value: handler.delay || 0,
+//                             event: "input",
+//                             key: "delay",
+//                             html: `<input data-key="delay" type="number" placeholder="单位为毫秒"/>`,
+//                             callback(value) {
+//                                 handler.delay = !value ? 0 : Number(value);
+//                             }
+//                         }, {
+//                             label: "循环迭代次数",
+//                             value: handler.iterate || 0,
+//                             event: "input",
+//                             key: "iterate",
+//                             html: `<input data-key="iterate" type="number"/>`,
+//                             callback(value) {
+//                                 handler.iterate = !value ? 0 : Number(value);
+//                             }
+//                         }, {
+//                             label: "失败策略",
+//                             value: handler.policy || "Stop",
+//                             event: "change",
+//                             key: "policy",
+//                             html: `<select data-key="policy">
+//                                        <option value="Stop">终止</option>
+//                                        <option value="Continue">继续</option>
+//                                    </select>`,
+//                             callback(value) {
+//                                 handler.policy = value;
+//                             }
+//                         });
+//                     }
+//                 }
+//             }
+//         }
+//
+//         let htmlCodes = [];
+//         let propertyModelMap = {}
+//         for (let propertyModel of propertyModels) {
+//             let {label, html, key} = propertyModel;
+//             htmlCodes.push(`
+//                  <div class="flow-form-item">
+//                     <div>${label}</div>
+//                     ${html}
+//                  </div>
+//             `);
+//             propertyModelMap[key] = propertyModel;
+//         }
+//         this.propertyForm.innerHTML = htmlCodes.join("");
+//         // 样式设置,事件处理
+//         this.propertyForm.querySelectorAll(".flow-form-item").forEach(item => {
+//             assign(item.style, {
+//                 display: "flex",
+//                 flexDirection: "column",
+//                 margin: "8px",
+//                 lineHeight: "28px"
+//             });
+//
+//             let inputDom = item.children[1];
+//             assign(inputDom.style, {
+//                 height: "28px",
+//                 lineHeight: "28px",
+//                 border: "1px solid #dcdfe6"
+//             });
+//             let key = inputDom.dataset.key;
+//             let propertyModel = propertyModelMap[key];
+//
+//             if (propertyModel.checkbox) {
+//                 if (propertyModel.value) {
+//                     inputDom.checked = true;
+//                 }
+//             } else {
+//                 inputDom["value"] = propertyModel.value;
+//             }
+//             if (propertyModel.readonly) {
+//                 inputDom.setAttribute("disabled", "disabled");
+//             } else {
+//                 bindDomEvent(inputDom, propertyModel.event, function (evt) {
+//                     let value = null;
+//                     if (propertyModel.checkbox) {
+//                         value = !!evt.target.checked;
+//                     } else {
+//                         value = evt.target.value;
+//                     }
+//                     propertyModel.callback(value);
+//                 });
+//             }
+//         });
+//         this.popwin.style.display = "block";
+//         this.disablePan = true;
     };
 
     // 重置连线的风格
@@ -1428,13 +1424,13 @@ class GraphicDesign {
         this.resetPathData(connectElement, fromElement, toElement, pathStyle);
     };
 
-    // 关闭弹出层窗口
-    closePopwin() {
-        if (this.popwin) {
-            this.popwin.style.display = "none";
-            this.disablePan = false;
-        }
-    };
+    // // 关闭弹出层窗口
+    // closePopwin() {
+    //     if (this.popwin) {
+    //         this.popwin.style.display = "none";
+    //         this.disablePan = false;
+    //     }
+    // };
 
     // 开始编辑
     beginInputEdit(element) {
@@ -1980,7 +1976,7 @@ class GraphicDesign {
     handleClickBlank(evt) {
         this.option.clickBlank && this.option.clickBlank(evt);
         this.cancelSelect();
-        this.closePopwin();
+        // this.closePopwin();
     };
 
     // 双击空白
@@ -4934,7 +4930,7 @@ class GraphicDesign {
      * */
     getData() {
         let {processId: id, processName: name} = this;
-        let data = {id,name};
+        let data = {id, name};
         let startNodeId = null;
         let {elements} = this;
         let nodes = (data.nodes = []), connects = (data.connects = []);

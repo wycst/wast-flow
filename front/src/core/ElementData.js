@@ -201,6 +201,19 @@ class ElementData {
         });
     };
 
+    // Change of response name
+    get name() {
+        let textEle = this.data("text");
+        return textEle && textEle.attr("text");
+    };
+
+    set name(val) {
+        let textEle = this.data("text");
+        if (textEle) {
+            textEle.attr("text", val)
+        }
+    };
+
     /**
      * is svg
      * @returns {boolean}
@@ -559,6 +572,38 @@ export class SvgPathElementData extends SvgElementData {
             fill: "none"
         });
     };
+
+    // Change of response pathStyle
+    get pathStyle() {
+        return this.data("pathStyle");
+    };
+
+    // broken/straight
+    set pathStyle(val) {
+        if (!val || ["broken", "straight"].includes(val)) {
+            this.data("pathStyle", val);
+        } else {
+            throw new Error(`pathStyle ${val} not supported`);
+        }
+    };
+
+    // Change of response script
+    get script() {
+        return this.data("script");
+    };
+
+    set script(val) {
+        this.data("script", val);
+    }
+
+    // Change of response script
+    get script() {
+        return this.data("script");
+    };
+
+    set script(val) {
+        this.data("script", val);
+    }
 
     // override attr
     attr() {
