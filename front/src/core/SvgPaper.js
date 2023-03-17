@@ -131,7 +131,7 @@ export default class SvgPaper {
      * clear elements
      */
     clear() {
-        let elements = this.canvas.querySelectorAll("*[data-element-id]");
+        let elements = this.canvas.querySelectorAll("*[data-id]");
         elements.forEach(element => {
             element.remove();
         })

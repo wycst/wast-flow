@@ -143,7 +143,7 @@ class ElementData {
     set id(val) {
         this._id = val;
         setDomAttrs(this.node, {
-            "data-element-id": val
+            "data-id": val
         });
     };
 
