@@ -197,6 +197,16 @@ const defaultOption = {
     overviewOffsetHeight: 20,
 
     /**
+     * 单击时启用编辑文本，默认false
+     */
+    textEditOnClick: false,
+
+    /**
+     * 双击编辑文本
+     */
+    textEditOnDblClick: true,
+
+    /**
      * 提示信息，默认使用window.alert
      *
      * @param message
@@ -521,7 +531,7 @@ class GraphicDesign {
             fill: "transparent",
             "stroke-width": 1,
             stroke: this.themeColor,
-            opacity: .5,
+            opacity: .8,
             "stroke-dasharray": "2 2"
         }).hide();
         this.connectRect.hover(() => {
@@ -804,7 +814,7 @@ class GraphicDesign {
 
     // settings
     get settings() {
-        return this.option.settings;
+        return this.option.settings || {};
     };
 
     // theme color
@@ -914,6 +924,7 @@ class GraphicDesign {
                     } else if (type == "join") {
                         dragContext.element = element = me.createJoinNode(x, y);
                     }
+                    me.handleClickElement(element, event);
                     me.selectElement = element;
                     me.elementDragStart(element);
                 }
@@ -1417,7 +1428,7 @@ class GraphicDesign {
     //     }
     // };
 
-    // 开始编辑
+    // begin edit text
     beginInputEdit(element) {
         if (!this.option.editable) return;
         let input = this.input;
@@ -2451,13 +2462,21 @@ class GraphicDesign {
 
         if (targetElement.data('text')) {
             targetElement.data('text').click(function (e) {
-                me.beginInputEdit(targetElement);
+                if(me.option.textEditOnClick) {
+                    me.beginInputEdit(targetElement);
+                } else {
+                    me.handleClickElement(targetElement, e);
+                }
                 eventStop(e);
             });
             targetElement.data('text').dblclick(function (e) {
                 // 点击文本直接修改文本，不再触发双击事件
                 // me.option.dblclickElement && me.option.dblclickElement(targetElement, e);
-                me.beginInputEdit(targetElement);
+                if(me.option.textEditOnDblClick) {
+                    me.beginInputEdit(targetElement);
+                } else {
+                    me.handleDblclickElement(targetElement, e);
+                }
                 eventStop(e);
             });
         }
@@ -2469,12 +2488,10 @@ class GraphicDesign {
 
         // 连线选中问题
         if (targetElement.type == "path") {
-            // 解决连线不好选中的问题
             targetElement.hover(function () {
                 let connectAttrs = me.getConnectBoundRect(targetElement);
                 me.connectRect.attr(connectAttrs).show();
                 me.connectRect.data("target", targetElement);
-                // this.attr("stroke-width", 4);
             }, function () {
                 // this.attr("stroke-width", 2);
                 // me.connectRect.attr("stroke-width", 0);
@@ -2504,12 +2521,16 @@ class GraphicDesign {
      * @param evt
      */
     handleDblclickElement(element, evt) {
-        this.option.dblclickElement && this.option.dblclickElement(element, evt);
-        // 文本编辑
-        this.beginInputEdit(element);
-        if (this.option.enablePropertyPop) {
-            this.openElementPropertyPop(element);
+        let {dblclickElement, textEditOnDblClick} = this.option;
+        if(typeof dblclickElement == "function" ) {
+            dblclickElement(element, evt);
         }
+        if(textEditOnDblClick) {
+            this.beginInputEdit(element);
+        }
+        // if (this.option.enablePropertyPop) {
+        //     this.openElementPropertyPop(element);
+        // }
     };
 
     bindMouseOverOutEvent(targetElement) {
@@ -2976,7 +2997,6 @@ class GraphicDesign {
         rect.attr({
             stroke: this.themeColor,
             "stroke-width": this.settings.nodeStrokeWith,
-            title: "id:" + rect.id,
             fill: this.settings.nodeBackgroundColor
         });
         rect.data("handler", {});

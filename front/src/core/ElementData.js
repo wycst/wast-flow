@@ -199,35 +199,37 @@ export function setElementDatas(element, datas, node) {
  */
 class ElementData {
 
-    #id;
-    #type;
-    #node;
-    #datas;
-    #attrs;
+    _id;
+    _type;
+    _node;
+    _datas;
+    _attrs;
+
+    #privateValue;
 
     /**
      * 元素数据构造函数
      */
     constructor(node, type) {
-        this.#type = type;
+        this._type = type;
         // dom节点
-        this.#node = node;
+        this._node = node;
         // 数据属性
-        this.#datas = {};
+        this._datas = {};
         // 节点属性（可修改属性）
-        this.#attrs = {};
+        this._attrs = {};
         // 设置id
         this.id = id();
     };
 
     // Change of response id
     get id() {
-        return this.#id;
+        return this._id;
     };
 
     // Change of response id
     set id(val) {
-        this.#id = val;
+        this._id = val;
         setDomAttrs(this.node, {
             "data-id": val
         });
@@ -235,14 +237,19 @@ class ElementData {
 
     // readonly type
     get type() {
-        return this.#type;
+        return this._type;
     };
 
     // Change of response name
     get name() {
         let textEle = this.data("text");
         return textEle && textEle.attr("text");
-    };
+    }
+
+    // uuid
+    get uuid() {
+        return this.data("uuid");
+    }
 
     set name(val) {
         let textEle = this.data("text");
@@ -252,15 +259,15 @@ class ElementData {
     };
 
     get node() {
-        return this.#node;
+        return this._node;
     }
 
     get datas() {
-        return this.#datas;
+        return this._datas;
     }
 
     get attrs() {
-        return this.#attrs;
+        return this._attrs;
     }
 
     // meta customobject
@@ -272,6 +279,10 @@ class ElementData {
         return meta;
     };
 
+    get privateValue() {
+        return this.#privateValue;
+    }
+
     /**
      * is svg
      * @returns {boolean}
@@ -279,6 +290,33 @@ class ElementData {
     isSvg() {
         return false;
     };
+
+    /**
+     * is gateway node
+     *
+     * @returns {boolean}
+     */
+    isGateway() {
+        return false;
+    }
+
+    /**
+     * is path
+     *
+     * @returns {boolean}
+     */
+    isPath() {
+        return false;
+    }
+
+    /**
+     * is task
+     *
+     * @returns {boolean}
+     */
+    isTask() {
+        return false;
+    }
 
     /**
      * 提供元素拖动api
@@ -467,7 +505,7 @@ class ElementData {
                 setterMode = true;
             }
         }
-        let result = getOrSetValue(this.attrs || (this.#attrs = {}), args);
+        let result = getOrSetValue(this.attrs || (this._attrs = {}), args);
         return setterMode ? this : result;
     };
 
@@ -479,7 +517,7 @@ class ElementData {
         let len = args.length;
         let p1 = args[0];
         let setterMode = len > 1 || (p1 && typeof p1 == "object");
-        let result = getOrSetValue(this.datas || (this.#datas = {}), args);
+        let result = getOrSetValue(this.datas || (this._datas = {}), args);
         return setterMode ? this : result;
     };
 
@@ -500,8 +538,8 @@ class ElementData {
             this.data("text").remove();
         }
         this.node.remove();
-        this.#attrs = null;
-        this.#datas = null;
+        this._attrs = null;
+        this._datas = null;
         this.removed = true;
     };
 }
@@ -527,23 +565,17 @@ class NodeElementData extends ElementData {
     get nodeType() {
         return this.data("nodeType");
     }
+
     set nodeType(val) {
-        if(this.supportedType(val)) {
+        if (this.supportedType(val)) {
             this.data("nodeType", val);
         } else {
             throw new Error(`nodeType '${val}' not supported for type '` + this.type + "'");
         }
     }
+
     supportedType(type) {
         return true;
-    }
-    /**
-     * is gateway node
-     *
-     * @returns {boolean}
-     */
-    isGateway() {
-        return false;
     }
 }
 
@@ -604,20 +636,27 @@ export class HtmlSplitElementData extends HtmlElementData {
  */
 export class HtmlTextElementData extends ElementData {
 
-    #nowrap;
+    _nowrap;
 
     constructor(node, nowrap) {
         super(node, "html");
-        this.#nowrap = nowrap;
+        this._nowrap = nowrap;
+        // init style
+        Object.assign(node.style, {
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            overflow: "hidden",
+            boxSizing: "border-box"
+        })
     };
 
     // set text
     setText(text) {
-        this.node.innerHTML = `<div title="${text}" style="transform: translate(-50%, -50%);text-align: center;overflow: hidden;word-break: break-all;box-sizing: border-box;${textStyle}">${text}</div>`;
+        this.node.innerHTML = `<span title="${text}" style="word-break: break-all;${textStyle}">${text}</span>`;
         Object.assign(this.attrs, {
             text
         });
-        this.#updateWhiteSpace();
+        this._updateWhiteSpace();
         return this;
     };
 
@@ -627,19 +666,16 @@ export class HtmlTextElementData extends ElementData {
     };
 
     // set whiteSpace if nowrap
-    #updateWhiteSpace() {
-        let innerHtmlNode = this.node.childNodes[0];
-        if (!innerHtmlNode) return;
-        if (this.#nowrap) {
-            Object.assign(innerHtmlNode.style, {
-                maxWidth: "100%",
+    _updateWhiteSpace() {
+        let node = this.node;
+        if (this._nowrap) {
+            Object.assign(node.style, {
                 textOverflow: "ellipsis",
                 overflow: "hidden",
                 whiteSpace: "nowrap"
             })
         } else {
-            Object.assign(innerHtmlNode.style, {
-                maxWidth: null,
+            Object.assign(node.style, {
                 textOverflow: null,
                 overflow: null,
                 whiteSpace: null
@@ -712,6 +748,15 @@ export class SvgRectElementData extends SvgNodeElementData {
         super(node, "rect");
     };
 
+    /**
+     * is task
+     *
+     * @returns {boolean}
+     */
+    isTask() {
+        return true;
+    }
+
     // // task type
     // set nodeType(val) {
     //     if (["Business", "Service", "Script", "Manual"].includes(val)) {
@@ -724,6 +769,7 @@ export class SvgRectElementData extends SvgNodeElementData {
     supportedType(type) {
         return ["Business", "Service", "Script", "Manual"].includes(type);
     }
+
     // Change of response nodeType
     get asynchronous() {
         let handler = this.handler;
@@ -930,6 +976,14 @@ export class SvgPathElementData extends SvgElementData {
         return this.node.getBBox();
     };
 
+    /**
+     * is path
+     *
+     * @returns {boolean}
+     */
+    isPath() {
+        return true;
+    }
 }
 
 /**
