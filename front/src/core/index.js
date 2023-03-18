@@ -11,7 +11,16 @@ import {
     uuid
 } from "./util"
 
-import {getElementDatas, HtmlElementData, HtmlTextElementData, setElementDatas, svgNS} from "./ElementData"
+import {
+    connectArrowPrefix,
+    createColorMarker,
+    getElementDatas,
+    HtmlElementData,
+    HtmlSplitElementData,
+    HtmlTextElementData,
+    setElementDatas,
+    svgNS
+} from "./ElementData"
 import historyActions from "./modules/history"
 import SvgPaper from "./SvgPaper";
 
@@ -48,31 +57,7 @@ const DefaultHtmlTypes = {
     zoomOut: appendSvgInner(`<path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z" ></path><path d="M625.792 448H336a32 32 0 0 0 0 64h289.792a32 32 0 1 0 0-64z"></path>`),
 };
 
-const connectArrowPrefix = "connect-arrow-";
 const defs = `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>`
-
-// 创建指定颜色的marker
-const createColorMarker = (svgDom, color) => {
-    if (!color) return;
-
-    // 箭头
-    let id = `${connectArrowPrefix}${color}`;
-    let marker = svgDom.querySelector("marker[id='" + id + "']");
-    if (!marker) {
-        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
-        marker = svgDom.querySelector("marker[id='" + id + "']");
-        marker.outerHTML = `<marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5"><use xlink:href="#${connectArrowPrefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use></marker>`;
-    }
-
-    // 条件连线样式
-    id = `connect-condition-${color}`;
-    marker = svgDom.querySelector("marker[id='" + id + "']");
-    if (!marker) {
-        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
-        marker = svgDom.querySelector("marker[id='" + id + "']");
-        marker.outerHTML = `<marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" fill="#fff" stroke="${color}"  stroke-width="1"></path></marker>`;
-    }
-}
 
 /** 全局映射html块 */
 const GlobalHTMLTypes = {...DefaultHtmlTypes};
@@ -256,7 +241,7 @@ const defaultOption = {
      *
      * @param evt
      */
-    contextMenu(evt) {
+    onContextMenu(evt) {
     },
 
     /**
@@ -622,7 +607,7 @@ class GraphicDesign {
         if (this.nextEndTool) {
             this.nextEndTool.remove();
         }
-        this.nextEndTool = this.renderHTML("end", ...imageArgs).attr({
+        this.nextEndTool = this.renderHtmlNode("end", ...imageArgs).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -641,7 +626,7 @@ class GraphicDesign {
         if (this.deleteTool) {
             this.deleteTool.remove();
         }
-        this.deleteTool = this.renderHTML("del", ...imageArgs).attr({
+        this.deleteTool = this.renderHtmlNode("del", ...imageArgs).attr({
             opacity: .5,
             title: "删除元素",
             cursor: "pointer"
@@ -1998,7 +1983,7 @@ class GraphicDesign {
     /**
      * 根据html创建节点（以div作为容器）
      */
-    renderHTML(type, x, y, width, height) {
+    renderHtmlNode(type, x, y, width, height, createFunction) {
         let html;
         if (!(html = GlobalHTMLTypes[type])) {
             console.error(`html type [${type}] is not register `);
@@ -2007,7 +1992,7 @@ class GraphicDesign {
         let domEle = createDomElement("div", this.flowWrapper);
         domEle.innerHTML = html;
         domEle.style.position = "absolute";
-        let element = new HtmlElementData(domEle);
+        let element = typeof createFunction == 'function' ? createFunction(domEle) : new HtmlElementData(domEle)
         element.attr({
             x: x || 0,
             y: y || 0,
@@ -2016,17 +2001,6 @@ class GraphicDesign {
         });
         return element;
     };
-
-    // /**
-    //  * 渲染svg text
-    //  *
-    //  * @param x
-    //  * @param y
-    //  * @returns {SvgTextElementData}
-    //  */
-    // renderSvgText(x, y) {
-    //     return this.paper.text(x, y);
-    // };
 
     /**
      * 渲染html文本
@@ -2944,9 +2918,13 @@ class GraphicDesign {
 
     /**
      * 创建分支节点(默认类型为xor)
+     *
+     * @param x
+     * @param y
+     * @returns {*}
      */
     createSplitNode(x, y) {
-        return this.createHTMLNode("xor", x || 100, y || 150, 64, 64, "Split").attr({
+        return this.createHTMLNode("xor", x || 100, y || 150, 64, 64, "Split", (node) => new HtmlSplitElementData(node)).attr({
             color: this.themeColor
         });
     };
@@ -2961,7 +2939,7 @@ class GraphicDesign {
     };
 
     /**
-     * 创建html节点
+     * 创建html节点(开始，结束，分支，聚合)
      *
      * @param src
      * @param x
@@ -2971,15 +2949,12 @@ class GraphicDesign {
      * @param nodeType
      * @returns {*}
      */
-    createHTMLNode(type, x, y, w, h, nodeType) {
-        let htmlElement = this.renderHTML(type, x, y, w, h);
-        if (!htmlElement) return null;
+    createHTMLNode(type, x, y, w, h, nodeType, createFunction) {
+        let htmlElement = this.renderHtmlNode(type, x, y, w, h, createFunction);
         this.setUUID(htmlElement);
         onNodeCreated(htmlElement, this);
         htmlElement.data("handler", {});
         htmlElement.data("nodeType", nodeType);
-        htmlElement.attr("title", nodeType + ":" + htmlElement.id);
-        this.autoContainerSelect(htmlElement);
         this.initElement(htmlElement);
         return htmlElement;
     };
@@ -3005,15 +2980,12 @@ class GraphicDesign {
             fill: this.settings.nodeBackgroundColor
         });
         rect.data("handler", {});
-
-        // create text
+        // create text element use html
         let text = this.renderHtmlText(0, 0, width * 0.8).attr({
             text: this.settings.nodeName + " " + this.nextId()
         });
         rect.data("text", text);
         onNodeCreated(rect, this);
-
-        this.autoContainerSelect(rect);
         this.initElement(rect);
         return rect;
     };
@@ -3035,45 +3007,6 @@ class GraphicDesign {
         }
     };
 
-
-    // /**
-    //  * 创建图片节点
-    //  *
-    //  * @param src
-    //  * @param x
-    //  * @param y
-    //  * @param w
-    //  * @param h
-    //  * @param nodeType
-    //  * @returns {*}
-    //  */
-    // createImage(src, x, y, w, h, nodeType) {
-    //     let image = this.renderImage(src, x, y, w, h);
-    //     // id需要第一时间修改
-    //     // image.id = this.createElementId();
-    //     // image.data("type", "node");
-    //     image.data("nodeType", nodeType);
-    //     image.attr("title", nodeType + ":" + image.id);
-    //     this.autoContainerSelect(image);
-    //     this.initElement(image);
-    //     return image;
-    // };
-
-    // /**
-    //  * 创建业务节点
-    //  *
-    //  * @param x
-    //  * @param y
-    //  * @param width
-    //  * @param height
-    //  * @returns {*}
-    //  */
-    // createBusinessNode2(x, y) {
-    //     return this.createHTMLNode("business", x || 100, y || 150, 100, 80, NodeTypes.Business).attr({
-    //         borderColor: this.themeColor
-    //     });
-    // };
-
     /**
      * 创建业务节点
      *
@@ -3088,22 +3021,6 @@ class GraphicDesign {
         rect.data("nodeType", NodeTypes.Business);
         return rect;
     };
-
-    // createMutiSubProcess(x, y, width, height, editable) {
-    //     let rect = this.renderRect(x, y, width, height);
-    //     rect.attr({
-    //         "stroke": "black",
-    //         fill: "white"
-    //     });
-    //     rect.id = this.createElementId();
-    //     rect.data("type", "mutiSubProcess");
-    //     if (!editable) {
-    //         return rect;
-    //     }
-    //     this.initElement(rect);
-    //     return rect;
-    // };
-
 
     /**
      * 根据数据构建节点
@@ -3131,7 +3048,6 @@ class GraphicDesign {
         nodeElement.attr(attrs);
         let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
         nodeElement.data("text", nodeText);
-        nodeElement.attr("title", "id:" + id);
         this.initElement(nodeElement);
         return nodeElement;
     };
@@ -3143,15 +3059,15 @@ class GraphicDesign {
      * @param type
      * @param component
      * @param nodeType
+     * @param createFunction
      * @returns {*}
      */
-    loadHTMLElement(id, type, component, nodeType) {
+    loadHTMLElement(id, type, component, nodeType, createFunction) {
         let {attrs} = component;
-        let htmlElement = this.renderHTML(type, 0, 0, 0, 0);
+        let htmlElement = this.renderHtmlNode(type, 0, 0, 0, 0, createFunction);
         htmlElement.id = id;
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr(attrs);
-        htmlElement.attr("title", "id:" + htmlElement.id);
         this.initElement(htmlElement);
         return htmlElement;
     };
@@ -3170,10 +3086,8 @@ class GraphicDesign {
         attrs.src = src;
         let image = this.renderImage("", 0, 0, 0, 0);
         image.id = id;
-        // image.data("type", "node");
         image.data("nodeType", nodeType);
         image.attr(attrs);
-        // image.attr("title", "id:" + image.id);
         this.initElement(image);
         return image;
     };
@@ -3188,7 +3102,6 @@ class GraphicDesign {
      */
     createConnectElement(connectData, fromElement, toElement) {
         let {id, component} = connectData;
-        // let {attrs, arrowAttrs, textAttrs} = component;
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
@@ -3199,7 +3112,7 @@ class GraphicDesign {
         let pathText = this.renderHtmlText(0, 0, this.option.maxPathTextWidth || 100).attr(textAttrs);
         connect.data("text", pathText);
 
-        // 绑定数据关系
+        // bind data
         connect.data("from", fromElement);
         connect.data("to", toElement);
 
@@ -4608,9 +4521,6 @@ class GraphicDesign {
         return false;
     };
 
-    autoContainerSelect(targetElement) {
-    };
-
     // isOutContainerBoundary(x, y, w, h, containerElement) {
     //     let containerX = containerElement.attr("x");
     //     let containerY = containerElement.attr("y");
@@ -4785,30 +4695,7 @@ class GraphicDesign {
      * @param type(Always,Script,HandlerCall)
      */
     setConnectType(connect, type) {
-        if (connect.node) {
-            let stroke = connect.attr("stroke");
-            createColorMarker(this.paper.node, stroke);
-            if (!type) {
-                type = connect.data("conditionType") || "Always";
-            }
-            let nodeStyle = connect.node.style;
-            switch (type) {
-                case "Always": {
-                    connect.data("conditionType", "Always");
-                    nodeStyle.markerStart = null;
-                    break;
-                }
-                case "Script":
-                case "HandlerCall": {
-                    connect.data("conditionType", type);
-                    nodeStyle.markerStart = `url(#connect-condition-${stroke})`;
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
+        connect.conditionType = type;
     };
 
     /**
@@ -4904,7 +4791,7 @@ class GraphicDesign {
                 case "Split": {
                     // 网关类型gateway： xor, or, and
                     let splitType = gateway.toLowerCase();
-                    element = this.loadHTMLElement(id, splitType, component, "Split"); //.attr({color: this.themeColor});
+                    element = this.loadHTMLElement(id, splitType, component, "Split", (node) => new HtmlSplitElementData(node));
                     setElementDatas(element, nodeDatas, elementData);
                     break;
                 }

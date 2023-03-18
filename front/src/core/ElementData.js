@@ -1,4 +1,4 @@
-import {bindDomEvent, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
+import {bindDomEvent, createDomElement, pointsToPathD, setDomAttrs, unbindDomEvent} from "./util";
 
 // svg namespace
 export const svgNS = "http://www.w3.org/2000/svg";
@@ -6,6 +6,31 @@ export const xlinkNS = "http://www.w3.org/1999/xlink";
 // default text font style
 const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
 const functionType = "function";
+
+export const connectArrowPrefix = "connect-arrow-";
+// 创建指定颜色的marker
+export const createColorMarker = (svgDom, color) => {
+    if (!color) return;
+
+    // 箭头
+    let id = `${connectArrowPrefix}${color}`;
+    let marker = svgDom.querySelector("marker[id='" + id + "']");
+    if (!marker) {
+        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
+        marker = svgDom.querySelector("marker[id='" + id + "']");
+        marker.outerHTML = `<marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5"><use xlink:href="#${connectArrowPrefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use></marker>`;
+    }
+
+    // 条件连线样式
+    id = `connect-condition-${color}`;
+    marker = svgDom.querySelector("marker[id='" + id + "']");
+    if (!marker) {
+        marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
+        marker = svgDom.querySelector("marker[id='" + id + "']");
+        marker.outerHTML = `<marker id="${id}" viewBox="0 0 20 20" refX="-15" refY="10" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 10 L 8 6 L 16 10 L 8 14 Z" fill="#fff" stroke="${color}"  stroke-width="1"></path></marker>`;
+    }
+}
+
 
 /***
  * set or get prop value
@@ -174,31 +199,43 @@ export function setElementDatas(element, datas, node) {
  */
 class ElementData {
 
+    #id;
+    #type;
+    #node;
+    #datas;
+    #attrs;
+
     /**
      * 元素数据构造函数
      */
-    constructor(node) {
+    constructor(node, type) {
+        this.#type = type;
         // dom节点
-        this.node = node;
+        this.#node = node;
         // 数据属性
-        this.datas = {};
+        this.#datas = {};
         // 节点属性（可修改属性）
-        this.attrs = {};
+        this.#attrs = {};
         // 设置id
         this.id = id();
     };
 
     // Change of response id
     get id() {
-        return this._id;
+        return this.#id;
     };
 
     // Change of response id
     set id(val) {
-        this._id = val;
+        this.#id = val;
         setDomAttrs(this.node, {
             "data-id": val
         });
+    };
+
+    // readonly type
+    get type() {
+        return this.#type;
     };
 
     // Change of response name
@@ -212,6 +249,27 @@ class ElementData {
         if (textEle) {
             textEle.attr("text", val)
         }
+    };
+
+    get node() {
+        return this.#node;
+    }
+
+    get datas() {
+        return this.#datas;
+    }
+
+    get attrs() {
+        return this.#attrs;
+    }
+
+    // meta customobject
+    get meta() {
+        let meta = this.data("meta");
+        if (!meta) {
+            this.data("meta", meta = {});
+        }
+        return meta;
     };
 
     /**
@@ -409,7 +467,7 @@ class ElementData {
                 setterMode = true;
             }
         }
-        let result = getOrSetValue(this.attrs || (this.attrs = {}), args);
+        let result = getOrSetValue(this.attrs || (this.#attrs = {}), args);
         return setterMode ? this : result;
     };
 
@@ -421,7 +479,7 @@ class ElementData {
         let len = args.length;
         let p1 = args[0];
         let setterMode = len > 1 || (p1 && typeof p1 == "object");
-        let result = getOrSetValue(this.datas || (this.datas = {}), args);
+        let result = getOrSetValue(this.datas || (this.#datas = {}), args);
         return setterMode ? this : result;
     };
 
@@ -442,19 +500,59 @@ class ElementData {
             this.data("text").remove();
         }
         this.node.remove();
-        this.attrs = null;
-        this.datas = null;
+        this.#attrs = null;
+        this.#datas = null;
         this.removed = true;
     };
 }
 
 /**
+ * node element data
+ */
+class NodeElementData extends ElementData {
+    constructor(node, type) {
+        super(node, type);
+    }
+
+    // node handler
+    get handler() {
+        let handler = this.data("handler");
+        if (!handler) {
+            this.data("handler", handler = {});
+        }
+        return handler;
+    }
+
+    // Change of response nodeType
+    get nodeType() {
+        return this.data("nodeType");
+    }
+    set nodeType(val) {
+        if(this.supportedType(val)) {
+            this.data("nodeType", val);
+        } else {
+            throw new Error(`nodeType '${val}' not supported for type '` + this.type + "'");
+        }
+    }
+    supportedType(type) {
+        return true;
+    }
+    /**
+     * is gateway node
+     *
+     * @returns {boolean}
+     */
+    isGateway() {
+        return false;
+    }
+}
+
+/**
  * html element data
  */
-export class HtmlElementData extends ElementData {
+export class HtmlElementData extends NodeElementData {
     constructor(node) {
-        super(node);
-        this.type = "html";
+        super(node, "html");
     };
 
     /**
@@ -468,12 +566,49 @@ export class HtmlElementData extends ElementData {
 }
 
 /**
+ * html split element data
+ */
+export class HtmlSplitElementData extends HtmlElementData {
+    constructor(node) {
+        super(node);
+    };
+
+    // gateway
+    get gateway() {
+        return this.data("gateway");
+    };
+
+    // broken/straight
+    set gateway(val) {
+        if (["XOR", "OR", "AND"].includes(val)) {
+            this.data("gateway", val);
+            this.setHtmlType(val.toLowerCase());
+            // update view ?
+        } else {
+            throw new Error(`gateway '${val}' not supported`);
+        }
+    };
+
+    /**
+     * is gateway node
+     *
+     * @returns {boolean}
+     */
+    isGateway() {
+        return true;
+    }
+}
+
+/**
  * html text element data Support line break
  */
-export class HtmlTextElementData extends HtmlElementData {
+export class HtmlTextElementData extends ElementData {
+
+    #nowrap;
+
     constructor(node, nowrap) {
-        super(node);
-        this.nowrap = nowrap;
+        super(node, "html");
+        this.#nowrap = nowrap;
     };
 
     // set text
@@ -482,7 +617,7 @@ export class HtmlTextElementData extends HtmlElementData {
         Object.assign(this.attrs, {
             text
         });
-        this.setNowrap(this.nowrap);
+        this.#updateWhiteSpace();
         return this;
     };
 
@@ -492,10 +627,10 @@ export class HtmlTextElementData extends HtmlElementData {
     };
 
     // set whiteSpace if nowrap
-    setNowrap(nowrap) {
+    #updateWhiteSpace() {
         let innerHtmlNode = this.node.childNodes[0];
         if (!innerHtmlNode) return;
-        if (nowrap) {
+        if (this.#nowrap) {
             Object.assign(innerHtmlNode.style, {
                 maxWidth: "100%",
                 textOverflow: "ellipsis",
@@ -512,7 +647,7 @@ export class HtmlTextElementData extends HtmlElementData {
         }
     };
 
-    // override attr
+    // override attr()
     attr() {
         let args = arguments;
         let [arg0, arg1] = args;
@@ -537,9 +672,27 @@ export class HtmlTextElementData extends HtmlElementData {
 /**
  * svg element data
  */
-export class SvgElementData extends ElementData {
-    constructor(node) {
-        super(node);
+class SvgElementData extends ElementData {
+    constructor(node, type) {
+        super(node, type);
+    };
+
+    /**
+     * is svg
+     * @returns {boolean}
+     */
+    isSvg() {
+        return true;
+    };
+}
+
+/**
+ * svg node element
+ */
+class SvgNodeElementData extends NodeElementData {
+
+    constructor(node, type) {
+        super(node, type);
     };
 
     /**
@@ -554,10 +707,102 @@ export class SvgElementData extends ElementData {
 /**
  * svg rect element data
  */
-export class SvgRectElementData extends SvgElementData {
+export class SvgRectElementData extends SvgNodeElementData {
     constructor(node) {
-        super(node);
-        this.type = "rect";
+        super(node, "rect");
+    };
+
+    // // task type
+    // set nodeType(val) {
+    //     if (["Business", "Service", "Script", "Manual"].includes(val)) {
+    //         this.data("nodeType", val);
+    //         // update view ?
+    //     } else {
+    //         throw new Error(`nodeType ${val} not supported`);
+    //     }
+    // };
+    supportedType(type) {
+        return ["Business", "Service", "Script", "Manual"].includes(type);
+    }
+    // Change of response nodeType
+    get asynchronous() {
+        let handler = this.handler;
+        return handler.asynchronous;
+    };
+
+    set asynchronous(val) {
+        this.handler.asynchronous = !!val;
+    };
+
+    // Change of response timeout
+    get timeout() {
+        let handler = this.handler;
+        return handler.timeout;
+    };
+
+    set timeout(val) {
+        this.handler.timeout = Number(val);
+    };
+
+    get delay() {
+        let handler = this.handler;
+        return handler.delay;
+    };
+
+    set delay(val) {
+        this.handler.delay = Number(val);
+    };
+
+    get iterate() {
+        let handler = this.handler;
+        return handler.iterate;
+    };
+
+    set iterate(val) {
+        this.handler.iterate = Number(val);
+    };
+
+    get policy() {
+        let handler = this.handler;
+        return handler.policy;
+    };
+
+    set policy(val) {
+        if (["Stop", "Continue"].includes(val)) {
+            this.handler.policy = val;
+        } else {
+            throw new Error(`policy ${val} not supported`);
+        }
+    };
+
+    // if retryOnError
+    get retryOnError() {
+        let handler = this.handler;
+        return handler.retryOnError || false;
+    };
+
+    set retryOnError(val) {
+        this.handler.retryOnError = !!val;
+    };
+
+    // retry count
+    get retryCount() {
+        let handler = this.handler;
+        return handler.retryCount || 0;
+    };
+
+    set retryCount(val) {
+        this.handler.retryCount = Number(val);
+    };
+
+    // if skip handler
+    get skip() {
+        let handler = this.handler;
+        return handler.skip || false;
+    };
+
+    set skip(val) {
+        this.handler.skip = !!val;
     };
 }
 
@@ -566,17 +811,16 @@ export class SvgRectElementData extends SvgElementData {
  */
 export class SvgPathElementData extends SvgElementData {
     constructor(node) {
-        super(node);
-        this.type = "path";
+        super(node, "path");
         setDomAttrs(node, {
             fill: "none"
         });
-    };
+    }
 
     // Change of response pathStyle
     get pathStyle() {
         return this.data("pathStyle");
-    };
+    }
 
     // broken/straight
     set pathStyle(val) {
@@ -585,24 +829,74 @@ export class SvgPathElementData extends SvgElementData {
         } else {
             throw new Error(`pathStyle ${val} not supported`);
         }
-    };
+    }
 
-    // Change of response script
-    get script() {
-        return this.data("script");
-    };
+    // Change of response conditionType
+    get conditionType() {
+        return this.data("conditionType") || "Always";
+    }
 
-    set script(val) {
-        this.data("script", val);
+    set conditionType(val) {
+        if (val) {
+            if (["Always", "Script", "HandlerCall", "Never"].includes(val)) {
+                this.data("conditionType", val);
+                // update view ?
+            } else {
+                throw new Error(`conditionType '${val}' not supported`);
+            }
+        }
+        this.updatePathView();
     }
 
     // Change of response script
     get script() {
         return this.data("script");
-    };
+    }
 
     set script(val) {
         this.data("script", val);
+    }
+
+    // is condition type
+    get isCondition() {
+        let conditionType = this.conditionType;
+        return conditionType == "Script" || conditionType == "HandlerCall";
+    }
+
+    get from() {
+        return this.data("from");
+    }
+
+    get to() {
+        return this.data("to");
+    }
+
+    /**
+     * 针对单分支连线设置条件类型（默认类型/条件类型）
+     *
+     * @param connect
+     * @param type(Always,Script,HandlerCall)
+     */
+    updatePathView() {
+        let stroke = this.attr("stroke");
+        let svgNode = this.node.parentNode
+        createColorMarker(svgNode, stroke);
+        let type = this.conditionType;
+        let nodeStyle = this.node.style;
+        switch (type) {
+            case "Always": {
+                nodeStyle.markerStart = null;
+                break;
+            }
+            case "Script":
+            case "HandlerCall": {
+                nodeStyle.markerStart = `url(#connect-condition-${stroke})`;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
 
     // override attr
@@ -643,8 +937,7 @@ export class SvgPathElementData extends SvgElementData {
  */
 export class SvgImageElementData extends SvgElementData {
     constructor(node) {
-        super(node);
-        this.type = "image";
+        super(node, "image");
     };
 
     // set image xlink:href
@@ -658,8 +951,7 @@ export class SvgImageElementData extends SvgElementData {
  */
 export class SvgCircleElementData extends SvgElementData {
     constructor(node) {
-        super(node);
-        this.type = "circle";
+        super(node, "circle");
     };
 }
 
@@ -668,8 +960,7 @@ export class SvgCircleElementData extends SvgElementData {
  */
 export class SvgTextElementData extends SvgElementData {
     constructor(node) {
-        super(node);
-        this.type = "text";
+        super(node, "text");
     };
 
     /**

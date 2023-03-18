@@ -1,15 +1,13 @@
 import {createDomElementNs, pointsToPathD} from "./util";
 import {
-    svgNS,
-    xlinkNS,
     SvgCircleElementData,
     SvgImageElementData,
+    svgNS,
     SvgPathElementData,
     SvgRectElementData,
-    SvgTextElementData
+    SvgTextElementData,
+    xlinkNS
 } from "./ElementData"
-
-// svg namespace
 
 /**
  * svg paper
@@ -17,6 +15,8 @@ import {
  * Note: svg text support capability is not as good as conventional dom nodes, unless foreignObject is used,
  */
 export default class SvgPaper {
+    #node;
+    #removed = false;
 
     constructor(selector, width, height) {
         let parentNode;
@@ -33,11 +33,17 @@ export default class SvgPaper {
             "xmlns:xlink": xlinkNS,
             style: "overflow: visible; position: relative; user-select: none; cursor: default;"
         });
-        createDomElementNs(svgNS, "defs", svg)
         // create svg dom
-        // let svg = createDomElement("svg", parentNode, );
-        this.node = svg;
+        createDomElementNs(svgNS, "defs", svg)
+        this.#node = svg;
     };
+
+    get node() {
+        return this.#node;
+    };
+    get removed() {
+        return this.#removed;
+    }
 
     /**
      * draw rect
@@ -94,7 +100,6 @@ export default class SvgPaper {
             rx: radius,
             ry: radius
         };
-        // let imageNode = createDomElementNs("http://www.w3.org/1999/xlink", 'image', this.svg, attrs);
         let imageNode = createDomElementNs(svgNS, 'image', this.node, attrs);
         let imageElementData = new SvgImageElementData(imageNode);
         imageElementData.setHref(src);
@@ -108,7 +113,7 @@ export default class SvgPaper {
      */
     text(x, y) {
         // if use foreignObject ?
-        let textNode = createDomElementNs(svgNS, 'text', this.node, {x,y});
+        let textNode = createDomElementNs(svgNS, 'text', this.node, {x, y});
         return new SvgTextElementData(textNode);
     };
 
@@ -143,7 +148,7 @@ export default class SvgPaper {
     remove() {
         this.clear();
         this.node.remove();
-        this.node = null;
-        this.removed = true;
+        this.#node = null;
+        this.#removed = true;
     };
 }
