@@ -345,7 +345,7 @@ const onNodeCreated = (node, instance) => {
 class GraphicDesign {
 
     /**
-     * new构造器
+     * new design
      *
      * @param dom
      * @param option 配置项
@@ -356,7 +356,7 @@ class GraphicDesign {
         }
         this.option = assign({}, defaultOption, option || {});
         if (!this.settings) {
-            this.option.settings = DefaultSettings;
+            this.option.settings = {...DefaultSettings};
         } else {
             this.option.settings = assign({}, DefaultSettings, this.settings);
         }
@@ -376,24 +376,14 @@ class GraphicDesign {
         let flowWrapper = dom.querySelector(".flow-wrapper-body");
         this.flowWrapper = flowWrapper;
         this.paper = new SvgPaper(flowWrapper, width, height);
-        // 连线颜色作为箭头的颜色
+        // connect colors
         this.connectColors = [this.themeColor];
-        // 初始化paper
         this.initPaper();
         this.dom = dom;
-        // 初始化
         this.init();
-        // 设置背景图片（网格）
         this.initStyles();
-        // 节点和连线map
         this.elements = {};
-        // // 容器
-        // this.containers = {};
-        // 圈选记录
         this.groupSelectElements = [];
-        // 设计模式
-        // this.designMode = 'Simple'
-        // 当前选择元素
         this.selectElement = null;
         let me = this;
         let setUUID = (element) => {
@@ -405,7 +395,6 @@ class GraphicDesign {
             uuid: setUUID,
             meta: {}
         };
-        // 连线绑定在element中的属性集合
         this.connectDatas = {
             priority: 0,
             conditionType: "Script",
@@ -527,7 +516,6 @@ class GraphicDesign {
 
         // 连线矩形（解决连线选择难问题）
         this.connectRect = this.renderRect(0, 0, 0, 0).attr({
-            // stroke: this.themeColor,
             fill: "transparent",
             "stroke-width": 1,
             stroke: this.themeColor,
@@ -2462,7 +2450,7 @@ class GraphicDesign {
 
         if (targetElement.data('text')) {
             targetElement.data('text').click(function (e) {
-                if(me.option.textEditOnClick) {
+                if (me.option.textEditOnClick) {
                     me.beginInputEdit(targetElement);
                 } else {
                     me.handleClickElement(targetElement, e);
@@ -2472,7 +2460,7 @@ class GraphicDesign {
             targetElement.data('text').dblclick(function (e) {
                 // 点击文本直接修改文本，不再触发双击事件
                 // me.option.dblclickElement && me.option.dblclickElement(targetElement, e);
-                if(me.option.textEditOnDblClick) {
+                if (me.option.textEditOnDblClick) {
                     me.beginInputEdit(targetElement);
                 } else {
                     me.handleDblclickElement(targetElement, e);
@@ -2522,10 +2510,10 @@ class GraphicDesign {
      */
     handleDblclickElement(element, evt) {
         let {dblclickElement, textEditOnDblClick} = this.option;
-        if(typeof dblclickElement == "function" ) {
+        if (typeof dblclickElement == "function") {
             dblclickElement(element, evt);
         }
-        if(textEditOnDblClick) {
+        if (textEditOnDblClick) {
             this.beginInputEdit(element);
         }
         // if (this.option.enablePropertyPop) {
