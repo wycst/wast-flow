@@ -5131,6 +5131,34 @@ class GraphicDesign {
         return null;
     };
 
+    // get start node
+    getStartNode() {
+        let {startNodeId} = this.getData();
+        return this.getElementById(startNodeId);
+    }
+
+    /**
+     * get next nodes
+     *
+     * @param data
+     * @returns {null|*[]}
+     */
+    getNextNodes(data) {
+        if (!data) return null;
+        let element = typeof data == "string" ? this.getElementById(data) : data;
+        if (!element) return null;
+        let nodes = [];
+        try {
+            let outLines = element.data("out");
+            for (let lineId in outLines) {
+                let line = outLines[lineId];
+                nodes.push(this.toElementData(line.to));
+            }
+        } catch (err) {
+        }
+        return nodes;
+    }
+
     /**
      * 重置所有元素的颜色
      */
@@ -5280,29 +5308,19 @@ class GraphicDesign {
         if (!this.completeRecords) {
             this.completeRecords = [];
         }
-        this.completeRecords.push(this.getElementId(element));
+        this.completeRecords.push(element.id);
         let inlines = element.data("in");
         for (let lineId in inlines) {
             let connectElement = inlines[lineId];
             if (!this.completeRecords.includes(lineId)) {
                 this.completeRecords.push(lineId);
                 let fromElement = connectElement.data("from");
-                if (this.completeRecords.includes(this.getElementId(fromElement))) {
+                if (this.completeRecords.includes(fromElement.id)) {
                     // 完成连线
                     this.setElementColor(connectElement, completeColor);
                 }
             }
         }
-    };
-
-    /**
-     * 获取元素的id,后续作废
-     *
-     * @param element
-     */
-    getElementId(element) {
-        let {id} = element.data();
-        return id ? id : element.id
     };
 
     /***
