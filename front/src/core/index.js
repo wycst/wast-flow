@@ -306,12 +306,14 @@ const divider = `<div style="border: 1px dashed #dcdfe6; width: 40%;margin: 8px;
 const extensionTemplate = `
     <div class="flow-menu" style="display:none;z-index: 100;">
         ${mr('select', 1, '圈选，可使用快捷键按住ctrl替代')}
+        ${divider}
         ${mr('start', 1, '开始')}
-        ${mr('manual', 1, '人工节点')}
+        ${mr('end', 1, '结束')}
+        ${divider}
         ${mr('businessTask', 1, '业务节点')}
         ${mr('service', 1, '服务节点')}
         ${mr('message', 1, '消息节点')}
-        ${mr('end', 1, '结束')}
+        ${mr('manual', 1, '人工节点')}
         ${divider}
         ${mr('xor', 1, '有且仅有一个满足条件的分支通过')}
         ${mr('or', 1, '至少一个满足条件的分支通过,与汇聚网关组合使用')}
@@ -828,7 +830,7 @@ class GraphicDesign {
             position: "absolute",
             left: 0,
             top: 0,
-            width: "64px",
+            width: "60px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -974,14 +976,14 @@ class GraphicDesign {
         // 设置item背景图片
         menuDom.querySelectorAll(".menu-item").forEach(item => {
             let type = item.dataset.type;
-            let width = 36, height = 36;
+            let width = 36 * 8/9, height = 36* 8/9;
             if (type == "or" || type == "xor" || type == "and" || type == "join") {
-                width = height = 45;
+                width = height = 45* 8/9;
             }
             assign(item.style, {
                 width: `${width}px`,
                 height: `${height}px`,
-                margin: "10px 0 4px 0"
+                margin: "5px 0"
             });
             if (type == "select") {
                 // 绑定全选事件
