@@ -534,9 +534,14 @@ class ElementData {
      * 移除元素,并释放内存
      */
     remove() {
-        if (this.data("text")) {
-            this.data("text").remove();
+        let ele;
+        if ((ele = this.data("text")) && typeof ele.remove == "function") {
+            ele.remove();
         }
+        if ((ele = this.data("icon")) && typeof ele.remove == "function") {
+            ele.remove();
+        }
+
         this.node.remove();
         this._attrs = null;
         this._datas = null;
