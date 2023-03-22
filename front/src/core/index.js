@@ -978,12 +978,12 @@ class GraphicDesign {
             let type = item.dataset.type;
             let width = 36 * 8/9, height = 36* 8/9;
             if (type == "or" || type == "xor" || type == "and" || type == "join") {
-                width = height = 45* 8/9;
+                width = height = 45 * 8/9;
             }
             assign(item.style, {
                 width: `${width}px`,
                 height: `${height}px`,
-                margin: "5px 0"
+                margin: "4px 0"
             });
             if (type == "select") {
                 // 绑定全选事件
