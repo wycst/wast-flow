@@ -16,6 +16,10 @@
   "publishConfig": {
     "registry": "http://192.168.1.113:8181/repository/npm-releases/"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wycst/wast-flow.git"
+  },
   "peerDependencies": {},
   "dependencies": {
     "wastflow": "^1.0.0-beta"
