@@ -4,7 +4,8 @@ import {bindDomEvent, createDomElement, pointsToPathD, setDomAttrs, unbindDomEve
 export const svgNS = "http://www.w3.org/2000/svg";
 export const xlinkNS = "http://www.w3.org/1999/xlink";
 // default text font style
-const textStyle = "font-family: Arial, sans-serif; font-size: 12px; font-weight: normal;";
+// font-family: Arial, sans-serif; font-weight: normal;
+const textStyle = "font-size: 12px;";
 const functionType = "function";
 
 export const connectArrowPrefix = "connect-arrow-";

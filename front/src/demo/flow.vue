@@ -1,7 +1,7 @@
 <template>
   <div style="position: relative;">
 
-    <div style="box-shadow: rgba(0, 0, 0, 0.08) 0px 16px 48px 16px, rgba(0, 0, 0, 0.12) 0px 12px 32px 0px, rgba(0, 0, 0, 0.16) 0px 8px 16px -8px;width: 150px;padding: 5px;">
+    <div style="box-shadow: rgba(0, 0, 0, 0.08) 0px 16px 48px 16px, rgba(0, 0, 0, 0.12) 0px 12px 32px 0px, rgba(0, 0, 0, 0.16) 0px 8px 16px -8px;width: 150px;padding: 5px;font-size: 12px;">
       <div style="display: flex; padding: 5px;">
         <div v-html="businessSvg" style="width: 18px;height: 18px"></div>
         <div style="margin-left: 10px;">业务节点</div>
