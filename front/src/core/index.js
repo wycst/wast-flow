@@ -139,7 +139,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
             let {type, text, action} = item;
             let typeSvg = DefaultHtmlTypes[type];
             actions[++index] = action;
-            html.push(`<div data-index="${index}" style="display: flex; padding: 5px;cursor: pointer;">
+            html.push(`<div data-index="${index}" style="display: flex; padding: 4px;cursor: pointer;align-items: center;">
                         <div style="width: 18px;height: 18px">
                             ${typeSvg}
                         </div>
@@ -619,7 +619,7 @@ class GraphicDesign {
         this.popupMenu = new PopupMenuHtmlElementData(createDomElement("div", this.dom)).attr({
             x: 0,
             y: 0,
-            width: 120,
+            width: 100,
             height: "auto",
             color: this.themeColor
         }).hide();
@@ -644,7 +644,7 @@ class GraphicDesign {
             // create next task
             // me.exchangeType();
             let target = exchange.data("from");
-            me.exchangePopupMenu(target);
+            me.exchangePopupMenu(target, evt);
         });
 
         // 工具栏
@@ -755,12 +755,13 @@ class GraphicDesign {
         });
     };
 
-    exchangePopupMenu(target) {
+    exchangePopupMenu(target, evt) {
         if (!target) return;
-        let {x, y} = target.attrs;
+        // get mouse pos relative root dom
+        let {pageX, pageY} = evt;
+        let {left, top} = this.dom.getBoundingClientRect();
+        let x = pageX - left, y = pageY - top;
         let nodeType = target.nodeType;
-        console.log(nodeType);
-
         let menuData = [];
         let options = {
             service: {
@@ -782,7 +783,6 @@ class GraphicDesign {
                 }
             }
         }
-
         if (nodeType == NodeTypes.Business) {
             menuData.push(...[options.service, options.message])
         } else if (nodeType == NodeTypes.Service) {
@@ -793,8 +793,8 @@ class GraphicDesign {
 
         let {width} = this.popupMenu.attrs;
         this.popupMenu.setData(menuData).attr({
-            x: x - width - 36,
-            y
+            x: x - width - 20,
+            y: y - 5
         }).show();
     }
 
@@ -1130,7 +1130,7 @@ class GraphicDesign {
                 item.innerHTML = DefaultHtmlTypes["select"];
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
-                    me.groupSelectionMode = true;
+                    me.groupSelectionFlag = true;
                     me.paper.node.style.cursor = "crosshair";
                     eventStop(event);
                 });
@@ -1745,7 +1745,7 @@ class GraphicDesign {
                 } else if (e.keyCode == 17) {
                     // Control
                     me.resetGroupSelection();
-                    me.groupSelectionMode = true;
+                    me.groupSelectionFlag = true;
                     me.paper.node.style.cursor = "crosshair";
                 } else if (e.keyCode == 89) {
                     if (e.ctrlKey) {
@@ -1767,7 +1767,7 @@ class GraphicDesign {
                     me.shiftMode = false;
                 }
                 if (event.keyCode == 17) {
-                    me.groupSelectionMode = false;
+                    me.groupSelectionFlag = false;
                     me.paper.node.style.cursor = "default";
                 }
             }
@@ -1791,7 +1791,7 @@ class GraphicDesign {
             const {pageX, pageY} = event;
             canvasDragContext.px = pageX;
             canvasDragContext.py = pageY;
-            if (me.enableGroupSelection()) {
+            if (me.groupSelectionMode()) {
                 // 获取鼠标点击的坐标，设置为圈选的位置
                 let {x, y, left, top} = me.dom.getBoundingClientRect();
                 let start = {
@@ -1817,7 +1817,7 @@ class GraphicDesign {
             if (dx * dx + dy * dy > 0) {
                 canvasDragContext.moved = true;
             }
-            if (me.enableGroupSelection()) {
+            if (me.groupSelectionMode()) {
                 let {x, y} = this.groupSelection.data("start");
                 let scaleValue = this.scaleValue || 1;
                 dx /= scaleValue;
@@ -1850,11 +1850,13 @@ class GraphicDesign {
         const onCanvasDragUp = (event) => {
             try {
                 // panto and remove transform
-                if (me.enableGroupSelection()) {
+                if (me.groupSelectionMode()) {
                     // compute groupSelectElements
                     me.showGroupSelection();
                 } else {
-                    me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+                    if(canvasDragContext.moved) {
+                        me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
+                    }
                 }
                 if (!canvasDragContext.moved) {
                     // only click
@@ -1862,7 +1864,7 @@ class GraphicDesign {
                 } else {
                     me.connectRect.hide();
                 }
-                me.groupSelectionMode = false;
+                me.groupSelectionFlag = false;
                 canvasDragContext.moved = false;
                 me.paper.node.style.cursor = "default";
             } finally {
@@ -1873,7 +1875,7 @@ class GraphicDesign {
         // 平移处理
         bindDomEvent(me.dom, "mousedown", function (event) {
             if (!me.dragingElement && !me.disablePan) {
-                if (!me.enablePanable() && !me.enableGroupSelection()) {
+                if (!me.enablePanable() && !me.groupSelectionMode()) {
                     return;
                 }
                 onCanvasDragStart(event);
@@ -2004,8 +2006,8 @@ class GraphicDesign {
      *
      * @returns {boolean|*}
      */
-    enableGroupSelection() {
-        return this.option.editable && this.groupSelectionMode;
+    groupSelectionMode() {
+        return this.option.editable && this.groupSelectionFlag;
     };
 
     /**
