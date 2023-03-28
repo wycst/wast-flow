@@ -93,7 +93,7 @@ function setAndRemoveAttr(domElement, attrKey, attrValue) {
  * @param styleValue
  */
 function setAndRemoveStyle(domElement, styleKey, styleValue) {
-    let val = `${styleValue}px`;
+    let val = typeof styleValue == "string" ? styleValue : `${styleValue}px`;
     let style = domElement.style;
     switch (styleKey) {
         case 'x': {

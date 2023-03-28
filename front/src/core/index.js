@@ -36,6 +36,7 @@ const appendSvgInner = (inner) => {
 
 // 内置html块
 const DefaultHtmlTypes = {
+    empty: ``,
     select: appendSvgInner(`<path d="M736.21333333 638.08l69.76-54.08c5.22666667-4.05333333 8-10.45333333 7.46666667-17.06666667-0.53333333-6.61333333-4.37333333-12.48-10.24-15.57333333L450.02666666 361.38666666c-6.82666667-3.62666667-15.04-2.98666667-21.12 1.70666667-6.08 4.69333333-8.85333333 12.58666667-7.04 20.05333333l95.57333334 389.54666667c1.6 6.4 6.29333333 11.62666667 12.48 13.76 6.18666667 2.13333333 13.12 1.06666667 18.34666666-2.98666667l69.86666667-54.08L769.06666666 924.37333333c3.2 4.05333333 7.78666667 6.72 12.90666667 7.36 0.85333333 0.10666667 1.6 0.10666667 2.45333333 0.10666667 4.26666667 0 8.53333333-1.38666667 11.94666667-4.05333334l87.25333333-67.52c8.53333333-6.61333333 10.02666667-18.88 3.52-27.30666666L736.21333333 638.08zM178.24 282.02666666l-31.25333334-21.01333333c-14.61333333 21.76-27.30666667 44.90666667-37.86666666 68.90666667l34.56 15.14666666c9.6-21.86666667 21.22666667-43.09333333 34.56-63.04zM549.54666666 103.89333333l3.2-37.54666667c-26.02666667-2.24-52.69333333-2.13333333-78.50666666 0.21333334l3.41333333 37.54666666c23.57333333-2.13333333 48-2.24 71.89333333-0.21333333zM120.74666666 413.22666666l-36.69333333-8.74666666c-6.08 25.38666667-9.92 51.52-11.30666667 77.76l37.65333334 2.13333333c1.38666667-24 4.8-47.89333333 10.34666666-71.14666667zM112.64 556.26666666l-37.44 4.48c3.09333333 26.02666667 8.64 51.94666667 16.32 76.90666667l36.05333333-11.09333333c-7.04-22.82666667-12.05333333-46.50666667-14.93333333-70.29333334zM919.36 327.46666666c-10.66666667-23.89333333-23.46666667-46.93333333-38.29333334-68.58666666l-31.14666666 21.22666666c13.44 19.84 25.28 40.96 34.98666666 62.82666667l34.45333334-15.46666667zM831.36 197.97333333c-18.34666667-18.77333333-38.4-35.94666667-59.62666667-51.09333333L749.86666666 177.6c19.52 13.86666667 37.86666667 29.65333333 54.61333334 46.82666666l26.88-26.45333333zM703.89333333 107.09333333c-23.68-11.2-48.53333333-20.37333333-73.81333333-27.09333333l-9.81333334 36.37333333c23.14666667 6.18666667 45.86666667 14.61333333 67.52 24.85333333l16.10666667-34.13333333zM277.76 178.98666666l-22.08-30.50666666c-21.22666667 15.36-41.17333333 32.64-59.41333334 51.52l27.09333334 26.13333333c16.74666667-17.28 35.09333333-33.06666667 54.4-47.14666667zM348.90666666 918.08c24.32 9.81333333 49.6 17.49333333 75.2 22.82666666l7.68-36.90666666c-23.46666667-4.90666667-46.61333333-11.94666667-68.8-20.90666667l-14.08 34.98666667zM503.25333333 912.42666666l-1.06666667 37.65333334c4.16 0.10666667 8.42666667 0.21333333 12.58666667 0.21333333 21.97333333 0 44.16-1.6 65.81333333-4.90666667l-5.54666666-37.22666666c-23.57333333 3.52-47.89333333 4.90666667-71.78666667 4.26666666zM944.85333333 401.81333333l-36.58666667 8.96c5.65333333 23.14666667 9.28 47.14666667 10.77333334 71.04l37.65333333-2.34666667c-1.70666667-26.13333333-5.65333333-52.26666667-11.84-77.65333333zM396.8 80.64c-25.28 6.93333333-50.02666667 16.21333333-73.6 27.62666666l16.32 33.92c21.54666667-10.34666667 44.26666667-18.88 67.30666666-25.17333333L396.8 80.64zM121.17333333 710.4c11.94666667 23.25333333 26.13333333 45.54666667 42.13333333 66.34666666l29.86666667-22.93333333c-14.61333333-18.98666667-27.52-39.46666667-38.50666667-60.69333333L121.17333333 710.4zM216.42666666 834.66666666c19.30666667 17.70666667 40.42666667 33.70666667 62.50666667 47.68l20.05333333-31.89333333c-20.26666667-12.8-39.46666667-27.41333333-57.17333333-43.62666667l-25.38666667 27.84z"></path>`),
     start: appendSvgInner(`<path d="M400.43759 732.273456a71.33239 71.33239 0 0 0 34.157473 8.810938 75.556813 75.556813 0 0 0 41.157944-12.069778l219.790665-144.837341a85.574729 85.574729 0 0 0 38.502593-72.418671 83.402169 83.402169 0 0 0-37.295615-70.608203l-221.842527-144.837341a72.41867 72.41867 0 0 0-74.591231-3.741631 84.488449 84.488449 0 0 0-41.761433 75.436115v289.674681a84.488449 84.488449 0 0 0 41.882131 74.591231z m42.002829-82.315889V374.163131l207.600188 135.664309v0.965582a13.156058 13.156058 0 0 1 0 2.293258z"></path><path d="M149.989688 874.093352a509.948138 509.948138 0 1 0-109.714286-162.700613 513.206978 513.206978 0 0 0 109.714286 162.700613zM84.571489 512a428.11504 428.11504 0 1 1 427.511551 428.11504A428.597831 428.597831 0 0 1 84.571489 512z" ></path>`),
     end: appendSvgInner(`<path d="M512 0c282.752 0 512 229.248 512 512s-229.248 512-512 512S0 794.752 0 512 229.248 0 512 0z m0 85.333333C276.352 85.333333 85.333333 276.352 85.333333 512s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m85.333333 256a85.333333 85.333333 0 0 1 85.333334 85.333334v170.666666a85.333333 85.333333 0 0 1-85.333334 85.333334h-170.666666a85.333333 85.333333 0 0 1-85.333334-85.333334v-170.666666a85.333333 85.333333 0 0 1 85.333334-85.333334h170.666666z"></path>`),
@@ -59,6 +60,9 @@ const DefaultHtmlTypes = {
     zoomReset: appendSvgInner(`<path d="M514.2 854.1c-188 0-340.9-152.9-340.9-340.9s152.9-340.9 340.9-340.9 340.9 152.9 340.9 340.9-152.9 340.9-340.9 340.9z m0-598.8C372 255.3 256.3 371 256.3 513.2S372 771.1 514.2 771.1s257.9-115.7 257.9-257.9-115.7-257.9-257.9-257.9z"></path><path d="M888.5 554.7H742.1c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5h146.5c22.9 0 41.5 18.6 41.5 41.5-0.1 22.9-18.6 41.5-41.6 41.5zM288 554.7H141.5c-22.9 0-41.5-18.6-41.5-41.5s18.6-41.5 41.5-41.5H288c22.9 0 41.5 18.6 41.5 41.5s-18.6 41.5-41.5 41.5zM515 327.7c-22.9 0-41.5-18.6-41.5-41.5V139.7c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.4c0 23-18.5 41.6-41.5 41.6zM515 928.2c-22.9 0-41.5-18.6-41.5-41.5V740.3c0-22.9 18.6-41.5 41.5-41.5s41.5 18.6 41.5 41.5v146.5c0 22.8-18.5 41.4-41.5 41.4z"></path>`),
     zoomIn: appendSvgInner(`<path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z"></path><path d="M625.792 448H512v-112a32 32 0 0 0-64 0V448h-112a32 32 0 0 0 0 64H448v112a32 32 0 1 0 64 0V512h113.792a32 32 0 1 0 0-64z"></path>`),
     zoomOut: appendSvgInner(`<path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z" ></path><path d="M625.792 448H336a32 32 0 0 0 0 64h289.792a32 32 0 1 0 0-64z"></path>`),
+
+    // 修改类型
+    exchange: appendSvgInner(`<path d="M825.6 448a37.12 37.12 0 0 0-37.12 37.76v243.2a56.96 56.96 0 0 1-56.32 56.32H291.84a56.96 56.96 0 0 1-56.32-56.32v-441.6a56.96 56.96 0 0 1 56.32-56.32h248.32A37.12 37.12 0 0 0 576 192a33.28 33.28 0 0 0-37.12-32.64H291.84a128 128 0 0 0-128 128v439.68a128 128 0 0 0 128 128h439.68a128 128 0 0 0 128-128V488.32c-1.28-23.04-15.36-40.32-33.92-40.32z"></path><path d="M362.24 647.68a33.92 33.92 0 0 0 46.72 0l412.16-412.16a36.48 36.48 0 1 0-51.2-51.2L362.24 600.96a42.24 42.24 0 0 0 0 46.72z"></path>`),
 };
 
 const defs = `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>`
@@ -99,6 +103,59 @@ HtmlElementData.prototype.setHtmlType = function (type) {
     }
 }
 
+/**
+ * popup menu element
+ */
+export class PopupMenuHtmlElementData extends HtmlElementData {
+    #_data;
+
+    constructor(node) {
+        super(node);
+        // init style
+        Object.assign(node.style, {
+            position: "absolute",
+            padding: "5px",
+            fontSize: "12px",
+            background: "#fff",
+            boxShadow: "0 1px 4px rgba(0,0,0,.3)"
+        });
+        this.attr("width")
+    }
+
+    setData(data) {
+        if (Array.isArray(data)) {
+            this.#_data = data;
+            this.#updateViews();
+        }
+        return this;
+    }
+
+    #updateViews() {
+        let data = this.#_data;
+        let html = [];
+        let actions = {};
+        let index = 0;
+        for (let item of data) {
+            let {type, text, action} = item;
+            let typeSvg = DefaultHtmlTypes[type];
+            actions[++index] = action;
+            html.push(`<div data-index="${index}" style="display: flex; padding: 5px;cursor: pointer;">
+                        <div style="width: 18px;height: 18px">
+                            ${typeSvg}
+                        </div>
+                        <div style="margin-left: 10px;">${text}</div>
+                       </div>`);
+        }
+        this.updateHTML(html.join(""));
+        let children = this.node.children;
+        for (let child of children) {
+            console.log(child);
+            let index = child.dataset.index;
+            bindDomEvent(child, "click", actions[index]);
+        }
+    }
+}
+
 const DefaultSettings = {
     linkName: "",
     nodeName: "节点名称",
@@ -108,6 +165,10 @@ const DefaultSettings = {
 }
 
 const NodeTypes = {
+    Start: "Start",
+    End: "End",
+    Join: "Join",
+    Split: "Split",
     Business: "Business",
     Service: "Service",
     Manual: "Manual",
@@ -549,9 +610,43 @@ class GraphicDesign {
             if (target) {
                 me.handleDblclickElement(target, e);
             }
-        })
+        });
+
+        // 再根目录上弹出菜单控件
+        if (this.popupMenu) {
+            this.popupMenu.remove();
+        }
+        this.popupMenu = new PopupMenuHtmlElementData(createDomElement("div", this.dom)).attr({
+            x: 0,
+            y: 0,
+            width: 120,
+            height: "auto",
+            color: this.themeColor
+        }).hide();
 
         let imageArgs = [0, 0, 16, 16];
+
+        // 修改类型
+        let exchange = this.exchange;
+        if (exchange) {
+            exchange.remove();
+        }
+        exchange = this.exchange = this.renderHtmlNode("exchange", ...imageArgs).attr({
+            opacity: .9,
+            title: "修改类型",
+            cursor: "pointer"
+        }).mouseover(function () {
+            me.dragingElement = {};
+        }).mouseout(function () {
+            me.dragingElement = null;
+        }).hide();
+        exchange.click(function (evt) {
+            // create next task
+            // me.exchangeType();
+            let target = exchange.data("from");
+            me.exchangePopupMenu(target);
+        });
+
         // 工具栏
         // 连线工具（图片）
         let linkTool = this.linkTool = paper.image(imgs.sequenceflow, ...imageArgs).hide();
@@ -614,10 +709,11 @@ class GraphicDesign {
         });
 
         // 快速追加结束任务
-        if (this.nextEndTool) {
-            this.nextEndTool.remove();
+        let nextEndTool = this.nextEndTool;
+        if (nextEndTool) {
+            nextEndTool.remove();
         }
-        this.nextEndTool = this.renderHtmlNode("end", ...imageArgs).attr({
+        nextEndTool = this.nextEndTool = this.renderHtmlNode("end", ...imageArgs).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -628,7 +724,7 @@ class GraphicDesign {
             this.attr("opacity", .5);
             me.dragingElement = null;
         }).hide();
-        this.nextEndTool.click(function (evt) {
+        nextEndTool.click(function (evt) {
             // create next task
             me.nextEnd();
         });
@@ -658,6 +754,49 @@ class GraphicDesign {
             me.deleteTool.hide();
         });
     };
+
+    exchangePopupMenu(target) {
+        if (!target) return;
+        let {x, y} = target.attrs;
+        let nodeType = target.nodeType;
+        console.log(nodeType);
+
+        let menuData = [];
+        let options = {
+            service: {
+                type: "service",
+                text: "服务节点",
+                action: () => {
+                }
+            },
+            message: {
+                type: "message",
+                text: "消息节点",
+                action: () => {
+                }
+            },
+            business: {
+                type: "business",
+                text: "业务节点",
+                action: () => {
+                }
+            }
+        }
+
+        if (nodeType == NodeTypes.Business) {
+            menuData.push(...[options.service, options.message])
+        } else if (nodeType == NodeTypes.Service) {
+            menuData.push(...[options.business, options.message])
+        } else if (nodeType == NodeTypes.Message) {
+            menuData.push(...[options.business, options.service])
+        }
+
+        let {width} = this.popupMenu.attrs;
+        this.popupMenu.setData(menuData).attr({
+            x: x - width - 36,
+            y
+        }).show();
+    }
 
     /**
      * 圈选拖动处理
@@ -976,9 +1115,9 @@ class GraphicDesign {
         // 设置item背景图片
         menuDom.querySelectorAll(".menu-item").forEach(item => {
             let type = item.dataset.type;
-            let width = 36 * 8/9, height = 36* 8/9;
+            let width = 36 * 8 / 9, height = 36 * 8 / 9;
             if (type == "or" || type == "xor" || type == "and" || type == "join") {
-                width = height = 45 * 8/9;
+                width = height = 45 * 8 / 9;
             }
             assign(item.style, {
                 width: `${width}px`,
@@ -2003,7 +2142,7 @@ class GraphicDesign {
      */
     renderHtmlNode(type, x, y, width, height, createFunction) {
         let html;
-        if (!(html = GlobalHTMLTypes[type])) {
+        if ((html = GlobalHTMLTypes[type]) == undefined || html == null) {
             console.error(`html type [${type}] is not register `);
             return;
         }
@@ -4106,6 +4245,7 @@ class GraphicDesign {
         if (!targetElement || (type = targetElement.type) == "rect" || type == "image" || type == "html") {
             let {
                 nw, w, sw, n, s, ne, e, se, dashOuterPath,
+                exchange,
                 linkTool,
                 nextTaskTool,
                 nextSplitTool,
@@ -4121,6 +4261,7 @@ class GraphicDesign {
             e.hide();
             se.hide();
             dashOuterPath.hide();
+            exchange.hide();
             linkTool.hide();
             nextTaskTool.hide();
             nextSplitTool.hide();
@@ -4161,6 +4302,7 @@ class GraphicDesign {
             let nodeType = targetElement.data("nodeType");
             let {
                 nw, w, sw, n, s, ne, e, se, dashOuterPath,
+                exchange,
                 linkTool,
                 nextTaskTool,
                 nextSplitTool,
@@ -4211,6 +4353,14 @@ class GraphicDesign {
                 se.data("host", targetElement).attr({x: hiddenPathEndX - 2.5, y: hiddenPathEndY - 2.5}).show();
             }
             if (nodeType != "End") {
+
+                if (nodeType != "Start") {
+                    exchange.data("from", targetElement).attr({
+                        x: hiddenPathStartX - 18,
+                        y: hiddenPathStartY
+                    }).show();
+                }
+
                 linkTool.data("from", targetElement).attr({x: hiddenPathEndX + 10, y: hiddenPathStartY}).show();
                 nextTaskTool.data("from", targetElement).attr({
                     x: hiddenPathEndX + 10,
@@ -5273,7 +5423,7 @@ class GraphicDesign {
             } else {
                 element.attr("stroke", color);
                 let icon = element.data("icon");
-                if(icon) {
+                if (icon) {
                     icon.attr("color", color);
                 }
             }
@@ -5308,6 +5458,10 @@ class GraphicDesign {
         });
         // 工具栏颜色
         this.setToolsStyle({
+            color
+        });
+        // 弹出菜单颜色
+        this.popupMenu.attr({
             color
         });
     };
