@@ -139,7 +139,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let index = 0;
         for (let item of data) {
             let {type, text, action} = item;
-            let typeSvg = DefaultHtmlTypes[type];
+            let typeSvg = DefaultHtmlTypes[type.toLowerCase()];
             actions[++index] = action;
             html.push(`<div data-index="${index}" style="display: flex; padding:4px; cursor: pointer;align-items: center;">
                         <div style="width: 18px;height: 18px">
@@ -152,7 +152,6 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let children = this.node.children;
         for (let child of children) {
             let index = child.dataset.index;
-            console.log(child);
             bindDomEvent(child, "click", (evt) => {
                 actions[index]();
             });
@@ -390,7 +389,7 @@ const extensionTemplate = `
         ${mr('businessTask', 1, '业务节点')}
         ${mr('service', 1, '服务节点')}
         ${mr('message', 1, '消息节点')}
-        ${mr('manual', 1, '人工节点')}
+        ${mr('manual', 1, '手工节点')}
         ${divider}
         ${mr('xor', 1, '有且仅有一个满足条件的分支通过')}
         ${mr('or', 1, '至少一个满足条件的分支通过,与汇聚网关组合使用')}
@@ -776,47 +775,48 @@ class GraphicDesign {
         // get mouse pos relative root dom
         let me = this;
         let {pageX, pageY} = evt;
-        let {left, top} = this.dom.getBoundingClientRect();
+        let {left, top, right} = this.dom.getBoundingClientRect();
         let x = pageX - left, y = pageY - top;
         let nodeType = target.nodeType;
         let menuData = [];
-        let options = {
-            service: {
-                type: "service",
-                text: "服务节点",
-                action: () => {
-                    target.nodeType = NodeTypes.Service;
-                    //me.hidePopupMenu();
+        if (nodeType == NodeTypes.Split) {
+            menuData = [
+                {type: "XOR", text: "独占"},
+                {type: "OR", text: "条件"},
+                {type: "AND", text: "并行"}
+            ].map(record => {
+                let {type} = record;
+                return {
+                    ...record,
+                    action: () => {
+                        target.gateway = type;
+                        me.hidePopupMenu();
+                    }
                 }
-            },
-            message: {
-                type: "message",
-                text: "消息节点",
-                action: () => {
-                    target.nodeType = NodeTypes.Message;
-                    //me.hidePopupMenu();
+            })
+        } else {
+            menuData = [
+                {type: NodeTypes.Business, text: "业务节点"},
+                {type: NodeTypes.Service, text: "服务节点"},
+                {type: NodeTypes.Message, text: "消息节点"},
+                {type: NodeTypes.Manual, text: "手工节点"}
+            ].filter(record => record.type != nodeType).map(record => {
+                let {type} = record;
+                return {
+                    ...record,
+                    action: () => {
+                        target.nodeType = type;
+                        me.hidePopupMenu();
+                    }
                 }
-            },
-            business: {
-                type: "business",
-                text: "业务节点",
-                action: () => {
-                    target.nodeType = NodeTypes.Business;
-                    //me.hidePopupMenu();
-                }
-            }
+            })
         }
-        if (nodeType == NodeTypes.Business) {
-            menuData.push(...[options.service, options.message])
-        } else if (nodeType == NodeTypes.Service) {
-            menuData.push(...[options.business, options.message])
-        } else if (nodeType == NodeTypes.Message) {
-            menuData.push(...[options.business, options.service])
-        }
-
         let {width} = this.popupMenu.attrs;
+        if (pageX > right - width) {
+            x = x - width - 20;
+        }
         this.popupMenu.setData(menuData).attr({
-            x: x - width - 20,
+            x: x + 10,
             y: y - 5
         }).show();
     }
@@ -905,8 +905,7 @@ class GraphicDesign {
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
 
-        let nextOneNode = this.createNode(x + width + 150, y);
-        nextOneNode.data("nodeType", NodeTypes.Business);
+        let nextOneNode = this.createBusinessNode(x + width + 150, y);
         let {height: h1} = nextOneNode.attrs;
         // 对齐
         nextOneNode.attr({y: centerY - h1 / 2 - 100});
@@ -918,8 +917,7 @@ class GraphicDesign {
         }
         this.hideEditElements(connect);
 
-        let nextTwoNode = this.createNode(x + width + 150, y);
-        nextTwoNode.data("nodeType", NodeTypes.Business);
+        let nextTwoNode = this.createBusinessNode(x + width + 150, y);
         let {height: h2} = nextTwoNode.attrs;
         // 对齐
         nextTwoNode.attr({y: centerY - h2 / 2 + 100});
@@ -3187,7 +3185,10 @@ class GraphicDesign {
         rect.data("text", text);
 
         // create icon
-
+        let iconNode = this.renderHtmlNode("empty", x + 5, y + 5, 20, 20).attr({
+            color: this.themeColor
+        });
+        rect.data("icon", iconNode)
 
         onNodeCreated(rect, this);
         this.initElement(rect);
@@ -3216,12 +3217,10 @@ class GraphicDesign {
      *
      * @param x
      * @param y
-     * @param width
-     * @param height
      * @returns {*}
      */
     createBusinessNode(x, y) {
-        return this.createTypeNode(NodeTypes.Business, "business", x, y);
+        return this.createTypeNode(NodeTypes.Business, x, y);
     };
 
     /**
@@ -3232,18 +3231,18 @@ class GraphicDesign {
      * @returns {*}
      */
     createServiceNode(x, y) {
-        return this.createTypeNode(NodeTypes.Service, "service", x, y);
+        return this.createTypeNode(NodeTypes.Service, x, y);
     };
 
     /**
-     * 创建人工节点
+     * 创建手工节点
      *
      * @param x
      * @param y
      * @returns {*}
      */
     createManualNode(x, y) {
-        return this.createTypeNode(NodeTypes.Manual, "manual", x, y);
+        return this.createTypeNode(NodeTypes.Manual, x, y);
     };
 
     /**
@@ -3254,13 +3253,13 @@ class GraphicDesign {
      * @returns {*}
      */
     createMessageNode(x, y) {
-        return this.createTypeNode(NodeTypes.Message, "message", x, y);
+        return this.createTypeNode(NodeTypes.Message, x, y);
     };
 
-    createTypeNode(type, icon, x, y) {
+    createTypeNode(type, x, y) {
         let rect = this.createNode(x, y);
         rect.data("nodeType", type);
-        let iconNode = this.renderHtmlNode(icon, x + 5, y + 5, 20, 20).attr({
+        let iconNode = this.renderHtmlNode(type.toLowerCase(), x + 5, y + 5, 20, 20).attr({
             color: this.themeColor
         });
         rect.data("icon", iconNode)
@@ -4313,8 +4312,11 @@ class GraphicDesign {
     };
 
     hidePopupMenu() {
-        if (this.popupMenu) {
-            // this.popupMenu.hide();
+        let popupMenu;
+        if (popupMenu = this.popupMenu) {
+            setTimeout(() => {
+                popupMenu.hide();
+            }, 50)
         }
     }
 
@@ -4386,13 +4388,6 @@ class GraphicDesign {
             }
             if (nodeType != "End") {
 
-                if (nodeType != "Start") {
-                    exchange.data("from", targetElement).attr({
-                        x: hiddenPathStartX - 18,
-                        y: hiddenPathStartY
-                    }).show();
-                }
-
                 linkTool.data("from", targetElement).attr({x: hiddenPathEndX + 10, y: hiddenPathStartY}).show();
                 nextTaskTool.data("from", targetElement).attr({
                     x: hiddenPathEndX + 10,
@@ -4411,6 +4406,13 @@ class GraphicDesign {
                     x: hiddenPathEndX + 10 + 16,
                     y: hiddenPathStartY - 5
                 }).data("host", targetElement).show();
+
+                if (nodeType != "Start" && nodeType != "Join") {
+                    exchange.data("from", targetElement).attr({
+                        x: hiddenPathEndX + 10 + 16,
+                        y: hiddenPathStartY + 13
+                    }).show();
+                }
             } else {
                 deleteTool.attr({
                     x: hiddenPathEndX + 10,
@@ -5557,6 +5559,11 @@ class GraphicDesign {
             element.attr({
                 stroke: color
             });
+        }
+
+        let icon = element.icon;
+        if (icon) {
+            icon.attr("color", color);
         }
     };
 
