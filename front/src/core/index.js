@@ -108,18 +108,20 @@ HtmlElementData.prototype.setHtmlType = function (type) {
  */
 export class PopupMenuHtmlElementData extends HtmlElementData {
     #_data;
+    #_option;
 
-    constructor(node) {
+    constructor(node, option) {
         super(node);
         // init style
         Object.assign(node.style, {
             position: "absolute",
+            borderRadius: "4px",
             padding: "5px",
             fontSize: "12px",
             background: "#fff",
             boxShadow: "0 1px 4px rgba(0,0,0,.3)"
         });
-        this.attr("width")
+        this.#_option = option;
     }
 
     setData(data) {
@@ -139,7 +141,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
             let {type, text, action} = item;
             let typeSvg = DefaultHtmlTypes[type];
             actions[++index] = action;
-            html.push(`<div data-index="${index}" style="display: flex; padding: 4px;cursor: pointer;align-items: center;">
+            html.push(`<div data-index="${index}" style="display: flex; padding:4px; cursor: pointer;align-items: center;">
                         <div style="width: 18px;height: 18px">
                             ${typeSvg}
                         </div>
@@ -149,10 +151,24 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         this.updateHTML(html.join(""));
         let children = this.node.children;
         for (let child of children) {
-            console.log(child);
             let index = child.dataset.index;
-            bindDomEvent(child, "click", actions[index]);
+            console.log(child);
+            bindDomEvent(child, "click", (evt) => {
+                actions[index]();
+            });
+            bindDomEvent(child, "mouseover", () => {
+                child.style.background = "#ddd";
+            });
+            bindDomEvent(child, "mouseout", () => {
+                child.style.background = "unset";
+            });
         }
+        // stop event
+        this.click((evt) => {
+            eventStop(evt);
+        }).dblclick((evt) => {
+            eventStop(evt);
+        })
     }
 }
 
@@ -758,6 +774,7 @@ class GraphicDesign {
     exchangePopupMenu(target, evt) {
         if (!target) return;
         // get mouse pos relative root dom
+        let me = this;
         let {pageX, pageY} = evt;
         let {left, top} = this.dom.getBoundingClientRect();
         let x = pageX - left, y = pageY - top;
@@ -768,18 +785,24 @@ class GraphicDesign {
                 type: "service",
                 text: "服务节点",
                 action: () => {
+                    target.nodeType = NodeTypes.Service;
+                    //me.hidePopupMenu();
                 }
             },
             message: {
                 type: "message",
                 text: "消息节点",
                 action: () => {
+                    target.nodeType = NodeTypes.Message;
+                    //me.hidePopupMenu();
                 }
             },
             business: {
                 type: "business",
                 text: "业务节点",
                 action: () => {
+                    target.nodeType = NodeTypes.Business;
+                    //me.hidePopupMenu();
                 }
             }
         }
@@ -1854,7 +1877,7 @@ class GraphicDesign {
                     // compute groupSelectElements
                     me.showGroupSelection();
                 } else {
-                    if(canvasDragContext.moved) {
+                    if (canvasDragContext.moved) {
                         me.panTo(me.translateX / this.scaleValue, me.translateY / this.scaleValue, true);
                     }
                 }
@@ -4285,8 +4308,15 @@ class GraphicDesign {
         if (targetElement) {
             targetElement.attr("cursor", "auto");
         }
+
+        this.hidePopupMenu();
     };
 
+    hidePopupMenu() {
+        if (this.popupMenu) {
+            // this.popupMenu.hide();
+        }
+    }
 
     setSelectElement(element) {
         this.selectElement = element;

@@ -241,6 +241,16 @@ class ElementData {
         return this._type;
     };
 
+    // text 元素
+    get text() {
+        return this.data("text");
+    }
+
+    // icon 元素
+    get icon() {
+        return this.data("icon");
+    }
+
     // Change of response name
     get name() {
         let textEle = this.data("text");
@@ -575,9 +585,13 @@ class NodeElementData extends ElementData {
     set nodeType(val) {
         if (this.supportedType(val)) {
             this.data("nodeType", val);
+            this.updateTypeView();
         } else {
             throw new Error(`nodeType '${val}' not supported for type '` + this.type + "'");
         }
+    }
+
+    updateTypeView() {
     }
 
     supportedType(type) {
@@ -773,7 +787,16 @@ export class SvgRectElementData extends SvgNodeElementData {
     //     }
     // };
     supportedType(type) {
-        return ["Business", "Service", "Script", "Manual"].includes(type);
+        return ["Business", "Service", "Script", "Manual", "Message"].includes(type);
+    }
+
+    updateTypeView() {
+        let icon = this.icon;
+        console.log(icon);
+        console.log(this.nodeType);
+        if(icon) {
+            icon.setHtmlType(this.nodeType.toLowerCase());
+        }
     }
 
     // Change of response nodeType
