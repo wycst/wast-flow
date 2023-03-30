@@ -143,6 +143,8 @@ export default {
 
       nowrap: false,
 
+      // excludeTypes: ["manual"],
+
       /** 默认条件类型 */
       defaultConditionType: "HandlerCall",
 

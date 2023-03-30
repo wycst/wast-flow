@@ -289,6 +289,11 @@ const defaultOption = {
      */
     textEditOnDblClick: true,
 
+    /***
+     * 排除的节点类型
+     */
+    excludeTypes: [],
+
     /**
      * 提示信息，默认使用window.alert
      *
@@ -779,6 +784,7 @@ class GraphicDesign {
         let x = pageX - left, y = pageY - top;
         let nodeType = target.nodeType;
         let menuData = [];
+        let excludeTypes = me.option.excludeTypes || [];
         if (nodeType == NodeTypes.Split) {
             menuData = [
                 {type: "XOR", text: "独占"},
@@ -800,7 +806,7 @@ class GraphicDesign {
                 {type: NodeTypes.Service, text: "服务节点"},
                 {type: NodeTypes.Message, text: "消息节点"},
                 {type: NodeTypes.Manual, text: "手工节点"}
-            ].filter(record => record.type != nodeType).map(record => {
+            ].filter(record => record.type != nodeType && !excludeTypes.includes(record.type.toLowerCase())).map(record => {
                 let {type} = record;
                 return {
                     ...record,
@@ -1145,6 +1151,14 @@ class GraphicDesign {
                 height: `${height}px`,
                 margin: "4px 0"
             });
+
+            let excludeTypes = me.option.excludeTypes || [];
+            if(excludeTypes.includes(type)) {
+                assign(item.style, {
+                    display: `none`
+                });
+            }
+
             if (type == "select") {
                 // 绑定全选事件
                 item.style.cursor = `pointer`;
