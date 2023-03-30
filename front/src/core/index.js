@@ -790,7 +790,7 @@ class GraphicDesign {
                     ...record,
                     action: () => {
                         target.gateway = type;
-                        me.hidePopupMenu();
+                        me.hidePopupMenu(0);
                     }
                 }
             })
@@ -806,7 +806,7 @@ class GraphicDesign {
                     ...record,
                     action: () => {
                         target.nodeType = type;
-                        me.hidePopupMenu();
+                        me.hidePopupMenu(0);
                     }
                 }
             })
@@ -4311,12 +4311,12 @@ class GraphicDesign {
         this.hidePopupMenu();
     };
 
-    hidePopupMenu() {
+    hidePopupMenu(delay) {
         let popupMenu;
         if (popupMenu = this.popupMenu) {
             setTimeout(() => {
                 popupMenu.hide();
-            }, 50)
+            }, delay || 200)
         }
     }
 
