@@ -150,7 +150,7 @@ public class WastFlowTest {
 //                Thread.sleep(1000);
             }
         });
-        flowEngine.setDatasource(getDatasource());
+        // flowEngine.setDatasource(getDatasource());
 
         // 设置静态资源目录文件加载： classpath:/flows/sample.json
         flowEngine.setStaticResources("flows");
@@ -186,7 +186,7 @@ public class WastFlowTest {
         vars.put("a", 11);
 
         // 流程标识
-        String processId = "a";
+        String processId = "ba3572c673a3bbda59c982e0fd3490ae";
         System.out.println("processID " + processId);
 
         Connect connect = null;

@@ -148,6 +148,7 @@ public class SplitNode extends RuntimeNode {
                         } finally {
                             // complete one
                             joinCountContext.completeOne();
+                            System.out.println("======= complete ");
                         }
                         return null;
                     }

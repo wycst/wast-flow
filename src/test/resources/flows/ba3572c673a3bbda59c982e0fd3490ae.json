@@ -1,0 +1,721 @@
+{
+    "id": "ba3572c673a3bbda59c982e0fd3490ae",
+    "name": "test",
+    "nodes": [
+        {
+            "id": "lg0prkg0",
+            "type": "Start",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "3a2a5bb4-5fb4-4817-83ac-0830b9b99b02",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 316.04876708984375,
+                    "y": 202.809326171875,
+                    "width": 48,
+                    "height": 48,
+                    "title": "id:lg0prkg0",
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "lgd50a7s",
+            "name": "141采集",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "d0755a52-42bd-4fcb-84a9-ddb5a1aa50c7",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 674.0487670898438,
+                    "y": 73.809326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgd50a7s",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 724.0487670898438,
+                    "y": 113.809326171875,
+                    "width": 80,
+                    "text": "141采集"
+                }
+            }
+        },
+        {
+            "id": "lgd50a7z",
+            "name": "142采集",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "ce024ddb-79e7-48f5-87a3-dd7d80f33324",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 674.0487670898438,
+                    "y": 191.809326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgd50a7z",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 724.0487670898438,
+                    "y": 231.809326171875,
+                    "width": 80,
+                    "text": "142采集"
+                }
+            }
+        },
+        {
+            "id": "lgd54vc8",
+            "name": "141和142对比",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "29dfb7d1-396a-4071-a900-8eaf7d5a1d39",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 1032.0487670898438,
+                    "y": 124.309326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgd54vc8",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 1082.0487670898438,
+                    "y": 164.309326171875,
+                    "width": 80,
+                    "text": "141和142对比"
+                }
+            }
+        },
+        {
+            "id": "lgddbwhc",
+            "name": "140采集",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "9577be49-bf83-45e7-b01c-9f06632a6dab",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 674.0487670898438,
+                    "y": 299.309326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgddbwhc",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 724.0487670898438,
+                    "y": 339.309326171875,
+                    "width": 80,
+                    "text": "140采集"
+                }
+            }
+        },
+        {
+            "id": "lgddbyso",
+            "name": "143采集",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "f7aab9e4-5b9e-4df1-8520-d260aba78f26",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 669.0487670898438,
+                    "y": 431.309326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgddbyso",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 719.0487670898438,
+                    "y": 471.309326171875,
+                    "width": 80,
+                    "text": "143采集"
+                }
+            }
+        },
+        {
+            "id": "lgddchbc",
+            "name": "140和143对比",
+            "type": "Business",
+            "gateway": "XOR",
+            "handler": {
+                "timeout": 0,
+                "delay": 0,
+                "policy": "Stop",
+                "retryOnError": false,
+                "retryCount": 0
+            },
+            "uuid": "fdda4f78-7122-4be2-8ff3-2d7f925eecc9",
+            "meta": {},
+            "component": {
+                "type": "rect",
+                "attrs": {
+                    "x": 1032.0487670898438,
+                    "y": 316.809326171875,
+                    "width": 100,
+                    "height": 80,
+                    "rx": 4,
+                    "ry": 4,
+                    "r": 4,
+                    "stroke": "#409eff",
+                    "stroke-width": "3",
+                    "title": "id:lgddchbc",
+                    "fill": "#fff"
+                },
+                "textAttrs": {
+                    "x": 1082.0487670898438,
+                    "y": 356.809326171875,
+                    "width": 80,
+                    "text": "140和143对比"
+                }
+            }
+        },
+        {
+            "id": "lgddcmps",
+            "type": "Join",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "2165838b-ad04-4643-a540-b9a9eeff9463",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 1235.5487670898438,
+                    "y": 227.809326171875,
+                    "width": 64,
+                    "height": 64,
+                    "title": "id:lgddcmps",
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "lgddcrcg",
+            "type": "End",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "b5cd4aea-9543-4078-8774-ca99746bad5a",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 1391.5487670898438,
+                    "y": 235.809326171875,
+                    "width": 48,
+                    "height": 48,
+                    "title": "id:lgddcrcg",
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "lgddwmmg",
+            "type": "Split",
+            "gateway": "AND",
+            "handler": {},
+            "uuid": "49b4f323-6d98-457c-81a4-e46a1a8400ff",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 501.29876708984375,
+                    "y": 194.809326171875,
+                    "width": 64,
+                    "height": 64,
+                    "title": "Split:lgddwmmg",
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "lgdidako",
+            "type": "Join",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "9add7b33-003d-40cb-832a-ddf3f377fe13",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 888.0180072784424,
+                    "y": 132.309326171875,
+                    "width": 64,
+                    "height": 64,
+                    "color": "#409eff"
+                }
+            }
+        },
+        {
+            "id": "lgdie3w8",
+            "type": "Join",
+            "gateway": "XOR",
+            "handler": {},
+            "uuid": "a5f0131b-8d7c-4cf3-8dec-2c60721a7df7",
+            "meta": {},
+            "component": {
+                "type": "html",
+                "attrs": {
+                    "x": 883.0180072784424,
+                    "y": 324.809326171875,
+                    "width": 64,
+                    "height": 64,
+                    "color": "#409eff"
+                }
+            }
+        }
+    ],
+    "connects": [
+        {
+            "id": "lgddcp14",
+            "name": " ",
+            "fromId": "lgd54vc8",
+            "toId": "lgddcmps",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "891d9353-bf32-4f06-9541-86edd37a9cd7",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M1137.0487670898438,192.62469005327665L1230.5487670898438,240.76080865165937",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 1171.2987670898438,
+                    "y": 204.192749352468,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddcqko",
+            "name": " ",
+            "fromId": "lgddchbc",
+            "toId": "lgddcmps",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "f6e4582a-2446-492b-a74a-1f6cdfc4bd39",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M1137.0487670898438,328.0492183551635L1230.5487670898438,279.1570350667537",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 1171.2987670898438,
+                    "y": 291.1031267109586,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddcrch",
+            "name": " ",
+            "fromId": "lgddcmps",
+            "toId": "lgddcrcg",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "41740fff-a820-4320-803d-12246f9449c2",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M1304.5487670898438,259.809326171875L1386.5487670898438,259.809326171875",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 1333.0487670898438,
+                    "y": 247.309326171875,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgdds6wg",
+            "name": " ",
+            "fromId": "lgddbwhc",
+            "toId": "lgdie3w8",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "fbac0af1-9cad-4645-8f30-b083905a6d64",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M779.0487670898438,344.34940487276657L878.0180072784424,353.41872777309345",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 816.0333871841431,
+                    "y": 336.38406632293004,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgdds8g0",
+            "name": " ",
+            "fromId": "lgddbyso",
+            "toId": "lgdie3w8",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "92530266-9585-4ecd-85a0-6729c82100d1",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M774.0487670898438,439.1741809116324L878.0180072784424,378.42751480149286",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 813.5333871841431,
+                    "y": 396.30084785656265,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddwoxs",
+            "name": " ",
+            "fromId": "lg0prkg0",
+            "toId": "lgddwmmg",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "2502d490-3a60-41f2-b4ba-461088959043",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M369.04876708984375,226.809326171875L496.29876708984375,226.809326171875",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 420.17376708984375,
+                    "y": 214.309326171875,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddws0w",
+            "name": " ",
+            "fromId": "lgddwmmg",
+            "toId": "lgd50a7s",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "f540eb7a-e5f9-470f-8ebd-23da4250df6a",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M570.2987670898438,204.890584363225L669.0487670898438,146.39123967121975",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 607.1737670898438,
+                    "y": 163.14091201722238,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddwtkg",
+            "name": " ",
+            "fromId": "lgddwmmg",
+            "toId": "lgd50a7z",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "c344e101-5939-4aaa-a202-f734fca2c144",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M570.2987670898438,227.77918200411617L669.0487670898438,230.36764858340842",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 607.1737670898438,
+                    "y": 216.5734152937623,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddwwnk",
+            "name": " ",
+            "fromId": "lgddwmmg",
+            "toId": "lgddbwhc",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "c8af1ef7-1b66-43d3-aa83-7a1dacdba505",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M570.2987670898438,248.63108239730096L669.0487670898438,306.87158043137697",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 607.1737670898438,
+                    "y": 265.25133141433895,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddwzqo",
+            "name": " ",
+            "fromId": "lgddwmmg",
+            "toId": "lgddbyso",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "c0572cea-2691-4101-a421-46c8c42654e5",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M561.4081740428089,263.809326171875L684.8616505254265,426.309326171875",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 610.6349122841177,
+                    "y": 332.559326171875,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddx9rs",
+            "name": " ",
+            "fromId": "lgd50a7s",
+            "toId": "lgdidako",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "db2b3a24-79de-4305-8afb-efe5d387022d",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M779.0487670898438,127.98246884123967L883.0180072784424,154.77466655793876",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 818.5333871841431,
+                    "y": 128.8785676995892,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgddxbbc",
+            "name": " ",
+            "fromId": "lgd50a7z",
+            "toId": "lgdidako",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "6b5ac5c4-a5dd-4426-b91f-34469c140ac4",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M779.0487670898438,212.86502656430838L883.0180072784424,177.05367318060166",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 818.5333871841431,
+                    "y": 182.45934987245502,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgdidyhs",
+            "name": " ",
+            "fromId": "lgdidako",
+            "toId": "lgd54vc8",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "43691861-7c90-491d-8de1-f09db88e3e2f",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M957.0180072784424,164.309326171875L1027.0487670898438,164.309326171875",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 979.5333871841431,
+                    "y": 151.809326171875,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        },
+        {
+            "id": "lgdieg8o",
+            "name": " ",
+            "fromId": "lgdie3w8",
+            "toId": "lgddchbc",
+            "priority": 0,
+            "conditionType": "Always",
+            "script": "",
+            "uuid": "cd1cb20e-d677-4c4d-9fbe-4d55110deab1",
+            "meta": {},
+            "pathStyle": "broken",
+            "component": {
+                "type": "path",
+                "attrs": {
+                    "d": "M952.0180072784424,356.809326171875L1027.0487670898438,356.809326171875",
+                    "stroke": "#409eff",
+                    "stroke-width": 2,
+                    "cursor": "auto"
+                },
+                "textAttrs": {
+                    "x": 977.0333871841431,
+                    "y": 344.309326171875,
+                    "width": 100,
+                    "text": " "
+                }
+            }
+        }
+    ],
+    "startNodeId": "lg0prkg0"
+}
