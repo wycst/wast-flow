@@ -123,7 +123,7 @@ public class WastFlowTest {
         return definitionEntity;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         FlowEngine flowEngine = new FlowEngine();
         // 业务节点设置handler
@@ -201,11 +201,18 @@ public class WastFlowTest {
         long l1 = System.currentTimeMillis();
         System.out.println();
         for(int i = 0 ; i < 1; i++) {
-            flowEngine.startProcess(processId, vars);
+            // flowEngine.startProcess(processId, vars);
         }
         long l2 = System.currentTimeMillis();
         System.out.println(l2 - l1);
+        Thread.sleep(100);
+        List<NodeInstance> nodeInstances = processInstance.getNodeInstances();
+        boolean hasNull = false;
+        int i = 0 ;
+        for (NodeInstance nodeInstance : nodeInstances) {
+            System.out.println(nodeInstance.getId());
 
+        }
 
         flowEngine.destroy();
     }

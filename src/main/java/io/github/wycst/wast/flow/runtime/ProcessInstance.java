@@ -161,7 +161,7 @@ public class ProcessInstance {
         return params;
     }
 
-    void addNodeInstance(NodeInstance nodeInstance) {
+    synchronized void addNodeInstance(NodeInstance nodeInstance) {
         nodeInstances.add(nodeInstance);
     }
 

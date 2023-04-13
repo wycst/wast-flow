@@ -25,14 +25,18 @@ public class JoinCountContext {
      * 完成当前并等待未完成
      */
     void completeAndAwait() {
-        try {
-            completeOne();
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-        }
+        completeOne();
+        await();
     }
 
     void completeOne() {
         countDownLatch.countDown();
+    }
+
+    void await() {
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+        }
     }
 }
