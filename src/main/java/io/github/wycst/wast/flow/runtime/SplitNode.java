@@ -33,7 +33,7 @@ public class SplitNode extends RuntimeNode {
     }
 
     @Override
-    public boolean isGateway() {
+    public final boolean isGateway() {
         return true;
     }
 
@@ -79,24 +79,20 @@ public class SplitNode extends RuntimeNode {
                 passNextOuts.add(runtimeConnect.getTo());
             }
         }
-        if (passNextOuts.size() == 0) {
+        final int nextOutsSize = passNextOuts.size();
+        if (nextOutsSize == 0) {
             this.handleEvent(EventType.GatewayError, processInstance, nodeInstance);
             throw new FlowRuntimeException(String.format("Gateway Error: SplitNode[id = '%s', name = '%s'] no branch passes through.", id, name));
         } else {
-            final JoinCountContext joinCountContext = new JoinCountContext(passNextOuts.size());
+            final JoinCountContext joinCountContext = new JoinCountContext(nextOutsSize);
             processInstance.setJoinCountContext(joinNodeId, joinCountContext);
-
-            int nextOutsSize = passNextOuts.size();
             // 暂时按异步处理
-            boolean asynchronous = nextOutsSize > 1;
-            if(asynchronous) {
-                processInstance.addAndGetStackCount(nextOutsSize);
-            }
+            final boolean asynchronous = nextOutsSize > 1;
+            FutureList futureList = new FutureList();
             for (RuntimeNode nextOut : passNextOuts) {
                 final RuntimeNode nextNode = nextOut;
                 if (asynchronous) {
-                    processInstance.setAsyncMode(true);
-                    processInstance.getExecuteEngine().submitRunnable(new Callable() {
+                    futureList.add(processInstance.getExecuteEngine().submitRunnable(new Callable() {
                         @Override
                         public Object call() throws Exception {
                             try {
@@ -107,27 +103,25 @@ public class SplitNode extends RuntimeNode {
                             }
                             return null;
                         }
-                    });
+                    }));
                 } else {
                     nextNode.run(processInstance, nodeInstance);
                 }
             }
             if(asynchronous) {
-                processInstance.decrementStackCount();
+                futureList.await();
             }
         }
     }
 
     // 网关and
     private void runOutAnd(final ProcessInstance processInstance, final NodeInstance nodeInstance) throws Exception {
-        final JoinCountContext joinCountContext = new JoinCountContext(outConnects.size());
-        processInstance.setJoinCountContext(joinNodeId, joinCountContext);
         int outConnectCount = outConnects.size();
+        final JoinCountContext joinCountContext = new JoinCountContext(outConnectCount);
+        processInstance.setJoinCountContext(joinNodeId, joinCountContext);
         // 暂时使用异步
-        boolean asynchronous = outConnectCount > 1; // handlerOption.isAsynchronous();
-        if(asynchronous) {
-            processInstance.addAndGetStackCount(outConnectCount);
-        }
+        final boolean asynchronous = outConnectCount > 1; // handlerOption.isAsynchronous();
+        FutureList futureList = new FutureList();
         for (RuntimeConnect runtimeConnect : outConnects) {
             ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);
             nodeInstance.addConnectInstance(connectInstance);
@@ -138,9 +132,7 @@ public class SplitNode extends RuntimeNode {
 
             final RuntimeNode nextNode = runtimeConnect.getTo();
             if (asynchronous) {
-                processInstance.setAsyncMode(true);
-                // processInstance.incrementStackCount();
-                processInstance.getExecuteEngine().submitRunnable(new Callable() {
+                futureList.add(processInstance.getExecuteEngine().submitRunnable(new Callable() {
                     @Override
                     public Object call() throws Exception {
                         try {
@@ -151,13 +143,13 @@ public class SplitNode extends RuntimeNode {
                         }
                         return null;
                     }
-                });
+                }));
             } else {
                 nextNode.run(processInstance, nodeInstance);
             }
         }
         if(asynchronous) {
-            processInstance.decrementStackCount();
+             futureList.await();
         }
     }
 

@@ -78,7 +78,20 @@ public class RuntimeNode extends Node {
         return false;
     }
 
+    /**
+     * 是否网关
+     *
+     * @return
+     */
     public boolean isGateway() {
+        return false;
+    }
+
+    /**
+     * 是否汇聚
+     * @return
+     */
+    public boolean isJoin() {
         return false;
     }
 
@@ -494,13 +507,13 @@ public class RuntimeNode extends Node {
      * @param processInstance
      */
     void checkExitStack(ProcessInstance processInstance) {
-        if (processInstance.isAsyncMode()) {
-            int count = processInstance.decrementStackCount();
-            if (count == 0) {
-                // unlock
-                processInstance.unlock();
-            }
-        }
+//        if (processInstance.isAsyncMode()) {
+//            int count = processInstance.decrementStackCount();
+//            if (count == 0) {
+//                // unlock
+//                processInstance.unlock();
+//            }
+//        }
     }
 
     @Override

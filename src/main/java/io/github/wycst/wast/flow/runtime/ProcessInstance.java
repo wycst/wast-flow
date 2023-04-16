@@ -247,41 +247,14 @@ public class ProcessInstance {
         return false;
     }
 
-    void await() throws InterruptedException {
-        synchronized (lock) {
-            lock.wait();
-        }
-    }
-
-    void unlock() {
-        synchronized (lock) {
-            lock.notify();
-        }
-        // reset async mode
-        setAsyncMode(false);
-    }
-
     void completedInstance() throws Exception {
         setStatus(Status.Completed);
         setCompletedDate(new Timestamp(System.currentTimeMillis()));
-        if (isAsyncMode()) {
-            unlock();
-        }
     }
 
     void stopInstance() throws Exception {
         setStatus(Status.Stop);
         setCompletedDate(new Timestamp(System.currentTimeMillis()));
-        if (isAsyncMode()) {
-            unlock();
-        }
     }
 
-    int addAndGetStackCount(int v) {
-        return stackCount.addAndGet(v);
-    }
-
-    int decrementStackCount() {
-        return stackCount.decrementAndGet();
-    }
 }

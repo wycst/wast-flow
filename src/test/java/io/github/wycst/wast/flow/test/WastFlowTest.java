@@ -150,7 +150,10 @@ public class WastFlowTest {
 //                Thread.sleep(1000);
             }
         });
-        // flowEngine.setDatasource(getDatasource());
+        flowEngine.setDatasource(getDatasource());
+        flowEngine.setPersistenceInstanceLog(true);
+        flowEngine.setEnableTransaction(true);
+
 
         // 设置静态资源目录文件加载： classpath:/flows/sample.json
         flowEngine.setStaticResources("flows");
@@ -210,7 +213,7 @@ public class WastFlowTest {
         boolean hasNull = false;
         int i = 0 ;
         for (NodeInstance nodeInstance : nodeInstances) {
-            System.out.println(nodeInstance.getId());
+            System.out.println(nodeInstance.getNode());
 
         }
 

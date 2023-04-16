@@ -131,9 +131,9 @@ public class FlowEngine extends AbstractFlowEngine implements ProcessEngine, Tas
             onStarted(processInstance);
             // start
             process.getStartNode().start(processInstance);
-            if (processInstance.isAsyncMode()) {
-                processInstance.await();
-            }
+//            if (processInstance.isAsyncMode()) {
+//                processInstance.await();
+//            }
             if (processInstance.isRollback()) {
                 throw processInstance.getThrowable();
             }

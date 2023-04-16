@@ -19,7 +19,7 @@ public class JoinNode extends RuntimeNode {
     }
 
     @Override
-    public boolean isGateway() {
+    public final boolean isJoin() {
         return true;
     }
 
