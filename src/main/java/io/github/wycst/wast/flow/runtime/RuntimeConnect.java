@@ -112,6 +112,15 @@ public class RuntimeConnect extends Connect {
         return to;
     }
 
+    /**
+     * 判断连线的目的节点为汇聚节点
+     *
+     * @return
+     */
+    boolean toJoinNode() {
+        return to.isJoin();
+    }
+
     @Override
     public List<Node> getFrontNearestNodes(Node.Type type) {
         List<Node> nodes = null;
