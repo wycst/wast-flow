@@ -168,7 +168,7 @@ public class FlowHelper {
         // 非xor分支map集合
         Map<String, SplitNode> splitNodes = new HashMap<String, SplitNode>();
         // 网关聚合节点
-        Map<String, JoinNode> joinNodes = new HashMap<String, JoinNode>();
+        HashMap<String, JoinNode> joinNodes = new HashMap<String, JoinNode>();
 
         // 构建运行时节点
         Map<String, RuntimeNode> nodeMap = new HashMap<String, RuntimeNode>();
@@ -206,7 +206,10 @@ public class FlowHelper {
         startNode.prepare();
 
         // check gateways
-        checkAndSetGateways(process, splitNodes, joinNodes);
+        checkAndSetGateways(process, splitNodes, (Map<String, JoinNode>) joinNodes.clone());
+
+        // collect join paths
+        checkJoinConnectPaths(process, startNode, nodeMap, connectMap, joinNodes);
 
         process.setNodeMap(nodeMap);
         process.setConnectMap(connectMap);
@@ -214,6 +217,46 @@ public class FlowHelper {
         process.setEndNode(null);
 
         return process;
+    }
+
+    private static void checkJoinConnectPaths(RuleProcess ruleProcess, RuntimeNode startNode, Map<String, RuntimeNode> nodeMap, Map<String, RuntimeConnect> connectMap, Map<String, JoinNode> joinNodes) {
+        if (joinNodes.isEmpty()) return;
+        // 所有出口节点路径
+        List<List<String>> exitPaths = getExitPaths(startNode, null);
+
+        // 获取所有汇聚节点的可达路径（连线）
+        for (JoinNode joinNode : joinNodes.values()) {
+            String joinNodeId = joinNode.getId();
+            List<List<String>> paths = getJoinReachablePaths(exitPaths, nodeMap, joinNodeId);
+            ruleProcess.setReachablePaths(joinNodeId, paths);
+        }
+    }
+
+    private static List<List<String>> getJoinReachablePaths(List<List<String>> exitPaths, Map<String, RuntimeNode> nodeMap, String joinNodeId) {
+        List<List<String>> reachablePaths = new ArrayList<List<String>>();
+        for (List<String> exitPath : exitPaths) {
+            if (exitPath.contains(joinNodeId)) {
+                // 节点路径中包含汇聚节点id
+                List<String> reachablePath = getJoinReachablePath(joinNodeId, exitPath, nodeMap);
+                reachablePaths.add(reachablePath);
+            }
+        }
+        return reachablePaths;
+    }
+
+    private static List<String> getJoinReachablePath(String joinNodeId, List<String> exitPath, Map<String, RuntimeNode> nodeMap) {
+        List<String> connectPath = new ArrayList<String>();
+        RuntimeNode from = null;
+        for (String id : exitPath) {
+            if (from != null) {
+                RuntimeConnect runtimeConnect = from.getOutConnect(id);
+                runtimeConnect.setImpactJoinPath(true);
+                connectPath.add(runtimeConnect.getId());
+            }
+            if(id.equals(joinNodeId)) break;
+            from = nodeMap.get(id);
+        }
+        return connectPath;
     }
 
     private static void checkAndSetGateways(RuleProcess process, Map<String, SplitNode> splitNodes, Map<String, JoinNode> joinNodes) {

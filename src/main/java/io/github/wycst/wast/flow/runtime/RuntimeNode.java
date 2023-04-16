@@ -95,6 +95,15 @@ public class RuntimeNode extends Node {
         return false;
     }
 
+    public RuntimeConnect getOutConnect(String toNodeId) {
+        for (RuntimeConnect connect : outConnects) {
+            if(connect.to.getId().equals(toNodeId)) {
+                return connect;
+            }
+        }
+        return null;
+    }
+
     /**
      * 获取前置节点列表
      *
@@ -474,7 +483,7 @@ public class RuntimeNode extends Node {
             }
         } else {
             // 如果存在多出口,以xor逻辑处理
-            // gateway节点会override此方法
+            // gateway节点（SplitNode）会override此方法
             RuntimeNode nextOut = null;
             for (RuntimeConnect runtimeConnect : outConnects) {
                 ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);

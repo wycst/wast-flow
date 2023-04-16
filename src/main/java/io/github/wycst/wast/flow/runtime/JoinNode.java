@@ -11,6 +11,7 @@ import io.github.wycst.wast.flow.definition.GatewayType;
  */
 public class JoinNode extends RuntimeNode {
 
+    // Not much use at the moment
     private final GatewayType gatewayType;
 
     public JoinNode(String id, String name, RuleProcess process, GatewayType gatewayType) {

@@ -54,15 +54,14 @@ public class ProcessInstance {
     private List<NodeInstance> nodeInstances = new ArrayList<NodeInstance>();
     // 待办列表
     private List<Task> tasks = new ArrayList<Task>();
-    // 同步lock
-    private Object lock = new Object();
-    // 每次初始化主栈计数为1
-    private final AtomicInteger stackCount = new AtomicInteger(1);
     private Throwable throwable;
     private boolean rollback;
 
     // 自定义对象(不参与持久化存储)
     private Object customContext;
+
+    // join 可达路径映射
+    private Map<String, List<List<String>>> joinReachablePaths;
 
     ProcessInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         this(IdGenerator.hex(), ruleProcess.self(), parent, executeEngine);
@@ -74,6 +73,10 @@ public class ProcessInstance {
         this.ruleProcess = ruleProcess.self();
         this.parent = parent;
         this.executeEngine = executeEngine;
+
+        if(ruleProcess.existJoinReachablePaths()) {
+            this.joinReachablePaths = ruleProcess.cloneReachablePaths();
+        }
     }
 
     /**

@@ -27,6 +27,9 @@ public class RuntimeConnect extends Connect {
     private Expression scriptEL;
     private boolean prepared;
 
+    // 是否影响汇聚路径
+    private boolean impactJoinPath;
+
     public RuntimeConnect(String id, String name, RuntimeNode from, RuntimeNode to) {
         this.id = id;
         this.name = name;
@@ -141,5 +144,13 @@ public class RuntimeConnect extends Connect {
             return nodes;
         }
         return to.getNextNearestNodes(type);
+    }
+
+    boolean isImpactJoinPath() {
+        return impactJoinPath;
+    }
+
+    void setImpactJoinPath(boolean impactJoinPath) {
+        this.impactJoinPath = impactJoinPath;
     }
 }
