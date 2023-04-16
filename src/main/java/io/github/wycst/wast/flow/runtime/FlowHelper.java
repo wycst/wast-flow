@@ -209,7 +209,7 @@ public class FlowHelper {
         checkAndSetGateways(process, splitNodes, (Map<String, JoinNode>) joinNodes.clone());
 
         // collect join paths
-        checkJoinConnectPaths(process, startNode, nodeMap, connectMap, joinNodes);
+        checkAndSetJoinConnectPaths(process, startNode, nodeMap, connectMap, joinNodes);
 
         process.setNodeMap(nodeMap);
         process.setConnectMap(connectMap);
@@ -219,7 +219,7 @@ public class FlowHelper {
         return process;
     }
 
-    private static void checkJoinConnectPaths(RuleProcess ruleProcess, RuntimeNode startNode, Map<String, RuntimeNode> nodeMap, Map<String, RuntimeConnect> connectMap, Map<String, JoinNode> joinNodes) {
+    private static void checkAndSetJoinConnectPaths(RuleProcess ruleProcess, RuntimeNode startNode, Map<String, RuntimeNode> nodeMap, Map<String, RuntimeConnect> connectMap, Map<String, JoinNode> joinNodes) {
         if (joinNodes.isEmpty()) return;
         // 所有出口节点路径
         List<List<String>> exitPaths = getExitPaths(startNode, null);
