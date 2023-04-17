@@ -234,7 +234,7 @@ public class RuntimeNode extends Node {
      */
     final void run(ProcessInstance processInstance, NodeInstance prev) throws Exception {
         // access
-        boolean access = beforeRun(processInstance);
+        boolean access = beforeRun(processInstance, prev);
         if (!access) {
             // exit
             checkExitStack(processInstance);
@@ -258,7 +258,7 @@ public class RuntimeNode extends Node {
         return true;
     }
 
-    protected boolean beforeRun(ProcessInstance processInstance) {
+    protected boolean beforeRun(ProcessInstance processInstance, NodeInstance prev) {
         return true;
     }
 
@@ -480,20 +480,28 @@ public class RuntimeNode extends Node {
                 onlyOneNext.run(processInstance, nodeInstance);
             } else {
                 processInstance.setStatus(Status.Stop);
+                // handle impactJoinPath
+                // todo note There may be bugs when running in parallel
+                onlyOneOut.handleRejectJoinPath(processInstance);
             }
         } else {
             // 如果存在多出口,以xor逻辑处理
             // gateway节点（SplitNode）会override此方法
             RuntimeNode nextOut = null;
             for (RuntimeConnect runtimeConnect : outConnects) {
-                ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);
-                nodeInstance.addConnectInstance(connectInstance);
-                boolean result = runtimeConnect.run(processInstance, nodeInstance);
-                connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
-                connectInstance.setExecuteTime(new Date());
-                if (result) {
-                    nextOut = runtimeConnect.getTo();
-                    break;
+                if(nextOut == null) {
+                    ConnectInstance connectInstance = new ConnectInstance(runtimeConnect);
+                    nodeInstance.addConnectInstance(connectInstance);
+                    boolean result = runtimeConnect.run(processInstance, nodeInstance);
+                    connectInstance.setConnectStatus(result ? ConnectStatus.Pass : ConnectStatus.Reject);
+                    connectInstance.setExecuteTime(new Date());
+                    if (result) {
+                        nextOut = runtimeConnect.getTo();
+                    } else {
+                        runtimeConnect.handleRejectJoinPath(processInstance);
+                    }
+                } else {
+                    runtimeConnect.handleRejectJoinPath(processInstance);
                 }
             }
             if (nextOut == null) {

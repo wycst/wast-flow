@@ -3,6 +3,9 @@ package io.github.wycst.wast.flow.runtime;
 import io.github.wycst.wast.flow.definition.Consts;
 import io.github.wycst.wast.flow.definition.GatewayType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 聚合节点，多进单出
  *
@@ -31,17 +34,33 @@ public class JoinNode extends RuntimeNode {
      * @return
      */
     @Override
-    protected boolean beforeRun(ProcessInstance processInstance) {
-        JoinCountContext joinCountContext = processInstance.getJoinCountContext(getId());
-        if (joinCountContext == null) return true;
-        int value = joinCountContext.decrementAndGet();
-        // complete current and continue await
-        joinCountContext.completeAndAwait();
-        if (value == 0) {
-            processInstance.removeJoinCountContext(getId());
-            return true;
+    protected boolean beforeRun(ProcessInstance processInstance, NodeInstance prev) {
+        RuntimeConnect prevConnect = prev.getNode().getOutConnect(id);
+        List<List<String>> unCompletedPaths = processInstance.getJoinPaths(id);
+        synchronized (processInstance) {
+            completeJoinPaths(prevConnect, unCompletedPaths);
+            return unCompletedPaths.isEmpty();
         }
-        return false;
+//        JoinCountContext joinCountContext = processInstance.getJoinCountContext(getId());
+//        if (joinCountContext == null) return true;
+//        int value = joinCountContext.decrementAndGet();
+//        // complete current and continue await
+//        joinCountContext.completeAndAwait();
+//        if (value == 0) {
+//            processInstance.removeJoinCountContext(getId());
+//            return true;
+//        }
+//        return false;
+    }
+
+    private void completeJoinPaths(RuntimeConnect prevConnect, List<List<String>> joinPaths) {
+        String connectId = prevConnect.getId();
+        List<List<String>> safelyPaths = new ArrayList<List<String>>(joinPaths);
+        for(List<String> path : safelyPaths) {
+            if(path.contains(connectId)) {
+                joinPaths.remove(path);
+            }
+        }
     }
 
     @Override

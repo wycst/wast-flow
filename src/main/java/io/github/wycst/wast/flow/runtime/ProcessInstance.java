@@ -6,7 +6,6 @@ import io.github.wycst.wast.json.JSON;
 
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author wangyunchao
@@ -61,7 +60,7 @@ public class ProcessInstance {
     private Object customContext;
 
     // join 可达路径映射
-    private Map<String, List<List<String>>> joinReachablePaths;
+    private final Map<String, List<List<String>>> joinReachablePaths;
 
     ProcessInstance(RuleProcess ruleProcess, ProcessInstance parent, FlowEngine executeEngine) {
         this(IdGenerator.hex(), ruleProcess.self(), parent, executeEngine);
@@ -74,9 +73,11 @@ public class ProcessInstance {
         this.parent = parent;
         this.executeEngine = executeEngine;
 
-        if(ruleProcess.existJoinReachablePaths()) {
-            this.joinReachablePaths = ruleProcess.cloneReachablePaths();
+        Map<String, List<List<String>>> joinReachablePaths = null;
+        if (ruleProcess.existJoinReachablePaths()) {
+            joinReachablePaths = ruleProcess.cloneReachablePaths();
         }
+        this.joinReachablePaths = joinReachablePaths;
     }
 
     /**
@@ -260,4 +261,7 @@ public class ProcessInstance {
         setCompletedDate(new Timestamp(System.currentTimeMillis()));
     }
 
+    List<List<String>> getJoinPaths(String joinNodeId) {
+        return joinReachablePaths.get(joinNodeId);
+    }
 }

@@ -77,6 +77,8 @@ public class SplitNode extends RuntimeNode {
             connectInstance.setExecuteTime(new Date());
             if (result) {
                 passNextOuts.add(runtimeConnect.getTo());
+            } else {
+                runtimeConnect.handleRejectJoinPath(processInstance);
             }
         }
         final int nextOutsSize = passNextOuts.size();

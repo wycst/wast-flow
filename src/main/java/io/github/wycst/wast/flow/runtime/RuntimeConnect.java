@@ -9,7 +9,9 @@ import io.github.wycst.wast.flow.definition.Node;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author wangyunchao
@@ -29,6 +31,8 @@ public class RuntimeConnect extends Connect {
 
     // 是否影响汇聚路径
     private boolean impactJoinPath;
+    // 汇聚节点id列表
+    private Set<String> impactJoinNodeIds;
 
     public RuntimeConnect(String id, String name, RuntimeNode from, RuntimeNode to) {
         this.id = id;
@@ -150,7 +154,24 @@ public class RuntimeConnect extends Connect {
         return impactJoinPath;
     }
 
-    void setImpactJoinPath(boolean impactJoinPath) {
-        this.impactJoinPath = impactJoinPath;
+    void setImpactJoinId(String impactJoinId) {
+        this.impactJoinPath = true;
+        if(impactJoinNodeIds == null) {
+            impactJoinNodeIds = new HashSet<String>();
+        }
+        impactJoinNodeIds.add(impactJoinId);
+    }
+
+    void handleRejectJoinPath(ProcessInstance processInstance) {
+        if(!impactJoinPath) return;
+        for (String impactJoinNodeId : impactJoinNodeIds) {
+            List<List<String>> joinPaths = processInstance.getJoinPaths(impactJoinNodeId);
+            List<List<String>> safelyPaths = new ArrayList<List<String>>(joinPaths);
+            for(List<String> path : safelyPaths) {
+                if(path.contains(id)) {
+                    joinPaths.remove(path);
+                }
+            }
+        }
     }
 }

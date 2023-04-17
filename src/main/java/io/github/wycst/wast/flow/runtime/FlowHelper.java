@@ -250,7 +250,7 @@ public class FlowHelper {
         for (String id : exitPath) {
             if (from != null) {
                 RuntimeConnect runtimeConnect = from.getOutConnect(id);
-                runtimeConnect.setImpactJoinPath(true);
+                runtimeConnect.setImpactJoinId(joinNodeId);
                 connectPath.add(runtimeConnect.getId());
             }
             if(id.equals(joinNodeId)) break;
