@@ -150,10 +150,6 @@ public class RuntimeConnect extends Connect {
         return to.getNextNearestNodes(type);
     }
 
-    boolean isImpactJoinPath() {
-        return impactJoinPath;
-    }
-
     void setImpactJoinId(String impactJoinId) {
         this.impactJoinPath = true;
         if(impactJoinNodeIds == null) {

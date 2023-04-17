@@ -37,7 +37,7 @@ public class JoinNode extends RuntimeNode {
     protected boolean beforeRun(ProcessInstance processInstance, NodeInstance prev) {
         RuntimeConnect prevConnect = prev.getNode().getOutConnect(id);
         List<List<String>> unCompletedPaths = processInstance.getJoinPaths(id);
-        synchronized (processInstance) {
+        synchronized (unCompletedPaths) {
             completeJoinPaths(prevConnect, unCompletedPaths);
             return unCompletedPaths.isEmpty();
         }
@@ -55,6 +55,13 @@ public class JoinNode extends RuntimeNode {
 
     private void completeJoinPaths(RuntimeConnect prevConnect, List<List<String>> joinPaths) {
         String connectId = prevConnect.getId();
+//        int len = joinPaths.size();
+//        for (int i = len - 1; i > -1; --i) {
+//            List<String> path = joinPaths.get(i);
+//            if(path.contains(connectId)) {
+//                joinPaths.remove(path);
+//            }
+//        }
         List<List<String>> safelyPaths = new ArrayList<List<String>>(joinPaths);
         for(List<String> path : safelyPaths) {
             if(path.contains(connectId)) {
