@@ -193,17 +193,17 @@ public class ProcessInstance {
         return JSON.toJsonString(processInstanceContext);
     }
 
-    void setJoinCountContext(String joinNodeId, JoinCountContext joinCountContext) {
-        processInstanceContext.setJoinCountContext(joinNodeId, joinCountContext);
-    }
+//    void setJoinCountContext(String joinNodeId, JoinCountContext joinCountContext) {
+//        processInstanceContext.setJoinCountContext(joinNodeId, joinCountContext);
+//    }
+//
+//    JoinCountContext getJoinCountContext(String joinNodeId) {
+//        return processInstanceContext.getJoinCountContext(joinNodeId);
+//    }
 
-    JoinCountContext getJoinCountContext(String joinNodeId) {
-        return processInstanceContext.getJoinCountContext(joinNodeId);
-    }
-
-    void removeJoinCountContext(String joinNodeId) {
-        processInstanceContext.removeJoinCountContext(joinNodeId);
-    }
+//    void removeJoinCountContext(String joinNodeId) {
+//        processInstanceContext.removeJoinCountContext(joinNodeId);
+//    }
 
     public Object getCustomContext() {
         return customContext;

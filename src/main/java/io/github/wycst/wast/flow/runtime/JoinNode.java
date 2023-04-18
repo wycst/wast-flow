@@ -9,6 +9,9 @@ import java.util.List;
 /**
  * 聚合节点，多进单出
  *
+ * <p> 汇聚目前只会激活一次，如果存在回退的场景汇聚将失效；</p>
+ * <p> 需要考虑重新激活的时机； </p>
+ *
  * @Author wangyunchao
  * @Date 2021/12/6 16:03
  */
@@ -35,8 +38,9 @@ public class JoinNode extends RuntimeNode {
      */
     @Override
     protected boolean beforeRun(ProcessInstance processInstance, NodeInstance prev) {
-        RuntimeConnect prevConnect = prev.getNode().getOutConnect(id);
         List<List<String>> unCompletedPaths = processInstance.getJoinPaths(id);
+        if(unCompletedPaths.isEmpty()) return true;
+        RuntimeConnect prevConnect = prev.getNode().getOutConnect(id);
         synchronized (unCompletedPaths) {
             completeJoinPaths(prevConnect, unCompletedPaths);
             return unCompletedPaths.isEmpty();

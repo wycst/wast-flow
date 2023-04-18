@@ -86,8 +86,8 @@ public class SplitNode extends RuntimeNode {
             this.handleEvent(EventType.GatewayError, processInstance, nodeInstance);
             throw new FlowRuntimeException(String.format("Gateway Error: SplitNode[id = '%s', name = '%s'] no branch passes through.", id, name));
         } else {
-            final JoinCountContext joinCountContext = new JoinCountContext(nextOutsSize);
-            processInstance.setJoinCountContext(joinNodeId, joinCountContext);
+//            final JoinCountContext joinCountContext = new JoinCountContext(nextOutsSize);
+//            processInstance.setJoinCountContext(joinNodeId, joinCountContext);
             // 暂时按异步处理
             final boolean asynchronous = nextOutsSize > 1;
             FutureList futureList = new FutureList();
@@ -101,7 +101,7 @@ public class SplitNode extends RuntimeNode {
                                 nextNode.run(processInstance, nodeInstance);
                             } finally {
                                 // complete one
-                                joinCountContext.completeOne();
+//                                joinCountContext.completeOne();
                             }
                             return null;
                         }
@@ -119,8 +119,8 @@ public class SplitNode extends RuntimeNode {
     // 网关and
     private void runOutAnd(final ProcessInstance processInstance, final NodeInstance nodeInstance) throws Exception {
         int outConnectCount = outConnects.size();
-        final JoinCountContext joinCountContext = new JoinCountContext(outConnectCount);
-        processInstance.setJoinCountContext(joinNodeId, joinCountContext);
+//        final JoinCountContext joinCountContext = new JoinCountContext(outConnectCount);
+//        processInstance.setJoinCountContext(joinNodeId, joinCountContext);
         // 暂时使用异步
         final boolean asynchronous = outConnectCount > 1; // handlerOption.isAsynchronous();
         FutureList futureList = new FutureList();
@@ -141,7 +141,7 @@ public class SplitNode extends RuntimeNode {
                             nextNode.run(processInstance, nodeInstance);
                         } finally {
                             // complete one
-                            joinCountContext.completeOne();
+//                            joinCountContext.completeOne();
                         }
                         return null;
                     }
