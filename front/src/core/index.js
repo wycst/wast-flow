@@ -4316,6 +4316,7 @@ class GraphicDesign {
                 leftRect.hide();
                 nextElement = nextElement.data("right");
             }
+            this.deleteTool.hide();
         }
 
         if (targetElement) {
