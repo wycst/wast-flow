@@ -12,6 +12,35 @@ export const browser = {
 }
 const {floor, random, sqrt} = Math;
 
+
+// ID使用长整数序列（时间戳/1000+序号（小于1000））转36进制字符串
+
+let lastSeconds = -1;
+let seq = 0;
+
+/**
+ * 生成唯一id（每秒生成1000个id在单线程UI前端已够用）
+ *
+ * @returns {string}
+ */
+export function id() {
+    let time = Date.now(), n = 1000;
+    let seconds = time - time % n;
+    if (lastSeconds == seconds) {
+        if (seq == 999) {
+            while (lastSeconds == seconds) {
+                time = Date.now();
+                seconds = time - time % n;
+            }
+            seq = 0;
+        }
+        return (seconds + ++seq).toString(36);
+    }
+    seq = 0;
+    lastSeconds = seconds;
+    return seconds.toString(36);
+}
+
 /**
  * 自定义uuid生成函数
  *
