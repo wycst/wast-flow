@@ -5428,7 +5428,7 @@ class FlowDesign {
     };
 
     completeFrontLines(element, completeColor) {
-        // console.log(" completeFrontLines ", this.completeRecords);
+        console.log(" completeFrontLines ", this.completeRecords);
         if (!element) return;
         if (!this.completeRecords) {
             this.completeRecords = [];
@@ -5441,8 +5441,12 @@ class FlowDesign {
                 this.completeRecords.push(lineId);
                 let fromElement = connectElement.data("from");
                 if (this.completeRecords.includes(fromElement.id)) {
-                    // 完成连线
-                    this.setElementColor(connectElement, completeColor);
+                    // 这里判断连线类型是否为自动的，如果自动的标位完成
+                    console.log("connectElement.conditionType ", connectElement.conditionType);
+                    if(connectElement.conditionType == "Always") {
+                        // 完成连线
+                        this.setElementColor(connectElement, completeColor);
+                    }
                 }
             }
         }
