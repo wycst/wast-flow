@@ -1797,7 +1797,8 @@ class FlowDesign {
         // this.translateX = 0;
         // this.translateY = 0;
         if (this.translateX != 0 || this.translateY != 0) {
-            this.panTo(this.translateX, this.translateY);
+            // 这里先注释掉
+            // this.panTo(this.translateX, this.translateY);
         }
         if (value <= 0.01) {
             value = 0.01;
@@ -1835,10 +1836,12 @@ class FlowDesign {
         let rectX = minX, rectY = minY;
         let elementsBoundingWidth = maxEndx - rectX, elementsBoundingHeight = maxEndy - rectY;
         let {width, height} = this.flowWrapper.parentNode.getBoundingClientRect();
+        console.log("flowWrapper parentNode", width, height);
         let center = {
             x: minX + elementsBoundingWidth / 2,
             y: minY + elementsBoundingHeight / 2
         }
+        console.log("minX minY", minX, minY);
         let targetCenter = {
             x: width / 2,
             y: height / 2
@@ -1849,8 +1852,10 @@ class FlowDesign {
         if (viewWidth < elementsBoundingWidth || viewHeight < elementsBoundingHeight) {
             scale = min(viewWidth / (elementsBoundingWidth || 1), viewHeight / (elementsBoundingHeight || 1));
         }
+
         let dx = (targetCenter.x - center.x) * scale;
         let dy = (targetCenter.y - center.y) * scale;
+
         this.translateTo(dx, dy);
         this.setScale(scale);
     };
@@ -2691,6 +2696,7 @@ class FlowDesign {
             // minWidth: `${newWidth}px`,
             // minHeight: `${newHeight}px`,
         });
+        console.log("updateWrapperTransform x, y", x, y);
 
         // let newWidth = width, newHeight = height;
         // // 计算offset
