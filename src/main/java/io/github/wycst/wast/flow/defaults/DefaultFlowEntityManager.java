@@ -4,7 +4,7 @@ import io.github.wycst.wast.flow.definition.FlowEntityManager;
 import io.github.wycst.wast.flow.entitys.IEntity;
 import io.github.wycst.wast.jdbc.executer.DefaultSqlExecuter;
 import io.github.wycst.wast.jdbc.executer.EntityManagementFactory;
-import io.github.wycst.wast.jdbc.oql.OqlQuery;
+import io.github.wycst.wast.jdbc.executer.OqlQuery;
 
 import javax.sql.DataSource;
 import java.io.Serializable;

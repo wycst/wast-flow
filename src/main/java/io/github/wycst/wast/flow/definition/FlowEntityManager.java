@@ -2,7 +2,7 @@ package io.github.wycst.wast.flow.definition;
 
 import io.github.wycst.wast.flow.entitys.IEntity;
 import io.github.wycst.wast.flow.entitys.TaskEntity;
-import io.github.wycst.wast.jdbc.oql.OqlQuery;
+import io.github.wycst.wast.jdbc.executer.OqlQuery;
 
 import java.io.Serializable;
 import java.util.List;

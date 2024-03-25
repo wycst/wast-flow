@@ -7,7 +7,7 @@ import io.github.wycst.wast.flow.definition.TaskEngine;
 import io.github.wycst.wast.flow.entitys.*;
 import io.github.wycst.wast.flow.exception.FlowDeploymentException;
 import io.github.wycst.wast.flow.exception.FlowRuntimeException;
-import io.github.wycst.wast.jdbc.oql.OqlQuery;
+import io.github.wycst.wast.jdbc.executer.OqlQuery;
 import io.github.wycst.wast.log.Log;
 import io.github.wycst.wast.log.LogFactory;
 
