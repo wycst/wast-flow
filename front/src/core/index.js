@@ -1,4 +1,11 @@
-import FlowDesign from "./flow/"
+import FlowDesign, {registerHTML} from "./flow/"
+
+/**
+ * export register function
+ */
+export {
+    registerHTML
+};
 
 /**
  * 简化构建实例api

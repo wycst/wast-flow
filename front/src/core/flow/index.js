@@ -27,6 +27,8 @@ import {
 } from "../ElementData"
 import historyActions from "../modules/history"
 import SvgPaper from "../SvgPaper";
+// options
+import defaultOption, {DefaultSettings} from "./option/"
 
 const {isChrome} = browser;
 const xmlns = `xmlns="${svgNS}"`;
@@ -39,7 +41,7 @@ const appendSvgInner = (inner) => {
 }
 
 // 内置html块
-const DefaultHtmlTypes = {
+const DEFAULT_HTML_TYPES = {
     empty: ``,
     select: appendSvgInner(`<path d="M736.21333333 638.08l69.76-54.08c5.22666667-4.05333333 8-10.45333333 7.46666667-17.06666667-0.53333333-6.61333333-4.37333333-12.48-10.24-15.57333333L450.02666666 361.38666666c-6.82666667-3.62666667-15.04-2.98666667-21.12 1.70666667-6.08 4.69333333-8.85333333 12.58666667-7.04 20.05333333l95.57333334 389.54666667c1.6 6.4 6.29333333 11.62666667 12.48 13.76 6.18666667 2.13333333 13.12 1.06666667 18.34666666-2.98666667l69.86666667-54.08L769.06666666 924.37333333c3.2 4.05333333 7.78666667 6.72 12.90666667 7.36 0.85333333 0.10666667 1.6 0.10666667 2.45333333 0.10666667 4.26666667 0 8.53333333-1.38666667 11.94666667-4.05333334l87.25333333-67.52c8.53333333-6.61333333 10.02666667-18.88 3.52-27.30666666L736.21333333 638.08zM178.24 282.02666666l-31.25333334-21.01333333c-14.61333333 21.76-27.30666667 44.90666667-37.86666666 68.90666667l34.56 15.14666666c9.6-21.86666667 21.22666667-43.09333333 34.56-63.04zM549.54666666 103.89333333l3.2-37.54666667c-26.02666667-2.24-52.69333333-2.13333333-78.50666666 0.21333334l3.41333333 37.54666666c23.57333333-2.13333333 48-2.24 71.89333333-0.21333333zM120.74666666 413.22666666l-36.69333333-8.74666666c-6.08 25.38666667-9.92 51.52-11.30666667 77.76l37.65333334 2.13333333c1.38666667-24 4.8-47.89333333 10.34666666-71.14666667zM112.64 556.26666666l-37.44 4.48c3.09333333 26.02666667 8.64 51.94666667 16.32 76.90666667l36.05333333-11.09333333c-7.04-22.82666667-12.05333333-46.50666667-14.93333333-70.29333334zM919.36 327.46666666c-10.66666667-23.89333333-23.46666667-46.93333333-38.29333334-68.58666666l-31.14666666 21.22666666c13.44 19.84 25.28 40.96 34.98666666 62.82666667l34.45333334-15.46666667zM831.36 197.97333333c-18.34666667-18.77333333-38.4-35.94666667-59.62666667-51.09333333L749.86666666 177.6c19.52 13.86666667 37.86666667 29.65333333 54.61333334 46.82666666l26.88-26.45333333zM703.89333333 107.09333333c-23.68-11.2-48.53333333-20.37333333-73.81333333-27.09333333l-9.81333334 36.37333333c23.14666667 6.18666667 45.86666667 14.61333333 67.52 24.85333333l16.10666667-34.13333333zM277.76 178.98666666l-22.08-30.50666666c-21.22666667 15.36-41.17333333 32.64-59.41333334 51.52l27.09333334 26.13333333c16.74666667-17.28 35.09333333-33.06666667 54.4-47.14666667zM348.90666666 918.08c24.32 9.81333333 49.6 17.49333333 75.2 22.82666666l7.68-36.90666666c-23.46666667-4.90666667-46.61333333-11.94666667-68.8-20.90666667l-14.08 34.98666667zM503.25333333 912.42666666l-1.06666667 37.65333334c4.16 0.10666667 8.42666667 0.21333333 12.58666667 0.21333333 21.97333333 0 44.16-1.6 65.81333333-4.90666667l-5.54666666-37.22666666c-23.57333333 3.52-47.89333333 4.90666667-71.78666667 4.26666666zM944.85333333 401.81333333l-36.58666667 8.96c5.65333333 23.14666667 9.28 47.14666667 10.77333334 71.04l37.65333333-2.34666667c-1.70666667-26.13333333-5.65333333-52.26666667-11.84-77.65333333zM396.8 80.64c-25.28 6.93333333-50.02666667 16.21333333-73.6 27.62666666l16.32 33.92c21.54666667-10.34666667 44.26666667-18.88 67.30666666-25.17333333L396.8 80.64zM121.17333333 710.4c11.94666667 23.25333333 26.13333333 45.54666667 42.13333333 66.34666666l29.86666667-22.93333333c-14.61333333-18.98666667-27.52-39.46666667-38.50666667-60.69333333L121.17333333 710.4zM216.42666666 834.66666666c19.30666667 17.70666667 40.42666667 33.70666667 62.50666667 47.68l20.05333333-31.89333333c-20.26666667-12.8-39.46666667-27.41333333-57.17333333-43.62666667l-25.38666667 27.84z"></path>`),
     start: appendSvgInner(`<path d="M400.43759 732.273456a71.33239 71.33239 0 0 0 34.157473 8.810938 75.556813 75.556813 0 0 0 41.157944-12.069778l219.790665-144.837341a85.574729 85.574729 0 0 0 38.502593-72.418671 83.402169 83.402169 0 0 0-37.295615-70.608203l-221.842527-144.837341a72.41867 72.41867 0 0 0-74.591231-3.741631 84.488449 84.488449 0 0 0-41.761433 75.436115v289.674681a84.488449 84.488449 0 0 0 41.882131 74.591231z m42.002829-82.315889V374.163131l207.600188 135.664309v0.965582a13.156058 13.156058 0 0 1 0 2.293258z"></path><path d="M149.989688 874.093352a509.948138 509.948138 0 1 0-109.714286-162.700613 513.206978 513.206978 0 0 0 109.714286 162.700613zM84.571489 512a428.11504 428.11504 0 1 1 427.511551 428.11504A428.597831 428.597831 0 0 1 84.571489 512z" ></path>`),
@@ -66,32 +68,32 @@ const DefaultHtmlTypes = {
     zoomOut: appendSvgInner(`<path d="M919.264 905.984l-138.912-138.912C851.808 692.32 896 591.328 896 480c0-229.376-186.624-416-416-416S64 250.624 64 480s186.624 416 416 416c95.008 0 182.432-32.384 252.544-86.208l141.44 141.44a31.904 31.904 0 0 0 45.248 0 32 32 0 0 0 0.032-45.248zM128 480C128 285.92 285.92 128 480 128s352 157.92 352 352-157.92 352-352 352S128 674.08 128 480z" ></path><path d="M625.792 448H336a32 32 0 0 0 0 64h289.792a32 32 0 1 0 0-64z"></path>`),
 
     // 修改类型
-    exchange:`<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;transform: scale(1.2);" viewBox="0 0 1024 1024" version="1.1" ${xmlns}><path d="M825.6 448a37.12 37.12 0 0 0-37.12 37.76v243.2a56.96 56.96 0 0 1-56.32 56.32H291.84a56.96 56.96 0 0 1-56.32-56.32v-441.6a56.96 56.96 0 0 1 56.32-56.32h248.32A37.12 37.12 0 0 0 576 192a33.28 33.28 0 0 0-37.12-32.64H291.84a128 128 0 0 0-128 128v439.68a128 128 0 0 0 128 128h439.68a128 128 0 0 0 128-128V488.32c-1.28-23.04-15.36-40.32-33.92-40.32z"></path><path d="M362.24 647.68a33.92 33.92 0 0 0 46.72 0l412.16-412.16a36.48 36.48 0 1 0-51.2-51.2L362.24 600.96a42.24 42.24 0 0 0 0 46.72z"></path></svg>`,
+    exchange: `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;transform: scale(1.2);" viewBox="0 0 1024 1024" version="1.1" ${xmlns}><path d="M825.6 448a37.12 37.12 0 0 0-37.12 37.76v243.2a56.96 56.96 0 0 1-56.32 56.32H291.84a56.96 56.96 0 0 1-56.32-56.32v-441.6a56.96 56.96 0 0 1 56.32-56.32h248.32A37.12 37.12 0 0 0 576 192a33.28 33.28 0 0 0-37.12-32.64H291.84a128 128 0 0 0-128 128v439.68a128 128 0 0 0 128 128h439.68a128 128 0 0 0 128-128V488.32c-1.28-23.04-15.36-40.32-33.92-40.32z"></path><path d="M362.24 647.68a33.92 33.92 0 0 0 46.72 0l412.16-412.16a36.48 36.48 0 1 0-51.2-51.2L362.24 600.96a42.24 42.24 0 0 0 0 46.72z"></path></svg>`,
 };
 
 const defs = `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>`
 
 /** 全局映射html块 */
-const GlobalHTMLTypes = {...DefaultHtmlTypes};
+const GLOBAL_HTML_TYPES = {...DEFAULT_HTML_TYPES};
 
 /**
- * 注册html映射类型
+ * 全局注册html映射类型
  *
  * @param type
  * @param innerHTML
  */
-export const registerHTML = (type, innerHTML) => {
-    GlobalHTMLTypes[type] = innerHTML;
+export const registerHTML = (type, innerHTML, options) => {
+    GLOBAL_HTML_TYPES[type] = innerHTML;
 }
 
 /**
- * 获取类型的html代码
+ * 获取全局类型的html代码
  *
  * @param type
  * @param innerHTML
  */
 export const getHTML = (type) => {
-    return GlobalHTMLTypes[type];
+    return GLOBAL_HTML_TYPES[type];
 }
 
 /**
@@ -99,7 +101,7 @@ export const getHTML = (type) => {
  * @param type
  */
 HtmlElementData.prototype.setHtmlType = function (type) {
-    let html = GlobalHTMLTypes[type];
+    let html = GLOBAL_HTML_TYPES[type];
     if (html) {
         this.updateHTML(html);
     } else {
@@ -143,7 +145,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let index = 0;
         for (let item of data) {
             let {type, text, action} = item;
-            let typeSvg = DefaultHtmlTypes[type.toLowerCase()];
+            let typeSvg = DEFAULT_HTML_TYPES[type.toLowerCase()];
             actions[++index] = action;
             html.push(`<div data-index="${index}" style="display: flex; padding:4px; cursor: pointer;align-items: center;">
                         <div style="width: 18px;height: 18px">
@@ -175,7 +177,11 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
     }
 }
 
-
+/**
+ * 内置节点类型 -> nodeType
+ *
+ * @type {{Message: string, Start: string, Join: string, Service: string, Manual: string, End: string, Split: string, Business: string}}
+ */
 const NodeTypes = {
     Start: "Start",
     End: "End",
@@ -184,11 +190,9 @@ const NodeTypes = {
     Business: "Business",
     Service: "Service",
     Manual: "Manual",
-    Message: "Message"
+    Message: "Message",
+    Custom: "Custom"
 }
-
-// options
-import defaultOption, {DefaultSettings} from "./option/"
 
 const mr = (type, draggable, title) => {
     let drag = draggable ? `draggable="true"` : "";
@@ -215,6 +219,7 @@ const extensionTemplate = `
         ${mr('service', 1, '服务节点')}
         ${mr('message', 1, '消息节点')}
         ${mr('manual', 1, '手工节点')}
+        <div class="flow-menu-custom-items"></div>
         ${divider}
         ${mr('xor', 1, '有且仅有一个满足条件的分支通过')}
         ${mr('or', 1, '至少一个满足条件的分支通过,与汇聚网关组合使用')}
@@ -267,6 +272,8 @@ class FlowDesign {
         if (typeof dom == "string") {
             dom = document.querySelector(dom);
         }
+        // 每个实例可独立一个自定义节点列表
+        this.customHtmlTypes = {...GLOBAL_HTML_TYPES};
         this.option = assign({}, defaultOption, option || {});
         if (!this.settings) {
             this.option.settings = {...DefaultSettings};
@@ -324,6 +331,40 @@ class FlowDesign {
         this.offsetX = 0;
         this.offsetY = 0;
         this.scaleValue = 1;
+    };
+
+    /**
+     * 当前实例中注册类型
+     *
+     * @param type
+     * @param innerHTML
+     * @param options
+     */
+    registerHTML(type, innerHTML, options) {
+        if (typeof type == 'string' && type) {
+            this.customHtmlTypes[type] = {
+                innerHTML,
+                options
+            }
+        }
+    };
+
+    /**
+     * 当前实例中获取类型
+     *
+     * @param type
+     * @returns {*|null|string}
+     */
+    getInnerHTML(type) {
+        let htmlObject = this.customHtmlTypes[type];
+        if (typeof htmlObject == 'string') return htmlObject;
+        if(htmlObject) {
+            let innerHTML = htmlObject.innerHTML;
+            if (innerHTML) {
+                return typeof innerHTML == 'function' ? innerHTML(this) : innerHTML;
+            }
+        }
+        return null;
     };
 
     // 初始化及事件处理
@@ -553,7 +594,7 @@ class FlowDesign {
         if (nextEndTool) {
             nextEndTool.remove();
         }
-        nextEndTool = this.nextEndTool = this.renderHtmlNode("end", ...imageArgs).attr({
+        nextEndTool = this.nextEndTool = this.renderBuiltInHtmlNode("end", ...imageArgs).attr({
             opacity: .5,
             title: "快速追加结束任务",
             cursor: "pointer"
@@ -572,7 +613,7 @@ class FlowDesign {
         if (this.deleteTool) {
             this.deleteTool.remove();
         }
-        this.deleteTool = this.renderHtmlNode("del", ...imageArgs).attr({
+        this.deleteTool = this.renderBuiltInHtmlNode("del", ...imageArgs).attr({
             opacity: .5,
             title: "删除元素",
             cursor: "pointer"
@@ -907,14 +948,17 @@ class FlowDesign {
                         element.data("gateway", "XOR");
                     } else if (type == "or") {
                         dragContext.element = element = me.createSplitNode(x, y);
-                        element.updateHTML(DefaultHtmlTypes["or"]);
+                        element.updateHTML(DEFAULT_HTML_TYPES["or"]);
                         element.data("gateway", "OR");
                     } else if (type == "and") {
                         dragContext.element = element = me.createSplitNode(x, y);
-                        element.updateHTML(DefaultHtmlTypes["and"]);
+                        element.updateHTML(DEFAULT_HTML_TYPES["and"]);
                         element.data("gateway", "AND");
                     } else if (type == "join") {
                         dragContext.element = element = me.createJoinNode(x, y);
+                    } else {
+                        // 创建自定义节点
+                        dragContext.element = element = me.createCustomHtmlNode(type, x, y);
                     }
 
                     me.handleClickElement(element, event);
@@ -959,6 +1003,21 @@ class FlowDesign {
             });
         }
 
+        // 支持自定义的节点列表(html)
+        let customTypes = this.settings.customHtmlTypes;
+        if (Array.isArray(customTypes) && customTypes.length > 0) {
+            let customParent = menuDom.querySelector(".flow-menu-custom-items");
+            for (let customType of customTypes) {
+                createDomElement("div", customParent, {
+                    'class': 'menu-item',
+                    'data-type': customType,
+                    draggable: true,
+                    style: 'width: 32px; height: 32px; margin: 4px 0px; cursor: move',
+                    title: customType
+                });
+            }
+        }
+
         // 设置item背景图片
         menuDom.querySelectorAll(".menu-item").forEach(item => {
             let type = item.dataset.type;
@@ -973,7 +1032,7 @@ class FlowDesign {
             });
 
             let excludeTypes = me.option.excludeTypes || [];
-            if(excludeTypes.includes(type)) {
+            if (excludeTypes.includes(type)) {
                 assign(item.style, {
                     display: `none`
                 });
@@ -982,7 +1041,7 @@ class FlowDesign {
             if (type == "select") {
                 // 绑定全选事件
                 item.style.cursor = `pointer`;
-                item.innerHTML = DefaultHtmlTypes["select"];
+                item.innerHTML = DEFAULT_HTML_TYPES["select"];
                 // 点击处理
                 bindDomEvent(item, "click", function (event) {
                     me.groupSelectionFlag = true;
@@ -992,7 +1051,7 @@ class FlowDesign {
 
             } else if (type == "reset") {
                 item.style.cursor = `pointer`;
-                item.innerHTML = DefaultHtmlTypes["reset"];
+                item.innerHTML = DEFAULT_HTML_TYPES["reset"];
                 bindDomEvent(item, "mousedown", function (event) {
                     eventStop(event);
                 });
@@ -1004,7 +1063,7 @@ class FlowDesign {
             } else if (type == "exp") {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.themeColor;
-                item.innerHTML = DefaultHtmlTypes["exp"];
+                item.innerHTML = DEFAULT_HTML_TYPES["exp"];
                 // 点击处理
                 bindDomEvent(item, "mousedown", function (event) {
                     eventStop(event);
@@ -1017,7 +1076,7 @@ class FlowDesign {
             } else if (type == "imp") {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.themeColor;
-                item.innerHTML = DefaultHtmlTypes["imp"];
+                item.innerHTML = DEFAULT_HTML_TYPES["imp"];
                 bindDomEvent(item, "mousedown", function (event) {
                     eventStop(event);
                 });
@@ -1029,7 +1088,7 @@ class FlowDesign {
             } else if (type == "picture") {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.themeColor;
-                item.innerHTML = DefaultHtmlTypes["picture"];
+                item.innerHTML = DEFAULT_HTML_TYPES["picture"];
                 bindDomEvent(item, "mousedown", function (event) {
                     eventStop(event);
                 });
@@ -1039,18 +1098,21 @@ class FlowDesign {
                     eventStop(event);
                 });
             } else {
+                // custom or
                 assign(item.style, {
                     cursor: "move"
                 });
-                // item.style.color = this.themeColor;
-                item.innerHTML = DefaultHtmlTypes[type];
-                // 拖动处理
-                bindDomEvent(item, "mousedown", function (event) {
-                    onDragStart(event, item);
-                    addEventListener("mousemove", onDragMove);
-                    addEventListener("mouseup", onDragUp);
-                    eventStop(event);
-                });
+                setTimeout(() => {
+                    let innerHTML = this.getInnerHTML(type);
+                    item.innerHTML = innerHTML;
+                    // 拖动处理
+                    bindDomEvent(item, "mousedown", function (event) {
+                        onDragStart(event, item);
+                        addEventListener("mousemove", onDragMove);
+                        addEventListener("mouseup", onDragUp);
+                        eventStop(event);
+                    });
+                }, 0);
             }
         });
     };
@@ -1068,14 +1130,20 @@ class FlowDesign {
      *
      * @param style
      */
-    setMenuStyle(style) {
-        if (typeof style != 'object') {
-            style = {};
-        }
+    setMenuThemeColor(themeColor) {
         let menu = this.menu;
+        // set base color
         if (menu) {
-            assign(menu.style, style || {});
+            assign(menu.style, {color: themeColor});
         }
+        // update custom menu items
+        menu.querySelectorAll(".menu-item").forEach(item => {
+            let customType = item.dataset.type;
+            let innerHTML = this.getInnerHTML(customType);
+            if(innerHTML) {
+                item.innerHTML = innerHTML;
+            }
+        });
     };
 
     /**
@@ -1544,7 +1612,7 @@ class FlowDesign {
                     boxShadow: "0 1px 4px rgba(0,0,0,.3)",
                 });
                 // item.style.color = this.themeColor;
-                item.innerHTML = DefaultHtmlTypes[type];
+                item.innerHTML = DEFAULT_HTML_TYPES[type];
 
                 // stop propagation
                 bindDomEvent(item, "mousedown", function (event) {
@@ -2000,12 +2068,34 @@ class FlowDesign {
     };
 
     /**
+     * 创建内置html节点(外界无法覆盖)
+     */
+    renderBuiltInHtmlNode(type, x, y, width, height, createFunction) {
+        let html;
+        if ((html = DEFAULT_HTML_TYPES[type]) == undefined || html == null) {
+            console.error(`html type [${type}] is not register `);
+            return;
+        }
+        let domEle = createDomElement("div", this.flowWrapper);
+        domEle.innerHTML = html;
+        domEle.style.position = "absolute";
+        let element = typeof createFunction == 'function' ? createFunction(domEle) : new HtmlElementData(domEle)
+        element.attr({
+            x: x || 0,
+            y: y || 0,
+            width: width || 0,
+            height: height || 0
+        });
+        return element;
+    };
+
+    /**
      * 根据html创建节点（以div作为容器）
      */
     renderHtmlNode(type, x, y, width, height, createFunction) {
-        let html;
-        if ((html = GlobalHTMLTypes[type]) == undefined || html == null) {
-            console.error(`html type [${type}] is not register `);
+        let html = this.getInnerHTML(type);
+        if (html === undefined || html === null) {
+            console.error(`html type [${type}] is null or not register`);
             return;
         }
         let domEle = createDomElement("div", this.flowWrapper);
@@ -2696,7 +2786,7 @@ class FlowDesign {
             // minWidth: `${newWidth}px`,
             // minHeight: `${newHeight}px`,
         });
-        console.log("updateWrapperTransform x, y", x, y);
+        // console.log("updateWrapperTransform x, y", x, y);
 
         // let newWidth = width, newHeight = height;
         // // 计算offset
@@ -2930,7 +3020,7 @@ class FlowDesign {
     };
 
     /**
-     * 创建开始节点
+     * 创建开始节点(html+svg)
      *
      * @param x
      * @param y
@@ -2945,7 +3035,7 @@ class FlowDesign {
     };
 
     /**
-     * 创建结束节点(使用svg)
+     * 创建结束节点(html+svg)
      */
     createEndNode(x, y) {
         // return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
@@ -2977,7 +3067,7 @@ class FlowDesign {
     };
 
     /**
-     * 创建html节点(开始，结束，分支，聚合)
+     * 创建html节点(开始，结束，分支，聚合，自定义节点)
      *
      * @param src
      * @param x
@@ -3050,6 +3140,22 @@ class FlowDesign {
                 }
             });
         }
+    };
+
+    createCustomHtmlNode(type, x, y) {
+        let width = 180, height = 80;
+        const node = this.createHTMLNode(type, x, y, width, height);
+        node.data("nodeType", NodeTypes.Custom);
+        node.data("customType", type);
+        // 假定所有的自定义node都支持文本,
+        // create text element use html
+        let text = this.renderHtmlText(0, 0, width * 0.8).attr({
+            text: this.settings.nodeName + " " + this.nextId()
+        });
+        node.data("text", text);
+
+        this.initElement(node);
+        return node;
     };
 
     /**
@@ -3158,11 +3264,18 @@ class FlowDesign {
      * @returns {*}
      */
     loadHTMLElement(id, type, component, nodeType, createFunction) {
-        let {attrs} = component;
+        let {attrs, textAttrs} = component;
         let htmlElement = this.renderHtmlNode(type, 0, 0, 0, 0, createFunction);
         htmlElement.id = id;
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr(attrs);
+
+        if (textAttrs && typeof textAttrs == 'object') {
+            // 判断是否需要创建text create text
+            let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
+            htmlElement.data("text", nodeText);
+        }
+
         this.initElement(htmlElement);
         return htmlElement;
     };
@@ -4815,6 +4928,32 @@ class FlowDesign {
     };
 
     /**
+     * 设置html节点的颜色
+     *
+     * @param htmlNode
+     * @param color
+     */
+    setHtmlNodeColor(htmlNode, color) {
+        // html node
+        htmlNode.attr("color", color);
+        let type = htmlNode.nodeType;
+        let htmlType = null;
+        if(type == NodeTypes.Start) {
+            htmlType = "start";
+        } else if(type == NodeTypes.End) {
+            htmlType = "end";
+        } else if(type == NodeTypes.Custom) {
+            htmlType = htmlNode.customType;
+        }
+        if(htmlType) {
+            let innerHTML = this.getInnerHTML(htmlType);
+            if(innerHTML) {
+                htmlNode.updateHTML(innerHTML);
+            }
+        }
+    };
+
+    /**
      * 针对单分支连线设置连线类型（默认类型/条件类型）
      *
      * @param connect
@@ -4838,6 +4977,11 @@ class FlowDesign {
         if (componentType != "path") {
             let node = {};
             let nodeType = element.data("nodeType");
+            let customType = element.data("customType");
+            let nodeProps = {};
+            if (nodeType == NodeTypes.Custom) {
+                nodeProps.customType = customType;
+            }
             let textEle = element.data("text");
             let attrs = {...element.attrs};
             let component = {
@@ -4857,6 +5001,7 @@ class FlowDesign {
                 id: element.id,
                 name: textEle && textEle.attr("text"),
                 type: nodeType,
+                ...nodeProps,
                 ...getElementDatas(element, nodeDatas),
                 component
             });
@@ -4889,7 +5034,7 @@ class FlowDesign {
      * @param elementData
      */
     fromElementData(elementData) {
-        let {id, type, gateway, component} = elementData;
+        let {id, type, customType, gateway, component} = elementData;
         let element;
         let {connectDatas, nodeDatas, elements} = this;
         if (component.type == "path") {
@@ -4923,6 +5068,12 @@ class FlowDesign {
                 }
                 case "Join": {
                     element = this.loadHTMLElement(id, "join", component, "Join"); //.attr({color: this.themeColor});
+                    setElementDatas(element, nodeDatas, elementData);
+                    break;
+                }
+                case "Custom": {
+                    // component.type == 'html'
+                    element = this.loadHTMLElement(id, customType, component, "Custom"); //.attr({color: this.themeColor});
                     setElementDatas(element, nodeDatas, elementData);
                     break;
                 }
@@ -5292,10 +5443,13 @@ class FlowDesign {
             let element = elements[elementId];
             let type = element.type;
             if (type == "path") {
+                // svg path
                 this.setConnectColor(element, color);
             } else if (type == "html") {
-                element.attr("color", color);
+                // html node
+                this.setHtmlNodeColor(element, color);
             } else {
+                // svg rect
                 element.attr("stroke", color);
                 let icon = element.data("icon");
                 if (icon) {
@@ -5328,9 +5482,7 @@ class FlowDesign {
         // 重置元素颜色
         this.setElementsColor(color);
         // 菜单颜色
-        this.setMenuStyle({
-            color
-        });
+        this.setMenuThemeColor(color);
         // 工具栏颜色
         this.setToolsStyle({
             color
@@ -5449,7 +5601,7 @@ class FlowDesign {
                 if (this.completeRecords.includes(fromElement.id)) {
                     // 这里判断连线类型是否为自动的，如果自动的标位完成
                     console.log("connectElement.conditionType ", connectElement.conditionType);
-                    if(connectElement.conditionType == "Always") {
+                    if (connectElement.conditionType == "Always") {
                         // 完成连线
                         this.setElementColor(connectElement, completeColor);
                     }

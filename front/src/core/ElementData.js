@@ -549,6 +549,11 @@ class NodeElementData extends ElementData {
         return handler;
     }
 
+    // Change of response customType
+    get customType() {
+        return this.data("customType");
+    }
+
     // Change of response nodeType
     get nodeType() {
         return this.data("nodeType");

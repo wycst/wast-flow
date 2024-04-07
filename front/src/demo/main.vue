@@ -4,6 +4,7 @@
       <el-menu router :default-active="activeIndex" class="el-menu-demo" mode="horizontal">
         <el-menu-item index="/main/index">首页</el-menu-item>
         <el-menu-item index="/main/flow">业务流程</el-menu-item>
+        <el-menu-item index="/main/flow-custom">自定义节点流程</el-menu-item>
       </el-menu>
     </header>
     <main class="el-main">
@@ -16,7 +17,7 @@ export default {
   name: "main.vue",
   data() {
     return {
-      activeIndex: '/main/flow'
+      activeIndex: '/main/flow-custom'
     }
   }
 }
