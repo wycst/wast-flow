@@ -16,7 +16,6 @@ import {
 } from "../util"
 
 import {
-    connectArrowPrefix,
     createColorMarker,
     getElementDatas,
     HtmlElementData,
@@ -71,7 +70,9 @@ const DEFAULT_HTML_TYPES = {
     exchange: `<svg style="${fitStyle}vertical-align: middle;fill: currentColor;overflow: hidden;transform: scale(1.2);" viewBox="0 0 1024 1024" version="1.1" ${xmlns}><path d="M825.6 448a37.12 37.12 0 0 0-37.12 37.76v243.2a56.96 56.96 0 0 1-56.32 56.32H291.84a56.96 56.96 0 0 1-56.32-56.32v-441.6a56.96 56.96 0 0 1 56.32-56.32h248.32A37.12 37.12 0 0 0 576 192a33.28 33.28 0 0 0-37.12-32.64H291.84a128 128 0 0 0-128 128v439.68a128 128 0 0 0 128 128h439.68a128 128 0 0 0 128-128V488.32c-1.28-23.04-15.36-40.32-33.92-40.32z"></path><path d="M362.24 647.68a33.92 33.92 0 0 0 46.72 0l412.16-412.16a36.48 36.48 0 1 0-51.2-51.2L362.24 600.96a42.24 42.24 0 0 0 0 46.72z"></path></svg>`,
 };
 
-const defs = `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${connectArrowPrefix}path"></path>`
+const defs = (prefix) => {
+    return `<path d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="${prefix}path"></path>`;
+}
 
 /** 全局映射html块 */
 const GLOBAL_HTML_TYPES = {...DEFAULT_HTML_TYPES};
@@ -1607,7 +1608,7 @@ class FlowDesign {
 
     initPaper() {
         let paperNode = this.paper.node;
-        paperNode.querySelector("defs").innerHTML = defs;
+        paperNode.querySelector("defs").innerHTML = defs(this.paper.id);
         for (let color of (this.connectColors || [])) {
             createColorMarker(paperNode, color);
         }
@@ -5004,7 +5005,7 @@ class FlowDesign {
                 stroke = connect.attr("stroke");
                 createColorMarker(this.paper.node, stroke);
             }
-            connect.node.style.markerEnd = `url(#${connectArrowPrefix}${stroke})`;
+            connect.node.style.markerEnd = `url(#${this.paper.id}${stroke})`;
         }
     };
 

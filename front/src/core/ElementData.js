@@ -8,18 +8,18 @@ export const xlinkNS = "http://www.w3.org/1999/xlink";
 const textStyle = "font-size: 12px;";
 const functionType = "function";
 
-export const connectArrowPrefix = "connect-arrow-";
 // 创建指定颜色的marker
 export const createColorMarker = (svgDom, color) => {
     if (!color) return;
-
+    // console.log(svgDom, svgDom.dataset.id);
+    let prefix = svgDom.dataset.id;
     // 箭头
-    let id = `${connectArrowPrefix}${color}`;
+    let id = `${prefix}${color}`;
     let marker = svgDom.querySelector("marker[id='" + id + "']");
     if (!marker) {
         marker = createDomElement("marker", svgDom.querySelector("defs"), {id});
         marker = svgDom.querySelector("marker[id='" + id + "']");
-        marker.outerHTML = `<marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5"><use xlink:href="#${connectArrowPrefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use></marker>`;
+        marker.outerHTML = `<marker id="${id}" fill="${color}" markerHeight="5" markerWidth="5" orient="auto" refX="2.5" refY="2.5"><use xlink:href="#${prefix}path" transform="rotate(180 2.5 2.5) scale(1,1)" stroke-width="1" stroke="none"></use></marker>`;
     }
 
     // 条件连线样式

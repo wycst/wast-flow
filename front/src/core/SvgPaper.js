@@ -1,4 +1,4 @@
-import {createDomElementNs, pointsToPathD} from "./util";
+import {createDomElementNs, pointsToPathD, id} from "./util";
 import {
     SvgCircleElementData,
     SvgImageElementData,
@@ -15,6 +15,7 @@ import {
  * Note: svg text support capability is not as good as conventional dom nodes, unless foreignObject is used,
  */
 export default class SvgPaper {
+    _id;
     _node;
     _removed = false;
 
@@ -25,19 +26,24 @@ export default class SvgPaper {
         } else {
             parentNode = selector;
         }
+        let svgId = id();
         let svg = createDomElementNs(svgNS, 'svg', parentNode, {
             width: width || "100%",
             height: height || "100%",
             version: "1.1",
             xmlns: svgNS,
             "xmlns:xlink": xlinkNS,
+            "data-id": svgId,
             style: "overflow: visible; position: relative; user-select: none; cursor: default;"
         });
         // create svg dom
         createDomElementNs(svgNS, "defs", svg)
+        this._id = svgId;
         this._node = svg;
     };
-
+    get id() {
+      return this._id;
+    };
     get node() {
         return this._node;
     };
