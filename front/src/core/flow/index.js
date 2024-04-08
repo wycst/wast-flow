@@ -882,6 +882,16 @@ class FlowDesign {
         this.setBackground(`url("${bg}")`);
     };
 
+    /** 启用滚动条 */
+    enableScroll() {
+        assign(this.dom.style, {overflow: 'auto'});
+    };
+
+    /** 停用滚动条 */
+    disableScroll() {
+        assign(this.dom.style, {overflow: 'hidden'});
+    };
+
     // settings
     get settings() {
         return this.option.settings || {};
