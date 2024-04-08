@@ -32,7 +32,13 @@ const routers = [
         path: "flow-custom",
         title: "自定义流程",
         name: "flow-custom",
-        component: () => import("../demo/flow-custom.vue"),
+        component: () => import("../demo/flow-draw.vue"),
+      },
+      {
+        path: "flow-custom-view",
+        title: "自定义流程-查看",
+        name: "flow-custom-view",
+        component: () => import("../demo/flow-view.vue"),
       }
     ],
   },

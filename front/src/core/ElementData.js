@@ -178,8 +178,6 @@ class ElementData {
     _datas;
     _attrs;
 
-    #privateValue;
-
     /**
      * 元素数据构造函数
      */
@@ -261,10 +259,6 @@ class ElementData {
         }
         return meta;
     };
-
-    get privateValue() {
-        return this.#privateValue;
-    }
 
     /**
      * is svg
@@ -530,6 +524,10 @@ class ElementData {
         this._datas = null;
         this.removed = true;
     };
+
+    toString() {
+        return "id = " + this.id + ", name = " + this.name;
+    }
 }
 
 /**

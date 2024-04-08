@@ -1,13 +1,11 @@
 <template>
     <div style="position: relative;">
 
-        <div style="display: flex; align-items: center;">
-            <!--            <el-switch v-model="editable" active-text="可编辑" inactive-text="不可编辑"-->
-            <!--                       style="margin-left: 10px;"></el-switch>-->
-            主题色:
-            <el-color-picker v-model="themeColor"></el-color-picker>
-        </div>
-
+        <el-form inline>
+            <el-form-item label="主题色">
+                <el-color-picker v-model="themeColor"></el-color-picker>
+            </el-form-item>
+        </el-form>
 
         <div ref="flow" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
         </div>
@@ -19,7 +17,6 @@
                 <label>属性设置</label>
                 <label style="float: right; color: red;cursor: pointer;" @click="visible = false">×</label>
             </h3>
-
             <el-form v-if="selectElement" label-width="150px">
                 <el-form-item label="ID">
                     <el-input v-model="selectElement.id"></el-input>
@@ -29,8 +26,6 @@
                 </el-form-item>
             </el-form>
         </div>
-
-
     </div>
 </template>
 
@@ -52,15 +47,11 @@ export default {
         }
     },
     mounted() {
-        console.log(" mounted ");
-        let flow = this.graphicDesign = wf.render(this.$refs.flow, {
-            grid: false,
-            // width: "2000px",
-            // height: "1000px",
+        let flow = this.flow = wf.render(this.$refs.flow, {
+            grid: true,
             menu: {
                 draggable: true
             },
-            // background: "lightblue",
             panable: true,
 
             textEditOnDblClick: false,
@@ -71,7 +62,12 @@ export default {
             excludeTypes: ["manual", "message", "service", "businessTask", "or", "join"],
 
             /** 默认条件类型 */
-            defaultConditionType: "HandlerCall",
+            defaultConditionType: "Always",
+
+            /** 默认快捷追加的节点函数 */
+            defaultNextNodeFn: (flow, x, y) => {
+                return flow.createCustomHtmlNode("custom-node", x, y);
+            },
 
             alertMessage: (message, level) => {
                 this.$message.error(message);
@@ -83,7 +79,8 @@ export default {
             // others settings
             settings: {
                 themeColor: "#00CCA7",
-                customHtmlTypes: ["custom-node"]
+                // 这里的item必须是已经注册的自定义节点(html)
+                customMenuItems: ["custom-node"],
             },
 
             // 元素单击事件
@@ -105,34 +102,34 @@ export default {
             let themeColor = flow.themeColor;
             return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff; border-radius: 30px;display: flex;align-items: center;justify-content: center;font-size: .9em;'>结束</div>`;
         });
-        // 自定义节点
+        // 自定义节点(支持设置初始化大小)
         flow.registerHTML("custom-node", (flow) => {
             let themeColor = flow.themeColor;
-            return  `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; border-radius: 12px;overflow: hidden;'>
+            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; border-radius: 12px;overflow: hidden;'>
                           <div style="width: 100%; height: 20%"></div>
                           <div style="width: 100%; height: 80%;background: #fff"></div>
                       </div>`;
+        }, {
+            width: 180,
+            height: 80,
+            text: true
         });
-
-        console.log(this.graphicDesign.getData());
-        window.instance = this.graphicDesign;
-        this.graphicDesign.processId = "test";
-        this.graphicDesign.processName = "test";
+        window.instance = this.flow;
+        this.flow.processId = "test";
+        this.flow.processName = "test";
 
         this.responsive++;
     },
     beforeUnmount() {
-        this.graphicDesign.destroy();
+        this.flow.destroy();
     },
     methods: {
         getData() {
-            this.tmpData = this.graphicDesign.getData();
+            this.tmpData = this.flow.getData();
             console.log(this.tmpData);
             console.log(JSON.stringify(this.tmpData, null, 4));
         },
         clickElement(element, evt) {
-            console.log(element);
-            console.log(element.id);
             this.selectElement = element;
         },
         dblclickElement(element, evt) {
@@ -143,55 +140,8 @@ export default {
         clickBlank() {
             this.visible = false;
         },
-        validateProcess() {
-            let error = this.graphicDesign.validate();
-            if (error) {
-                this.$message.error(error);
-            } else {
-                this.$message.success("成功");
-            }
-        },
-        pop() {
-            this.dialogVisible = true;
-            this.$nextTick(() => {
-                if (!this.flowInstance) {
-                    console.log(this.$refs.flow2);
-                    this.flowInstance = wf.render(this.$refs.flow2, {
-                        grid: true,
-                        editable: true
-                    })
-                }
-            })
-        },
-        clearData() {
-            this.graphicDesign.reset();
-        },
-        setData() {
-            this.graphicDesign.setData(this.tmpData, true);
-        },
-        initStartAndEnd() {
-            this.graphicDesign.createStartNode();
-            this.graphicDesign.createEndNode();
-        },
-        createNode() {
-            this.graphicDesign.createNode(100, 100, 100, 80, 8);
-        },
-        exportImage() {
-            this.graphicDesign.exportImage();
-        },
-        setEditable() {
-            this.editable = !this.editable;
-            this.graphicDesign.setEditable(this.editable);
-        },
-        handleClose() {
-            console.log("==== ");
-            this.dialogVisible = false;
-        }
     },
     computed: {
-        processData() {
-            return this.responsive && this.graphicDesign ? this.graphicDesign.getData() : null
-        },
         drawerStyle() {
             if (this.visible) {
                 return {
@@ -205,11 +155,6 @@ export default {
         }
     },
     watch: {
-        editable() {
-            if (this.graphicDesign) {
-                this.graphicDesign.setEditable(this.editable);
-            }
-        },
         selectElement: {
             handler(val) {
                 this.responsive++;
@@ -217,8 +162,8 @@ export default {
             deep: true
         },
         themeColor(val) {
-            if (this.graphicDesign) {
-                this.graphicDesign.setThemeColor(val);
+            if (this.flow) {
+                this.flow.setThemeColor(val);
             }
         }
     }

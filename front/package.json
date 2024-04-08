@@ -1,6 +1,6 @@
 {
   "name": "wastflow",
-  "version": "1.0.0-beta39",
+  "version": "1.0.0-beta41",
   "scripts": {
     "dev": "vite",
     "build": "vite build"
@@ -22,7 +22,7 @@
   },
   "peerDependencies": {},
   "dependencies": {
-    "wastflow": "^1.0.0-beta"
+    "wastflow": "^1.0.0-beta41"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "1.0.0",

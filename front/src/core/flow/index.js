@@ -355,16 +355,26 @@ class FlowDesign {
      * @param type
      * @returns {*|null|string}
      */
-    getInnerHTML(type) {
+    getCustomInnerHTML(type) {
         let htmlObject = this.customHtmlTypes[type];
         if (typeof htmlObject == 'string') return htmlObject;
-        if(htmlObject) {
+        if (htmlObject) {
             let innerHTML = htmlObject.innerHTML;
             if (innerHTML) {
                 return typeof innerHTML == 'function' ? innerHTML(this) : innerHTML;
             }
         }
         return null;
+    };
+
+    /**
+     * 获取自定义注册的配置项
+     *
+     * @param type
+     * @returns {*}
+     */
+    getCustomOptions(type) {
+        return this.customHtmlTypes[type] && this.customHtmlTypes[type].options;
     };
 
     // 初始化及事件处理
@@ -751,7 +761,7 @@ class FlowDesign {
         if (!fromNode) return;
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
-        let nextNode = this.createBusinessNode(x + width + 150, y);
+        let nextNode = this.createNextNode(x + width + 150, y);
         // nextNode.data("nodeType", NodeTypes.Business);
         let {height: h2} = nextNode.attrs;
         // 对齐
@@ -760,6 +770,21 @@ class FlowDesign {
         // 创建连线
         let path = this.createPath(fromNode, nextNode);
         this.hideEditElements(path);
+    };
+
+    /**
+     * 快速追加下一个节点
+     *
+     * @param x
+     * @param y
+     */
+    createNextNode(x, y) {
+        let defaultNextNodeFn = this.option.defaultNextNodeFn;
+        if (typeof defaultNextNodeFn == 'function') {
+            return defaultNextNodeFn(this, x, y);
+        } else {
+            return this.createBusinessNode(x, y);
+        }
     };
 
     /**
@@ -772,7 +797,7 @@ class FlowDesign {
         let {x, y, width, height} = fromNode.attrs;
         let centerY = y + height / 2;
 
-        let nextOneNode = this.createBusinessNode(x + width + 150, y);
+        let nextOneNode = this.createNextNode(x + width + 150, y);
         let {height: h1} = nextOneNode.attrs;
         // 对齐
         nextOneNode.attr({y: centerY - h1 / 2 - 100});
@@ -784,7 +809,7 @@ class FlowDesign {
         }
         this.hideEditElements(connect);
 
-        let nextTwoNode = this.createBusinessNode(x + width + 150, y);
+        let nextTwoNode = this.createNextNode(x + width + 150, y);
         let {height: h2} = nextTwoNode.attrs;
         // 对齐
         nextTwoNode.attr({y: centerY - h2 / 2 + 100});
@@ -837,6 +862,24 @@ class FlowDesign {
         // 设置bg图片
         // this.setContainerStyle(parentStyle);
         assign(this.dom.style, parentStyle);
+    };
+
+    /**
+     * 设置背景色
+     * @param background
+     */
+    setBackground(background) {
+        assign(this.dom.style, {
+            background
+        });
+    };
+
+    /**
+     * 设置背景网格
+     * @param background
+     */
+    setBackgroundGrid() {
+        this.setBackground(`url("${bg}")`);
     };
 
     // settings
@@ -1004,10 +1047,10 @@ class FlowDesign {
         }
 
         // 支持自定义的节点列表(html)
-        let customTypes = this.settings.customHtmlTypes;
-        if (Array.isArray(customTypes) && customTypes.length > 0) {
+        let customMenuItemTypes = this.settings.customMenuItems;
+        if (Array.isArray(customMenuItemTypes) && customMenuItemTypes.length > 0) {
             let customParent = menuDom.querySelector(".flow-menu-custom-items");
-            for (let customType of customTypes) {
+            for (let customType of customMenuItemTypes) {
                 createDomElement("div", customParent, {
                     'class': 'menu-item',
                     'data-type': customType,
@@ -1103,7 +1146,7 @@ class FlowDesign {
                     cursor: "move"
                 });
                 setTimeout(() => {
-                    let innerHTML = this.getInnerHTML(type);
+                    let innerHTML = this.getCustomInnerHTML(type);
                     item.innerHTML = innerHTML;
                     // 拖动处理
                     bindDomEvent(item, "mousedown", function (event) {
@@ -1135,15 +1178,15 @@ class FlowDesign {
         // set base color
         if (menu) {
             assign(menu.style, {color: themeColor});
+            // update custom menu items
+            menu.querySelectorAll(".menu-item").forEach(item => {
+                let customType = item.dataset.type;
+                let innerHTML = this.getCustomInnerHTML(customType);
+                if (innerHTML) {
+                    item.innerHTML = innerHTML;
+                }
+            });
         }
-        // update custom menu items
-        menu.querySelectorAll(".menu-item").forEach(item => {
-            let customType = item.dataset.type;
-            let innerHTML = this.getInnerHTML(customType);
-            if(innerHTML) {
-                item.innerHTML = innerHTML;
-            }
-        });
     };
 
     /**
@@ -2093,7 +2136,7 @@ class FlowDesign {
      * 根据html创建节点（以div作为容器）
      */
     renderHtmlNode(type, x, y, width, height, createFunction) {
-        let html = this.getInnerHTML(type);
+        let html = this.getCustomInnerHTML(type);
         if (html === undefined || html === null) {
             console.error(`html type [${type}] is null or not register`);
             return;
@@ -3028,8 +3071,13 @@ class FlowDesign {
      * @returns {*}
      */
     createStartNode(x, y) {
-        // return this.createImage(imgs.start, x || 100, y || 150, 48, 48, "Start");
-        return this.createHTMLNode("start", x || 100, y || 150, 48, 48, "Start").attr({
+        let width = 48, height = 48;
+        let customOptions = this.getCustomOptions("start");
+        if (customOptions) {
+            width = customOptions.width || 48;
+            height = customOptions.height || 48;
+        }
+        return this.createHTMLNode("start", x || 100, y || 150, width, height, "Start").attr({
             color: this.themeColor
         });
     };
@@ -3038,8 +3086,13 @@ class FlowDesign {
      * 创建结束节点(html+svg)
      */
     createEndNode(x, y) {
-        // return this.createImage(imgs.end, x || 850, y || 150, 48, 48, "End", true);
-        return this.createHTMLNode("end", x || 100, y || 150, 48, 48, "End").attr({
+        let width = 48, height = 48;
+        let customOptions = this.getCustomOptions("start");
+        if (customOptions) {
+            width = customOptions.width || 48;
+            height = customOptions.height || 48;
+        }
+        return this.createHTMLNode("end", x || 100, y || 150, width, height, "End").attr({
             color: this.themeColor
         });
     };
@@ -3144,9 +3197,17 @@ class FlowDesign {
 
     createCustomHtmlNode(type, x, y) {
         let width = 180, height = 80;
+        let customOptions = this.getCustomOptions(type);
+        if (customOptions) {
+            width = customOptions.width || 180;
+            height = customOptions.height || 80;
+        }
+
         const node = this.createHTMLNode(type, x, y, width, height);
         node.data("nodeType", NodeTypes.Custom);
         node.data("customType", type);
+        // node.nodeType = NodeTypes.Custom;
+        // node.customType = type;
         // 假定所有的自定义node都支持文本,
         // create text element use html
         let text = this.renderHtmlText(0, 0, width * 0.8).attr({
@@ -3154,7 +3215,7 @@ class FlowDesign {
         });
         node.data("text", text);
 
-        this.initElement(node);
+        // this.initElement(node);
         return node;
     };
 
@@ -3251,6 +3312,22 @@ class FlowDesign {
 
         this.initElement(nodeElement);
         return nodeElement;
+    };
+
+    /**
+     * 根据数据生成自定义的元素（html）
+     *
+     * @param id
+     * @param type
+     * @param component
+     * @param nodeType
+     * @param createFunction
+     * @returns {*}
+     */
+    loadCustomHTMLElement(id, type, component, nodeType, createFunction) {
+        let htmlElement = this.loadHTMLElement(id, type, component, nodeType, createFunction);
+        htmlElement.data("customType", type);
+        return htmlElement;
     };
 
     /**
@@ -3662,6 +3739,9 @@ class FlowDesign {
             this.updatePathByControlRect(controlRect);
         }
         this.validateDropLink(host, type == "start");
+
+        // 处理对齐线的显示和隐藏
+        this.handleAlignLines(controlRect);
     };
 
     controlOnStart(controlRect) {
@@ -3744,6 +3824,9 @@ class FlowDesign {
         }
 
         this.dragingLine = null;
+
+        // 处理对齐线的隐藏
+        this.hideAlignLines();
     };
 
     /**
@@ -4938,16 +5021,16 @@ class FlowDesign {
         htmlNode.attr("color", color);
         let type = htmlNode.nodeType;
         let htmlType = null;
-        if(type == NodeTypes.Start) {
+        if (type == NodeTypes.Start) {
             htmlType = "start";
-        } else if(type == NodeTypes.End) {
+        } else if (type == NodeTypes.End) {
             htmlType = "end";
-        } else if(type == NodeTypes.Custom) {
+        } else if (type == NodeTypes.Custom) {
             htmlType = htmlNode.customType;
         }
-        if(htmlType) {
-            let innerHTML = this.getInnerHTML(htmlType);
-            if(innerHTML) {
+        if (htmlType) {
+            let innerHTML = this.getCustomInnerHTML(htmlType);
+            if (innerHTML) {
                 htmlNode.updateHTML(innerHTML);
             }
         }
@@ -5073,7 +5156,7 @@ class FlowDesign {
                 }
                 case "Custom": {
                     // component.type == 'html'
-                    element = this.loadHTMLElement(id, customType, component, "Custom"); //.attr({color: this.themeColor});
+                    element = this.loadCustomHTMLElement(id, customType, component, "Custom"); //.attr({color: this.themeColor});
                     setElementDatas(element, nodeDatas, elementData);
                     break;
                 }
@@ -5491,6 +5574,10 @@ class FlowDesign {
         this.popupMenu.attr({
             color
         });
+
+        // 对齐线颜色
+        this.horizontalLine.attr("stroke", color);
+        this.verticalLine.attr("stroke", color);
     };
 
     /**

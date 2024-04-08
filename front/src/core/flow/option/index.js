@@ -78,7 +78,7 @@ export default {
     /**
      * 默认条件类型
      */
-    defaultConditionType: "Script",
+    defaultConditionType: "Always",
 
     /**
      * 是否支持缩放

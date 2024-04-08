@@ -15,8 +15,8 @@ import {
  * Note: svg text support capability is not as good as conventional dom nodes, unless foreignObject is used,
  */
 export default class SvgPaper {
-    #node;
-    #removed = false;
+    _node;
+    _removed = false;
 
     constructor(selector, width, height) {
         let parentNode;
@@ -35,14 +35,14 @@ export default class SvgPaper {
         });
         // create svg dom
         createDomElementNs(svgNS, "defs", svg)
-        this.#node = svg;
+        this._node = svg;
     };
 
     get node() {
-        return this.#node;
+        return this._node;
     };
     get removed() {
-        return this.#removed;
+        return this._removed;
     }
 
     /**
@@ -148,7 +148,7 @@ export default class SvgPaper {
     remove() {
         this.clear();
         this.node.remove();
-        this.#node = null;
-        this.#removed = true;
+        this._node = null;
+        this._removed = true;
     };
 }

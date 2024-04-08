@@ -5,6 +5,7 @@
         <el-menu-item index="/main/index">首页</el-menu-item>
         <el-menu-item index="/main/flow">业务流程</el-menu-item>
         <el-menu-item index="/main/flow-custom">自定义节点流程</el-menu-item>
+        <el-menu-item index="/main/flow-custom-view">自定义节点流程-查看</el-menu-item>
       </el-menu>
     </header>
     <main class="el-main">
