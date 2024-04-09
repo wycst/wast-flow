@@ -443,7 +443,7 @@ class FlowDesign {
 
         // drop active path elements
         attr = {
-            stroke: "#1DC967",
+            stroke: this.themeColor || "#1DC967",
             "stroke-width": 2
         };
         this.dropNw = paper.path("").attr({...attr}).hide();
@@ -2685,13 +2685,25 @@ class FlowDesign {
         // }
     };
 
+    bindOptionMouseover(element) {
+        let mouseoverFn = this.option.mouseover;
+        if(typeof mouseoverFn == 'function') {
+            element.mouseover(function (evt) {
+                mouseoverFn(element, evt);
+            });
+        }
+    };
+
     bindMouseOverOutEvent(targetElement) {
+        // option event supported
+        this.bindOptionMouseover(targetElement);
         let type = targetElement.type;
         let me = this;
         if (type == "rect" || type == "image" || type == "html") {
             let nodeType = targetElement.data("nodeType");
             if (nodeType != "Start") {
                 targetElement.mouseover(function () {
+                    if(!me.option.editable) return;
                     me.dropNode = null;
                     if (!me.dragingLine) {
                         return;
@@ -2699,6 +2711,7 @@ class FlowDesign {
                     me.showDropRect(targetElement);
                     me.dropNode = this;
                 }).mouseout(function () {
+                    if(!me.option.editable) return;
                     me.hideDropRect();
                     this.attr("cursor", "default");
                     me.dropNode = null;
@@ -4115,6 +4128,7 @@ class FlowDesign {
             linkTool.data("virtualPath", virtualPath);
         } else {
             virtualPath.attr("d", virtualData.data);
+            virtualPath.attr("stroke", this.themeColor);
         }
         virtualPath.show();
 
@@ -5571,6 +5585,7 @@ class FlowDesign {
      * @param color
      */
     setThemeColor(color) {
+        if(!color) return;
         // 更新主题颜色
         this.settings.themeColor = color;
         // 重置元素颜色
@@ -5581,14 +5596,29 @@ class FlowDesign {
         this.setToolsStyle({
             color
         });
-        // 弹出菜单颜色
-        this.popupMenu.attr({
-            color
-        });
-
+        // 弹出菜单
+        if(this.popupMenu) {
+            // 弹出菜单颜色
+            this.popupMenu.attr({
+                color
+            });
+        }
         // 对齐线颜色
-        this.horizontalLine.attr("stroke", color);
-        this.verticalLine.attr("stroke", color);
+        if(this.horizontalLine) {
+            this.horizontalLine.attr("stroke", color);
+            this.verticalLine.attr("stroke", color);
+        }
+        // drop rects
+        if(this.dropNw) {
+            this.dropNw.attr("stroke", color);
+            this.dropNe.attr("stroke", color);
+            this.dropSw.attr("stroke", color);
+            this.dropSe.attr("stroke", color);
+        }
+        // connect rect
+        if(this.connectRect) {
+            this.connectRect.attr("stroke", color);
+        }
     };
 
     /**
@@ -5651,7 +5681,7 @@ class FlowDesign {
                 stroke: color
             });
         }
-
+        // update icon color
         let icon = element.icon;
         if (icon) {
             icon.attr("color", color);

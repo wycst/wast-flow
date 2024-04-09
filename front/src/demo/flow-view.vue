@@ -16,6 +16,7 @@
 <script>
 import {wf} from "../core/index"
 import flowJson from "./flow.json"
+import element from "./element";
 export default {
     name: "flow-view.vue",
     props: {
@@ -42,6 +43,7 @@ export default {
             settings: {
                 themeColor: "#00CCA7",
             },
+            mouseover: this.mouseover,
             // 元素单击事件
             clickElement: this.clickElement,
             // 元素双击事件
@@ -87,6 +89,9 @@ export default {
         }
     },
     methods: {
+        mouseover(element, evt) {
+            console.log(element);
+        },
         clickElement(element, evt) {
             console.log(element);
             this.selectElement = element;

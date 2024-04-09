@@ -120,6 +120,15 @@ export default {
     },
 
     /**
+     * 鼠标悬浮事件
+     *
+     * @param element
+     * @param evt
+     */
+    mouseover(element, evt) {
+    },
+
+    /**
      * 单击事件（可覆盖）
      * @param element
      * @param evt
