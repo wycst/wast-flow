@@ -518,7 +518,6 @@ class ElementData {
         if ((ele = this.data("icon")) && typeof ele.remove == "function") {
             ele.remove();
         }
-
         this.node.remove();
         this._attrs = null;
         this._datas = null;

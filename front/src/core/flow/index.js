@@ -802,7 +802,7 @@ class FlowDesign {
         let nextOneNode = this.createNextNode(x + width + 150, y);
         let {height: h1} = nextOneNode.attrs;
         // 对齐
-        nextOneNode.attr({y: centerY - h1 / 2 - 100});
+        nextOneNode.attr({y: centerY - h1 / 2 - 150});
         this.updateElements(nextOneNode);
         // 创建连线1
         let connect = this.createPath(fromNode, nextOneNode);
@@ -814,7 +814,7 @@ class FlowDesign {
         let nextTwoNode = this.createNextNode(x + width + 150, y);
         let {height: h2} = nextTwoNode.attrs;
         // 对齐
-        nextTwoNode.attr({y: centerY - h2 / 2 + 100});
+        nextTwoNode.attr({y: centerY - h2 / 2 + 150});
         this.updateElements(nextTwoNode);
         // 创建连线2
         let connect2 = this.createPath(fromNode, nextTwoNode);
@@ -2410,12 +2410,12 @@ class FlowDesign {
     };
 
     /**
-     * 获取一个path（连线）的垂平线路径
+     * 获取一个path（连线）的垂平线路径(垂直+水平)
      *
      * @param pathElement
      * @returns {{data: string, start: {}, end: {}}}
      */
-    getHorizontalVerticalPathData(pathElement) {
+    getH2VPathData(pathElement) {
         let pathStyleSet = pathElement.data("pathStyleSet");
         let startDirection = null, endDirection = null;
         let startOffset = 0, endOffset = 0;
@@ -2511,8 +2511,28 @@ class FlowDesign {
             points.push(['L', startCenterX, endY - 5]);
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
             // 结束节点在开始节点的右上方
-
-
+            if(startY - endCenterY > 10) {
+                if(endX - startCenterX > 10) {
+                    // 西中 -> 北中
+                    points.push(['M', startCenterX, startY]);
+                    points.push(['L', startCenterX, endCenterY]);
+                    points.push(['L', endX - 5, endCenterY]);
+                } else {
+                    // x方向太近
+                    let inflectionPointY = (startY + endY + endHeight) / 2;
+                    points.push(['M', startCenterX, startY]);
+                    points.push(['L', startCenterX, inflectionPointY]);
+                    points.push(['L', endCenterX, inflectionPointY]);
+                    points.push(['L', endCenterX, endY + endHeight + 5]);
+                }
+            } else {
+                // x方向太近
+                let inflectionPointX = (startX + startWidth + endX) / 2;
+                points.push(['M', startX + startWidth, startCenterY]);
+                points.push(['L', inflectionPointX, startCenterY]);
+                points.push(['L', inflectionPointX, endCenterY]);
+                points.push(['L', endX - 5, endCenterY]);
+            }
         } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
             // 结束节点在开始节点的水平对齐靠右
             points.push(['M', startX + startWidth, startCenterY]);
@@ -2520,8 +2540,51 @@ class FlowDesign {
         } else {
             // endCenterX > startCenterX && endCenterY > startCenterY
             // 结束节点在开始节点的右下方
-
-
+            if(endCenterX - startX - startWidth > 10) {
+                if(endCenterY - startY - startHeight > 10) {
+                    points.push(['M', startCenterX, startY + startHeight]);
+                    points.push(['L', startCenterX, endCenterY]);
+                    points.push(['L', endX - 5, endCenterY]);
+                } else {
+                    let inflectionPointX = (startX + startWidth + endX) / 2;
+                    points.push(['M', startX + startWidth, startCenterY]);
+                    points.push(['L', inflectionPointX, startCenterY]);
+                    points.push(['L', inflectionPointX, endCenterY]);
+                    points.push(['L', endX - 5, endCenterY]);
+                }
+            } else {
+                let inflectionPointY = (startY + startHeight + endY) / 2;
+                points.push(['M', startCenterX, startY + startHeight]);
+                points.push(['L', startCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, endY - 5]);
+            }
+        }
+        let p1 = {
+            x: points[0][1],
+            y: points[0][2],
+        };
+        let p2 = {
+            x: points[1][1],
+            y: points[1][2],
+        }
+        if(points.length > 2) {
+            let p3 = {
+                x: points[2][1],
+                y: points[2][2],
+            }
+            let length1 = Math.abs(p2.x - p1.x + p2.y - p1.y)
+            let length2 = Math.abs(p3.x - p2.x + p3.y - p2.y)
+            if(length1 > length2) {
+                start = p1;
+                end = p2;
+            } else {
+                start = p2;
+                end = p3;
+            }
+        } else {
+            start = p1;
+            end = p2;
         }
         return {data: pointsToPathD(points), start, end};
     };
@@ -2713,6 +2776,9 @@ class FlowDesign {
                 // temp.undrag();
                 temp.remove();
             }
+            // remove ref
+            targetElement.data("start", null);
+            targetElement.data("end", null);
         }
     };
 
@@ -3528,7 +3594,7 @@ class FlowDesign {
      * @returns {*}
      */
     createConnectElement(connectData, fromElement, toElement) {
-        let {id, component} = connectData;
+        let {id, pathStyle, component} = connectData;
         let {attrs, textAttrs} = component;
 
         let connect = this.paper.path("").attr(attrs);
@@ -3552,39 +3618,40 @@ class FlowDesign {
         toElement.data("in", inLines);
 
         // create control elements
-        let points = pathDToPoints(attrs.path || attrs.d);
-        let len = points.length;
-        let startElement, endElement;
+        if(!pathStyle || pathStyle == "broken") {
+            let points = pathDToPoints(attrs.path || attrs.d);
+            let len = points.length;
+            let startElement, endElement;
+            let controlElements = [];
+            for (let i = 0; i < len; i++) {
+                let point = points[i];
+                let controlElement = this.createControlDragRect(point[1], point[2], connect);
+                controlElement.data("cpIndex", -1);
+                controlElements.push(controlElement);
+                if (i == 0) {
+                    startElement = controlElement;
+                    startElement.data("fromNode", fromElement);
+                    startElement.data("type", "start");
+                    connect.data("start", startElement);
+                } else {
+                    let prevControlElement = controlElements[i - 1];
+                    prevControlElement.data("right", controlElement);
+                    controlElement.data("left", prevControlElement);
 
-        let controlElements = [];
-        for (let i = 0; i < len; i++) {
-            let point = points[i];
-            let controlElement = this.createControlDragRect(point[1], point[2], connect);
-            controlElement.data("cpIndex", -1);
-            controlElements.push(controlElement);
-            if (i == 0) {
-                startElement = controlElement;
-                startElement.data("fromNode", fromElement);
-                startElement.data("type", "start");
-                connect.data("start", startElement);
-            } else {
-                let prevControlElement = controlElements[i - 1];
-                prevControlElement.data("right", controlElement);
-                controlElement.data("left", prevControlElement);
+                    let centerDragRect = this.createControlDragRect((prevControlElement.attr("x") + controlElement.attr("x") + 5) / 2, (prevControlElement.attr("y") + controlElement.attr("y") + 5) / 2, connect);
+                    centerDragRect.data("cpIndex", 0);
+                    centerDragRect.data("left", prevControlElement);
+                    centerDragRect.data("right", controlElement);
 
-                let centerDragRect = this.createControlDragRect((prevControlElement.attr("x") + controlElement.attr("x") + 5) / 2, (prevControlElement.attr("y") + controlElement.attr("y") + 5) / 2, connect);
-                centerDragRect.data("cpIndex", 0);
-                centerDragRect.data("left", prevControlElement);
-                centerDragRect.data("right", controlElement);
-
-                prevControlElement.data("rightRect", centerDragRect);
-                controlElement.data("leftRect", centerDragRect);
-            }
-            if (i == len - 1) {
-                endElement = controlElement;
-                endElement.data("toNode", toElement);
-                endElement.data("type", "end");
-                connect.data("end", endElement);
+                    prevControlElement.data("rightRect", centerDragRect);
+                    controlElement.data("leftRect", centerDragRect);
+                }
+                if (i == len - 1) {
+                    endElement = controlElement;
+                    endElement.data("toNode", toElement);
+                    endElement.data("type", "end");
+                    connect.data("end", endElement);
+                }
             }
         }
         // hide edit elements
@@ -3649,7 +3716,7 @@ class FlowDesign {
     };
 
     /**
-     * 重置路径连线数据
+     * 重置或初始化路径连线数据
      *
      * @param pathElement
      * @param fromElement
@@ -3657,30 +3724,10 @@ class FlowDesign {
      * @param pathStyle  连线风格(hv/broken/straight)
      */
     resetPathData(pathElement, fromElement, toElement, pathStyle) {
+        // reset pathElement
         if (pathStyle == "hv") {
-            // hv path datas
-            let hvPathData = this.getHorizontalVerticalPathData(pathElement);
-            // Initialize path data for vertical lines
-            pathElement.attr("d", hvPathData.data);
-            pathElement.data("pathStyle", pathStyle);
-
-            let pathStartPoint = hvPathData.start;
-            let pathEndPoint = hvPathData.end;
-            let startX = pathStartPoint.x, startY = pathStartPoint.y;
-            let endX = pathEndPoint.x, endY = pathEndPoint.y;
-            let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
-            // text
-            let pathText = pathElement.data("text");
-            if (!pathText) {
-                pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
-                    text: this.settings.linkName || " "
-                });
-                pathElement.data("text", pathText);
-            } else {
-                pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
-            }
+            this.updateH2VPath(pathElement);
         } else {
-            // reset pathElement
             this.removePathRelationRects(pathElement);
             // line data
             let linePathData = this.getPathData(fromElement, toElement);
@@ -4470,7 +4517,7 @@ class FlowDesign {
                     nextElement = nextElement.data("right");
                 }
             }
-            let {x, y} = targetElement.getPointAtLength(1);
+            let {x, y} = targetElement.getPointAtLength(15);
             this.deleteTool.attr({x, y}).data("host", targetElement).show();
         }
         targetElement.attr("cursor", "move");
@@ -4524,7 +4571,6 @@ class FlowDesign {
 
     updateLine(pathElement) {
         let pathStyle = pathElement.data("pathStyle");
-        let pathStyleSet = pathElement.data("pathStyleSet");
         switch (pathStyle) {
             case "broken": {
                 this.updateBrokenPath(pathElement);
@@ -4537,15 +4583,12 @@ class FlowDesign {
             }
             case "hv": {
                 // 垂平线
-                if (!pathStyleSet) {
-                    pathElement.data("pathStyleSet", pathStyleSet = {});
-                }
+                this.updateH2VPath(pathElement);
+                break;
             }
             default: {
-
             }
         }
-        // this.updatePath(pathElement);
     };
 
     updateBrokenPath(pathElement) {
@@ -4609,6 +4652,30 @@ class FlowDesign {
                 nextElement = nextElement.data("right");
             }
             pathElement.attr("d", pathData);
+        }
+    };
+
+    updateH2VPath(pathElement) {
+        this.removePathRelationRects(pathElement);
+        let hvPathData = this.getH2VPathData(pathElement);
+        // pathD
+        pathElement.attr("d", hvPathData.data);
+        // update text
+
+        let pathStartPoint = hvPathData.start;
+        let pathEndPoint = hvPathData.end;
+        let startX = pathStartPoint.x, startY = pathStartPoint.y;
+        let endX = pathEndPoint.x, endY = pathEndPoint.y;
+        let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
+        // text
+        let pathText = pathElement.data("text");
+        if (!pathText) {
+            pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
+                text: this.settings.linkName || " "
+            });
+            pathElement.data("text", pathText);
+        } else {
+            pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
         }
     };
 
