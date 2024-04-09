@@ -12,6 +12,7 @@ import {
     exportBlob,
     exportTextFile,
     pathDToPoints,
+    pointsToPathD,
     uuid
 } from "../util"
 
@@ -2245,7 +2246,7 @@ class FlowDesign {
     };
 
     /**
-     * get path data
+     * get line path data
      *
      * @param elementStart
      * @param elementEnd
@@ -2272,7 +2273,7 @@ class FlowDesign {
         let start = {};
         let end = {};
         if (endCenterX < startCenterX && endCenterY < startCenterY) {
-
+            // 结束节点位于开始节点的左上角
             let horizontalStartPoint = {};
             horizontalStartPoint.y = startY;
             horizontalStartPoint.x =
@@ -2406,6 +2407,123 @@ class FlowDesign {
             }
         }
         return {data: "M" + start.x + "," + start.y + "L" + end.x + "," + end.y, start, end};
+    };
+
+    /**
+     * 获取一个path（连线）的垂平线路径
+     *
+     * @param pathElement
+     * @returns {{data: string, start: {}, end: {}}}
+     */
+    getHorizontalVerticalPathData(pathElement) {
+        let pathStyleSet = pathElement.data("pathStyleSet");
+        let startDirection = null, endDirection = null;
+        let startOffset = 0, endOffset = 0;
+        if (!pathStyleSet) {
+            pathElement.data("pathStyleSet", pathStyleSet = {});
+        } else {
+            startOffset = pathStyleSet.startOffset || 0;
+            endOffset = pathStyleSet.endOffset || 0;
+            startDirection = pathStyleSet.startDirection;
+            endDirection = pathStyleSet.endDirection;
+        }
+        let elementStart = pathElement.data("from"), elementEnd = pathElement.data("to");
+
+        let startX = elementStart.attr("x") - 5;
+        let startY = elementStart.attr("y") - 5;
+        let startWidth = elementStart.attr("width") + 10;
+        let startHeight = elementStart.attr("height") + 10;
+
+        let endX = elementEnd.attr("x") - 5;
+        let endY = elementEnd.attr("y") - 5;
+        let endWidth = elementEnd.attr("width") + 10;
+        let endHeight = elementEnd.attr("height") + 10;
+
+        // 计算2个重心连接与2个元素的交点 一共4个交点（分8中情况，8个方位）
+        let startCenterX = startX + startWidth / 2;
+        let startCenterY = startY + startHeight / 2;
+
+        let endCenterX = endX + endWidth / 2;
+        let endCenterY = endY + endHeight / 2;
+
+        let start = {};
+        let end = {};
+        let points = [];
+        if (endCenterX < startCenterX && endCenterY < startCenterY) {
+            // 结束节点位于开始节点的左上角
+            if (startCenterX - (endX + endWidth) > 10) {
+                if (startY - endCenterY > 10) {
+                    // 开始节点北面中点连接结束节点东面中点，不需要拐点
+                    points.push(['M', startCenterX, startY + 5]);
+                    points.push(['L', startCenterX, endCenterY]);
+                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                } else {
+                    // y方向靠太近需要从开始节点西面终点连接结束节点东面中点，中间需要一个拐点
+                    let inflectionPointX = (startX + endX + endWidth) / 2;
+                    points.push(['M', startX, startCenterY]);
+                    points.push(['L', inflectionPointX, startCenterY]);
+                    points.push(['L', inflectionPointX, endCenterY]);
+                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                }
+            } else {
+                // x方向靠太近，开始节点的北面中点连接结束节点的南面中点，中间需要一个拐点
+                let inflectionPointY = (startCenterY + endCenterY) / 2;
+                points.push(['M', startCenterX, startY + 5]);
+                points.push(['L', startCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, endY + endHeight + 5]);
+            }
+        } else if (endCenterX < startCenterX && endCenterY == startCenterY) {
+            // 结束节点位与开始节点水平对齐且位于开始节点的左边
+            points.push(['M', startX, startCenterY]);
+            points.push(['L', endX + endWidth + 5, endCenterY]);
+        } else if (endCenterX < startCenterX && endCenterY > startCenterY) {
+            // 结束节点在开始节点的左下方
+            if (startX - endCenterX > 10) {
+                if (endY - startCenterY > 10) {
+                    // 西中 -> 北中
+                    points.push(['M', startX, startCenterY]);
+                    points.push(['L', endCenterX, startCenterY]);
+                    points.push(['L', endCenterX, endY]);
+                } else {
+                    // y方向太近 西中 -> 东中
+                    let inflectionPointX = (startX + endX + endWidth) / 2;
+                    points.push(['M', startX, startCenterY]);
+                    points.push(['L', inflectionPointX, startCenterY]);
+                    points.push(['L', inflectionPointX, endCenterY]);
+                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                }
+            } else {
+                // x方向太近
+                let inflectionPointY = (startY + startHeight + endY) / 2;
+                points.push(['M', startCenterX, startY + startHeight]);
+                points.push(['L', startCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, inflectionPointY]);
+                points.push(['L', endCenterX, endY - 5]);
+            }
+        } else if (endCenterX == startCenterX && endCenterY < startCenterY) {
+            // 结束节点位与开始节点垂直对齐且位于开始节点的上方
+            points.push(['M', startCenterX, startY]);
+            points.push(['L', startCenterX, endY + endHeight + 5]);
+        } else if (endCenterX == startCenterX && endCenterY > startCenterY) {
+            // 结束节点位与开始节点垂直对齐且位于开始节点的下方
+            points.push(['M', startCenterX, startY + startHeight]);
+            points.push(['L', startCenterX, endY - 5]);
+        } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
+            // 结束节点在开始节点的右上方
+
+
+        } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
+            // 结束节点在开始节点的水平对齐靠右
+            points.push(['M', startX + startWidth, startCenterY]);
+            points.push(['L', endX - 5, startCenterY]);
+        } else {
+            // endCenterX > startCenterX && endCenterY > startCenterY
+            // 结束节点在开始节点的右下方
+
+
+        }
+        return {data: pointsToPathD(points), start, end};
     };
 
     /**
@@ -2687,7 +2805,7 @@ class FlowDesign {
 
     bindOptionMouseover(element) {
         let mouseoverFn = this.option.mouseover;
-        if(typeof mouseoverFn == 'function') {
+        if (typeof mouseoverFn == 'function') {
             element.mouseover(function (evt) {
                 mouseoverFn(element, evt);
             });
@@ -2703,7 +2821,7 @@ class FlowDesign {
             let nodeType = targetElement.data("nodeType");
             if (nodeType != "Start") {
                 targetElement.mouseover(function () {
-                    if(!me.option.editable) return;
+                    if (!me.option.editable) return;
                     me.dropNode = null;
                     if (!me.dragingLine) {
                         return;
@@ -2711,7 +2829,7 @@ class FlowDesign {
                     me.showDropRect(targetElement);
                     me.dropNode = this;
                 }).mouseout(function () {
-                    if(!me.option.editable) return;
+                    if (!me.option.editable) return;
                     me.hideDropRect();
                     this.attr("cursor", "default");
                     me.dropNode = null;
@@ -3371,7 +3489,7 @@ class FlowDesign {
         htmlElement.data("nodeType", nodeType);
         htmlElement.attr(attrs);
 
-        if (textAttrs && typeof textAttrs == 'object') {
+        if (textAttrs && typeof textAttrs == 'object' && keys(textAttrs).length > 0) {
             // 判断是否需要创建text create text
             let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
             htmlElement.data("text", nodeText);
@@ -3536,28 +3654,50 @@ class FlowDesign {
      * @param pathElement
      * @param fromElement
      * @param toElement
-     * @param pathStyle  连线风格
+     * @param pathStyle  连线风格(hv/broken/straight)
      */
     resetPathData(pathElement, fromElement, toElement, pathStyle) {
-        // reset pathElement
-        this.removePathRelationRects(pathElement);
-        // 直线数据
-        let linePathData = this.getPathData(fromElement, toElement);
-        let pathStartPoint = linePathData.start;
-        let pathEndPoint = linePathData.end;
+        if (pathStyle == "hv") {
+            // hv path datas
+            let hvPathData = this.getHorizontalVerticalPathData(pathElement);
+            // Initialize path data for vertical lines
+            pathElement.attr("d", hvPathData.data);
+            pathElement.data("pathStyle", pathStyle);
 
-        // 暂时设置至直线数据
-        pathElement.attr("d", linePathData.data);
-        pathElement.data("pathStyle", pathStyle);
+            let pathStartPoint = hvPathData.start;
+            let pathEndPoint = hvPathData.end;
+            let startX = pathStartPoint.x, startY = pathStartPoint.y;
+            let endX = pathEndPoint.x, endY = pathEndPoint.y;
+            let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
+            // text
+            let pathText = pathElement.data("text");
+            if (!pathText) {
+                pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
+                    text: this.settings.linkName || " "
+                });
+                pathElement.data("text", pathText);
+            } else {
+                pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
+            }
+        } else {
+            // reset pathElement
+            this.removePathRelationRects(pathElement);
+            // line data
+            let linePathData = this.getPathData(fromElement, toElement);
+            let pathStartPoint = linePathData.start;
+            let pathEndPoint = linePathData.end;
 
-        // centerDragRect.attr("x") - 10, centerDragRect.attr("y") - 10
-        let startX = pathStartPoint.x, startY = pathStartPoint.y;
-        let endX = pathEndPoint.x, endY = pathEndPoint.y;
-        let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
+            // Temporarily set to linear data
+            pathElement.attr("d", linePathData.data);
+            pathElement.data("pathStyle", pathStyle);
 
-        switch (pathStyle) {
-            case "broken": {
-                // 创建3个控制点
+            // centerDragRect.attr("x") - 10, centerDragRect.attr("y") - 10
+            let startX = pathStartPoint.x, startY = pathStartPoint.y;
+            let endX = pathEndPoint.x, endY = pathEndPoint.y;
+            let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
+
+            if (pathStyle == "broken") {
+                // Create 3 control points
                 let startElement = this.createControlDragRect(startX, startY, pathElement);
                 let endElement = this.createControlDragRect(endX, endY, pathElement);
                 startElement.data("fromNode", fromElement);
@@ -3571,7 +3711,7 @@ class FlowDesign {
                 startElement.data("type", "start");
                 endElement.data("type", "end");
 
-                // 创建中间拖动的矩形
+                // Create a rectangle dragged in the middle
                 let centerDragRect = this.createControlDragRect(centerX, centerY, pathElement);
                 centerDragRect.data("cpIndex", 0);
                 centerDragRect.data("left", startElement);
@@ -3579,36 +3719,17 @@ class FlowDesign {
 
                 startElement.data("rightRect", centerDragRect);
                 endElement.data("leftRect", centerDragRect);
-                // 线段
-                break;
             }
-            // case "straight": {
-            //     // 直线 donothing
-            //     break;
-            // }
-            // case "h2v": {
-            //     break;
-            // }
-            // case "v2h": {
-            //     break;
-            // }
-            // case "curve": {
-            //     break;
-            // }
-            default: {
-                break;
+            // text
+            let pathText = pathElement.data("text");
+            if (!pathText) {
+                pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
+                    text: this.settings.linkName || " "
+                });
+                pathElement.data("text", pathText);
+            } else {
+                pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
             }
-        }
-
-        // 文本
-        let pathText = pathElement.data("text");
-        if (!pathText) {
-            pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
-                text: this.settings.linkName || " "
-            });
-            pathElement.data("text", pathText);
-        } else {
-            pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
         }
     };
 
@@ -3629,70 +3750,6 @@ class FlowDesign {
             width: width + 10,
             height: height + 10
         }
-
-        // let pathDatas = connect.attr("d");
-        //
-        // let minX = undefined, minY = undefined, maxX = undefined, maxY = undefined;
-        // let lastX = 0, lastY = 0;
-        // for (let pathData of pathDatas) {
-        //     let code = pathData[0];
-        //     let x, y;
-        //     let breakFlag = false;
-        //     switch (code) {
-        //         case "M":
-        //         case "L": {
-        //             x = pathData[1];
-        //             y = pathData[2];
-        //             break;
-        //         }
-        //         case "H": {
-        //             x = pathData[1];
-        //             y = lastY;
-        //             break;
-        //         }
-        //         case "V": {
-        //             x = lastX;
-        //             y = pathData[1];
-        //             break;
-        //         }
-        //         case "h": {
-        //             x = lastX + pathData[1];
-        //             y = lastY;
-        //             break;
-        //         }
-        //         case "v": {
-        //             x = lastX;
-        //             y = lastY + pathData[1];
-        //             break;
-        //         }
-        //         default: {
-        //             breakFlag = true;
-        //         }
-        //     }
-        //
-        //     if (breakFlag) {
-        //         break;
-        //     }
-        //     if (minX === undefined) {
-        //         minX = maxX = x;
-        //         minY = maxY = y;
-        //     } else {
-        //         minX = Math.min(minX, x);
-        //         minY = Math.min(minY, y);
-        //
-        //         maxX = Math.max(maxX, x);
-        //         maxY = Math.max(maxY, y);
-        //     }
-        //     lastX = x;
-        //     lastY = y;
-        // }
-        //
-        // return {
-        //     x: minX - 5,
-        //     y: minY - 5,
-        //     width: maxX - minX + 10,
-        //     height: maxY - minY + 10
-        // }
     };
 
     createControlDragRect(x, y, pathElement) {
@@ -3732,12 +3789,6 @@ class FlowDesign {
         });
         let type = controlRect.data("type");
         let host = controlRect.data("host");
-
-        // if (host.data("container")) {
-        //     // 更新相对位置
-        //     this.relativePosition(controlRect, host.data("container"));
-        // }
-
         if (type == "start") {
             // 解决zindex导致move事件不响应问题
             controlRect.hide();
@@ -4223,36 +4274,11 @@ class FlowDesign {
     };
 
     validateDropLink(pathElement, reverse) {
-
-        // let standardMode = false; // this.designMode != "Simple";
         let dropNode = this.dropNode;
         if (dropNode) {
-
-            // let isSameContainer = function (fromElement, toElement) {
-            //     let sameContainer = fromElement.data("container") == toElement.data("container");
-            //     if (!sameContainer) {
-            //         dropNode.attr("cursor", "not-allowed");
-            //     }
-            //     return sameContainer;
-            // };
-
             // 除去分支节点外，其他节点只能单出
             let from = pathElement.data("from");
             let to = pathElement.data("to");
-
-            // let fromDataType = from.data("type");
-            // let dateType = dropNode.data("type");
-            // // 开始节点只能单出
-            // if (dateType == "start" && !reverse) {
-            //     dropNode.attr("cursor", "not-allowed");
-            //     return false;
-            // }
-
-            // // 如果2个容器不一致，直接禁用
-            // let sameContainer = reverse ? isSameContainer(dropNode, to) : isSameContainer(from, dropNode);
-            // if (!sameContainer) {
-            //     return false;
-            // }
 
             // 判断from和to2个点之间是否已经存在了连线
             // 遍历from的out即可
@@ -4268,59 +4294,7 @@ class FlowDesign {
                     }
                 }
             }
-
             return true;
-            // // 如果reverse为true说明是反向连接，dropNode即将是pathElement的from端
-            // if (reverse) {
-            //     // 判断pathElement是否本来就是dropNode的from（连线的开始点拉出来后又还原回去），如果是返回true
-            //     if (from == dropNode) {
-            //         // 还原
-            //         return true;
-            //     }
-            //     // // 除去分支节点外，其他节点只能单出
-            //     // if (dateType != "diverage") {
-            //     //     let outLines = dropNode.data("out");
-            //     //     let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
-            //     //     if (len > 0) {
-            //     //         dropNode.attr("cursor", "not-allowed");
-            //     //         return false;
-            //     //     }
-            //     // }
-            //     // // end节点不能作为from端
-            //     // if (dateType == "end") {
-            //     //     dropNode.attr("cursor", "not-allowed");
-            //     //     return false;
-            //     // }
-            //     from = dropNode;
-            // } else {
-            //     // 除去聚合节点外，其他节点只能单进
-            //     if (dateType != "converge") {
-            //         if (to == dropNode) {
-            //             // 还原
-            //             return true;
-            //         }
-            //         let inLines = dropNode.data("in");
-            //         let len = 0 || (inLines && Object.getOwnPropertyNames(inLines).length);
-            //         if (len > 0) {
-            //             dropNode.attr("cursor", "not-allowed");
-            //             return false;
-            //         }
-            //     }
-            //
-            //     if (fromDataType != "diverage") {
-            //         // if (to) {
-            //         //     // 如果to存在说明是已经存在的link,当前操作可能是变更连接to端，而非virthPath
-            //         //     return isSameContainer(from, dropNode);
-            //         // }
-            //         let outLines = from.data("out");
-            //         let len = 0 || (outLines && Object.getOwnPropertyNames(outLines).length);
-            //         if (len > 0) {
-            //             dropNode.attr("cursor", "not-allowed");
-            //             return false;
-            //         }
-            //     }
-            //
-            // }
         }
         return true;
     };
@@ -4355,13 +4329,15 @@ class FlowDesign {
         } else if (type == "path") {
             // 连线
             let startElement = targetElement.data("start");
-            startElement.hide();
-            let nextElement = startElement.data("right");
-            while (nextElement) {
-                nextElement.hide();
-                let leftRect = nextElement.data("leftRect");
-                leftRect.hide();
-                nextElement = nextElement.data("right");
+            if (startElement) {
+                startElement.hide();
+                let nextElement = startElement.data("right");
+                while (nextElement) {
+                    nextElement.hide();
+                    let leftRect = nextElement.data("leftRect");
+                    leftRect.hide();
+                    nextElement = nextElement.data("right");
+                }
             }
             this.deleteTool.hide();
         }
@@ -4484,13 +4460,15 @@ class FlowDesign {
         } else if (type == "path") {
             // 连线
             let startElement = targetElement.data("start");
-            startElement.show();
-            let nextElement = startElement.data("right");
-            while (nextElement) {
-                nextElement.show();
-                let leftRect = nextElement.data("leftRect");
-                leftRect.show();
-                nextElement = nextElement.data("right");
+            if (startElement) {
+                startElement.show();
+                let nextElement = startElement.data("right");
+                while (nextElement) {
+                    nextElement.show();
+                    let leftRect = nextElement.data("leftRect");
+                    leftRect.show();
+                    nextElement = nextElement.data("right");
+                }
             }
             let {x, y} = targetElement.getPointAtLength(1);
             this.deleteTool.attr({x, y}).data("host", targetElement).show();
@@ -4523,7 +4501,6 @@ class FlowDesign {
             });
             text.setWidth(width * 0.8);
         }
-
         let icon = targetElement.data("icon");
         if (icon) {
             icon.attr({
@@ -4531,7 +4508,6 @@ class FlowDesign {
                 y: y + 5
             });
         }
-
         if (targetElement.data("in")) {
             let inLines = targetElement.data("in");
             for (let i in inLines) {
@@ -4546,68 +4522,103 @@ class FlowDesign {
         }
     };
 
-    updateLine(hostElement) {
+    updateLine(pathElement) {
+        let pathStyle = pathElement.data("pathStyle");
+        let pathStyleSet = pathElement.data("pathStyleSet");
+        switch (pathStyle) {
+            case "broken": {
+                this.updateBrokenPath(pathElement);
+                break;
+            }
+            case "straight": {
+                // 重置
+                this.resetPathData(pathElement, pathElement.data("from"), pathElement.data("to"), pathStyle);
+                break;
+            }
+            case "hv": {
+                // 垂平线
+                if (!pathStyleSet) {
+                    pathElement.data("pathStyleSet", pathStyleSet = {});
+                }
+            }
+            default: {
 
-        let startElement = hostElement.data("start");
-        let endElement = hostElement.data("end");
-
-        if (startElement.data("fromNode")) {
-            let fromElement = startElement.data("fromNode");
-            let fromElementRight = startElement.data("right");
-
-            let isToNode = endElement == fromElementRight && endElement.data("toNode") != null;
-            let linePathData = this.getPathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight);
-            let pathStartPoint = linePathData.start;
-            startElement.attr({
-                x: pathStartPoint.x - 2.5,
-                y: pathStartPoint.y - 2.5
-            });
-
-            // if (hostElement.data("container")) {
-            //     this.relativePosition(startElement, hostElement.data("container"));
-            // }
-
-            // 更新rightrect的位置
-            let rightControlRect = startElement.data("rightRect");
-            rightControlRect.attr({
-                x: (startElement.attr("x") + fromElementRight.attr("x")) / 2,
-                y: (startElement.attr("y") + fromElementRight.attr("y")) / 2
-            });
+            }
         }
+        // this.updatePath(pathElement);
+    };
 
-        if (endElement.data("toNode")) {
-            let toElement = endElement.data("toNode");
-            let toElementLeft = endElement.data("left");
+    updateBrokenPath(pathElement) {
+        let startElement = pathElement.data("start");
+        if (!startElement) {
+            // reset broken
+            let fromElement = pathElement.data("from");
+            let toElement = pathElement.data("to");
+            this.resetPathData(pathElement, fromElement, toElement, "broken");
+        } else {
+            let endElement = pathElement.data("end");
+            if (startElement.data("fromNode")) {
+                let fromElement = startElement.data("fromNode");
+                let fromElementRight = startElement.data("right");
 
-            let isFromNode = startElement == toElementLeft && startElement.data("fromNode") != null;
-            let linePathData = this.getPathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement);
-            let pathEndPoint = linePathData.end;
-            endElement.attr({
-                x: pathEndPoint.x - 2.5,
-                y: pathEndPoint.y - 2.5
+                let isToNode = endElement == fromElementRight && endElement.data("toNode") != null;
+                let linePathData = this.getPathData(fromElement, isToNode ? endElement.data("toNode") : fromElementRight);
+                let pathStartPoint = linePathData.start;
+                startElement.attr({
+                    x: pathStartPoint.x - 2.5,
+                    y: pathStartPoint.y - 2.5
+                });
+                // update rightrect pos
+                let rightControlRect = startElement.data("rightRect");
+                rightControlRect.attr({
+                    x: (startElement.attr("x") + fromElementRight.attr("x")) / 2,
+                    y: (startElement.attr("y") + fromElementRight.attr("y")) / 2
+                });
+            }
+
+            if (endElement.data("toNode")) {
+                let toElement = endElement.data("toNode");
+                let toElementLeft = endElement.data("left");
+
+                let isFromNode = startElement == toElementLeft && startElement.data("fromNode") != null;
+                let linePathData = this.getPathData(isFromNode ? startElement.data("fromNode") : toElementLeft, toElement);
+                let pathEndPoint = linePathData.end;
+                endElement.attr({
+                    x: pathEndPoint.x - 2.5,
+                    y: pathEndPoint.y - 2.5
+                });
+
+                // 更新rightrect的位置
+                let leftControlRect = endElement.data("leftRect");
+                leftControlRect.attr({
+                    x: (toElementLeft.attr("x") + endElement.attr("x")) / 2,
+                    y: (toElementLeft.attr("y") + endElement.attr("y")) / 2
+                });
+            }
+
+            let startRightRect = startElement.data("rightRect");
+            // update path text
+            pathElement.data("text").attr({
+                x: startRightRect.attr("x") - 10,
+                y: startRightRect.attr("y") - 10
             });
-
-            // if (hostElement.data("container")) {
-            //     this.relativePosition(endElement, hostElement.data("container"));
-            // }
-
-            // 更新rightrect的位置
-            let leftControlRect = endElement.data("leftRect");
-            leftControlRect.attr({
-                x: (toElementLeft.attr("x") + endElement.attr("x")) / 2,
-                y: (toElementLeft.attr("y") + endElement.attr("y")) / 2
-            });
+            let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
+            let nextElement = startElement.data("right");
+            while (nextElement) {
+                pathData += "L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5);
+                nextElement = nextElement.data("right");
+            }
+            pathElement.attr("d", pathData);
         }
-
-        this.updatePath(hostElement);
     };
 
     /** 拖拽过程中实时更新path */
     updatePath(pathElement) {
         let pathStyle = pathElement.data("pathStyle");
+        let pathStyleSet = pathElement.data("pathStyleSet");
         switch (pathStyle) {
             case "broken": {
-                // 连线的开始元素
+                // 分段线通过源端节点到目的节点以及中间每个拐点组合生成pathD
                 let startElement = pathElement.data("start");
                 let startRightRect = startElement.data("rightRect");
                 // path文本位置更新
@@ -4616,42 +4627,12 @@ class FlowDesign {
                     y: startRightRect.attr("y") - 10
                 });
                 let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
-                // let arrowPathEnd = pathElement.data("end");
-                // let arrowPathStart = startElement;
                 let nextElement = startElement.data("right");
                 while (nextElement) {
-                    // let temp = nextElement;
-                    // if (hostElement.data("container")) {
-                    //     let containerElement = hostElement.data("container");
-                    //     let relativePosition = nextElement.data("relativePosition");
-                    //     // 更新坐标
-                    //     nextElement.attr({
-                    //         x: containerElement.attr("x") + relativePosition.x,
-                    //         y: containerElement.attr("y") + relativePosition.y
-                    //     });
-                    //     // 更新中点的坐标
-                    //     let leftElement = nextElement.data("left");
-                    //     let centerRect = nextElement.data("leftRect");
-                    //     if (centerRect) {
-                    //         centerRect.attr({
-                    //             x: leftElement.attr("x") / 2 + nextElement.attr("x") / 2,
-                    //             y: leftElement.attr("y") / 2 + nextElement.attr("y") / 2
-                    //         });
-                    //     }
-                    // }
                     pathData += "L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5);
                     nextElement = nextElement.data("right");
-                    // if (nextElement != null) {
-                    //     arrowPathStart = temp;
-                    // }
                 }
-                //console.log(pathData);
                 pathElement.attr("d", pathData);
-
-                // // 绘制箭头
-                // let arrowPath = pathElement.data("arrow");
-                // let arrowPathData = this.getArrowPathData(arrowPathStart.attr("x") + 2.5, arrowPathStart.attr("y") + 2.5, arrowPathEnd.attr("x") + 2.5, arrowPathEnd.attr("y") + 2.5);
-                // arrowPath.attr("d", arrowPathData);
                 break;
             }
             case "straight": {
@@ -4659,8 +4640,14 @@ class FlowDesign {
                 this.resetPathData(pathElement, pathElement.data("from"), pathElement.data("to"), pathStyle);
                 break;
             }
+            case "hv": {
+                // 垂平线
+                if (!pathStyleSet) {
+                    pathElement.data("pathStyleSet", pathStyleSet = {});
+                }
+                console.log("pathElement", pathElement);
+            }
             default: {
-
             }
         }
     };
@@ -5585,7 +5572,7 @@ class FlowDesign {
      * @param color
      */
     setThemeColor(color) {
-        if(!color) return;
+        if (!color) return;
         // 更新主题颜色
         this.settings.themeColor = color;
         // 重置元素颜色
@@ -5597,26 +5584,26 @@ class FlowDesign {
             color
         });
         // 弹出菜单
-        if(this.popupMenu) {
+        if (this.popupMenu) {
             // 弹出菜单颜色
             this.popupMenu.attr({
                 color
             });
         }
         // 对齐线颜色
-        if(this.horizontalLine) {
+        if (this.horizontalLine) {
             this.horizontalLine.attr("stroke", color);
             this.verticalLine.attr("stroke", color);
         }
         // drop rects
-        if(this.dropNw) {
+        if (this.dropNw) {
             this.dropNw.attr("stroke", color);
             this.dropNe.attr("stroke", color);
             this.dropSw.attr("stroke", color);
             this.dropSe.attr("stroke", color);
         }
         // connect rect
-        if(this.connectRect) {
+        if (this.connectRect) {
             this.connectRect.attr("stroke", color);
         }
     };
@@ -5878,7 +5865,7 @@ class FlowDesign {
 
     /** 导出JSON */
     exportJSON() {
-        if(!this.option.ignoreValidateOnExport) {
+        if (!this.option.ignoreValidateOnExport) {
             let errorMessage = this.validate();
             if (errorMessage) {
                 this.alertMessage("流程图错误：" + errorMessage, 5);

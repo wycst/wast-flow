@@ -18,12 +18,23 @@
                 <label style="float: right; color: red;cursor: pointer;" @click="visible = false">×</label>
             </h3>
             <el-form v-if="selectElement" label-width="150px">
-                <el-form-item label="ID">
+                <el-form-item label="编号">
                     <el-input v-model="selectElement.id"></el-input>
                 </el-form-item>
-                <el-form-item label="NAME">
+                <el-form-item label="名称">
                     <el-input v-model="selectElement.name"></el-input>
                 </el-form-item>
+
+                <template v-if="selectElement.isPath()">
+                    <el-form-item label="连线风格">
+                        <el-select v-model="selectElement.pathStyle">
+                            <el-option label="折线段" value="broken"></el-option>
+                            <el-option label="垂平线" value="hv"></el-option>
+                            <el-option label="直线" value="straight"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </template>
+
             </el-form>
         </div>
     </div>
@@ -48,17 +59,34 @@ export default {
     },
     mounted() {
         let flow = this.flow = wf.render(this.$refs.flow, {
+            // 是否显示网格
             grid: true,
+
+            // 是否开启菜单(编辑模式)
             menu: {
                 draggable: true
             },
+
+            // 是否支持平移
             panable: true,
 
+            // 双击文本是否开启编辑
             textEditOnDblClick: false,
 
+            // 是否单行显示（如果超长使用三个点风格的省略号）
             nowrap: false,
 
-            // 拖拽菜单中排除哪些类型不显示
+            /**
+             * 默认连线风格:
+             *  hv:         垂平线(垂直+水平)
+             *  broken:     自由的折线段(折线段个数没有限制)
+             *  straight:   开始节点和结束节点直连风格
+             */
+            pathStyle: "hv",
+
+            /**
+             * 拖拽菜单中排除哪些类型不显示
+             */
             excludeTypes: ["manual", "message", "service", "businessTask", "or", "join"],
 
             /** 默认条件类型 */
@@ -75,17 +103,23 @@ export default {
             alertMessage: (message, level) => {
                 this.$message.error(message);
             },
-
-            onConnectCreated(connect) {
-            },
-
-            // others settings
+            /**
+             * others settings
+             *
+             */
             settings: {
+                // 主题色
                 themeColor: "#00CCA7",
                 // 这里的item必须是已经注册的自定义节点(html)
                 customMenuItems: ["custom-node"],
             },
-
+            /**
+             * 当连线被创建时
+             *
+             * @param connect
+             */
+            onConnectCreated(connect) {
+            },
             // 元素单击事件
             clickElement: this.clickElement,
             // 元素双击事件
