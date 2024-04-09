@@ -64,6 +64,9 @@ export default {
             /** 默认条件类型 */
             defaultConditionType: "Always",
 
+            /** 导出时忽略校验 */
+            ignoreValidateOnExport: true,
+
             /** 默认快捷追加的节点函数 */
             defaultNextNodeFn: (flow, x, y) => {
                 return flow.createCustomHtmlNode("custom-node", x, y);

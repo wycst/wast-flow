@@ -356,13 +356,13 @@ class FlowDesign {
      * @param type
      * @returns {*|null|string}
      */
-    getCustomInnerHTML(type) {
+    getCustomInnerHTML(type, options) {
         let htmlObject = this.customHtmlTypes[type];
         if (typeof htmlObject == 'string') return htmlObject;
         if (htmlObject) {
             let innerHTML = htmlObject.innerHTML;
             if (innerHTML) {
-                return typeof innerHTML == 'function' ? innerHTML(this) : innerHTML;
+                return typeof innerHTML == 'function' ? innerHTML(this, options) : innerHTML;
             }
         }
         return null;
@@ -1157,7 +1157,7 @@ class FlowDesign {
                     cursor: "move"
                 });
                 setTimeout(() => {
-                    let innerHTML = this.getCustomInnerHTML(type);
+                    let innerHTML = this.getCustomInnerHTML(type, {scene: "menu"});
                     item.innerHTML = innerHTML;
                     // 拖动处理
                     bindDomEvent(item, "mousedown", function (event) {
@@ -1192,7 +1192,7 @@ class FlowDesign {
             // update custom menu items
             menu.querySelectorAll(".menu-item").forEach(item => {
                 let customType = item.dataset.type;
-                let innerHTML = this.getCustomInnerHTML(customType);
+                let innerHTML = this.getCustomInnerHTML(customType, {scene: "menu"});
                 if (innerHTML) {
                     item.innerHTML = innerHTML;
                 }
@@ -5040,7 +5040,7 @@ class FlowDesign {
             htmlType = htmlNode.customType;
         }
         if (htmlType) {
-            let innerHTML = this.getCustomInnerHTML(htmlType);
+            let innerHTML = this.getCustomInnerHTML(htmlType, {color, scene: "element"});
             if (innerHTML) {
                 htmlNode.updateHTML(innerHTML);
             }
@@ -5645,7 +5645,7 @@ class FlowDesign {
             this.setConnectArrow(element);
             this.setConnectType(element);
         } else if (type == "html") {
-            element.attr("color", color);
+            this.setHtmlNodeColor(element, color)
         } else {
             element.attr({
                 stroke: color
@@ -5848,10 +5848,12 @@ class FlowDesign {
 
     /** 导出JSON */
     exportJSON() {
-        let errorMessage = this.validate();
-        if (errorMessage) {
-            this.alertMessage("流程图错误：" + errorMessage, 5);
-            return;
+        if(!this.option.ignoreValidateOnExport) {
+            let errorMessage = this.validate();
+            if (errorMessage) {
+                this.alertMessage("流程图错误：" + errorMessage, 5);
+                return;
+            }
         }
         let data = this.getData();
         exportTextFile(JSON.stringify(data, null, 4), `${this.processId || 'flow'}.json`)

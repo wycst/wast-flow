@@ -52,18 +52,18 @@ export default {
 
         // 自定义开始和结束节点覆盖内置
         // 自定义开始
-        flow.registerHTML("start", (flow) => {
-            let themeColor = flow.themeColor;
+        flow.registerHTML("start", (flow, options) => {
+            let themeColor = (options && options.color) || flow.themeColor;
             return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border-radius: 30px;display: flex;align-items: center;justify-content: center;font-size: .9em;'>开始</div>`;
         });
         // 自定义结束
-        flow.registerHTML("end", (flow) => {
-            let themeColor = flow.themeColor;
+        flow.registerHTML("end", (flow, options) => {
+            let themeColor = (options && options.color) || flow.themeColor;
             return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff; border-radius: 30px;display: flex;align-items: center;justify-content: center;font-size: .9em;'>结束</div>`;
         });
         // 自定义节点(支持设置初始化大小)
-        flow.registerHTML("custom-node", (flow) => {
-            let themeColor = flow.themeColor;
+        flow.registerHTML("custom-node", (flow, options) => {
+            let themeColor = (options && options.color) || flow.themeColor;
             return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; border-radius: 12px;overflow: hidden;'>
                           <div style="width: 100%; height: 20%"></div>
                           <div style="width: 100%; height: 80%;background: #fff"></div>
@@ -79,6 +79,7 @@ export default {
 
         // 销毁
         // flow.destroy();
+        window.flowview = flow;
     },
     beforeUnmount() {
         if(this.flow) {
