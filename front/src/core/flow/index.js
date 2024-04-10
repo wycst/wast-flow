@@ -882,7 +882,7 @@ class FlowDesign {
      * @param background
      */
     setBackgroundGrid(flag) {
-        if(flag) {
+        if (flag) {
             this.setBackground(`url("${bg}")`);
         } else {
             this.setBackground(`unset`);
@@ -2518,8 +2518,8 @@ class FlowDesign {
             points.push(['L', startCenterX, endY - d]);
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
             // 结束节点在开始节点的右上方
-            if(startY - endCenterY > 10) {
-                if(endX - startCenterX > 10) {
+            if (startY - endCenterY > 10) {
+                if (endX - startCenterX > 10) {
                     // 西中 -> 北中
                     points.push(['M', startCenterX, startY]);
                     points.push(['L', startCenterX, endCenterY]);
@@ -2547,8 +2547,8 @@ class FlowDesign {
         } else {
             // endCenterX > startCenterX && endCenterY > startCenterY
             // 结束节点在开始节点的右下方
-            if(endCenterX - startX - startWidth > 10 && endX - startCenterX > 10) {
-                if(endCenterY - startY - startHeight > 10) {
+            if (endCenterX - startX - startWidth > 10 && endX - startCenterX > 10) {
+                if (endCenterY - startY - startHeight > 10) {
                     points.push(['M', startCenterX, startY + startHeight]);
                     points.push(['L', startCenterX, endCenterY]);
                     points.push(['L', endX - d, endCenterY]);
@@ -2575,14 +2575,14 @@ class FlowDesign {
             x: points[1][1],
             y: points[1][2],
         }
-        if(points.length > 2) {
+        if (points.length > 2) {
             let p3 = {
                 x: points[2][1],
                 y: points[2][2],
             }
             let length1 = Math.abs(p2.x - p1.x + p2.y - p1.y)
             let length2 = Math.abs(p3.x - p2.x + p3.y - p2.y)
-            if(length1 > length2) {
+            if (length1 > length2) {
                 start = p1;
                 end = p2;
             } else {
@@ -3624,7 +3624,7 @@ class FlowDesign {
         toElement.data("in", inLines);
 
         // create control elements
-        if(!pathStyle || pathStyle == "broken") {
+        if (!pathStyle || pathStyle == "broken") {
             let points = pathDToPoints(attrs.path || attrs.d);
             let len = points.length;
             let startElement, endElement;
@@ -4685,7 +4685,7 @@ class FlowDesign {
     /** 拖拽过程中实时更新pathD和文本文本 */
     updatePathDataAndText(pathElement) {
         let pathStyle = pathElement.data("pathStyle");
-        if(pathStyle == "broken") {
+        if (pathStyle == "broken") {
             // 分段线通过源端节点到目的节点以及中间每个拐点组合生成pathD
             let startElement = pathElement.data("start");
             let startRightRect = startElement.data("rightRect");
@@ -5807,62 +5807,75 @@ class FlowDesign {
         return elements;
     };
 
-    // /**
-    //  * 完成一条路径
-    //  *
-    //  * @param fromElementId 开始环节的id
-    //  * @param toElementId   结束环节的id
-    //  * @param styles        自定义样式
-    //  */
-    // complete(fromElementId, toElementId, completeColor) {
-    //
-    //     completeColor = completeColor || this.option.settings.completeColor;
-    //
-    //     let fromElement = this.getElementById(fromElementId);
-    //     if (!fromElement) {
-    //         this.alertMessage("开始节点[id=" + fromElementId + "]不存在", 5);
-    //         return;
-    //     }
-    //     let toElement = null, connect = null;
-    //     let connects = fromElement.data("out");
-    //     if (connects) {
-    //         for (let connectId in connects) {
-    //             let conn = connects[connectId];
-    //             let ele = conn.data("to");
-    //             if (ele.id == toElementId) {
-    //                 connect = conn;
-    //                 toElement = ele;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //
-    //     if (!toElement) {
-    //         this.alertMessage("结束节点[id=" + toElementId + "]不存在或无效", 5);
-    //         return;
-    //     }
-    //     if (fromElement.type == "html") {
-    //         fromElement.attr("color", completeColor);
-    //     } else {
-    //         fromElement.attr({
-    //             stroke: completeColor
-    //         });
-    //     }
-    //     if (toElement.type == "html") {
-    //         toElement.attr("color", completeColor);
-    //     } else {
-    //         toElement.attr({
-    //             stroke: completeColor
-    //         });
-    //     }
-    //     let pathAttr = {
-    //         fill: completeColor,
-    //         stroke: completeColor
-    //     }
-    //     // 路径
-    //     connect.attr(pathAttr); //.data("arrow").attr(pathAttr);
-    //     this.setConnectArrow(connect);
-    // };
+    /**
+     * 完成一条路径,点亮开始节点和路径，结束节点通过参数设置的颜色设置，如果没有设置，结束节点忽略设置
+     *
+     * @param fromElementId 开始环节的id
+     * @param toElementId   结束环节的id
+     * @param styles        自定义样式
+     */
+    completeConnect(fromElementId, toElementId, completeColor, toElementColor) {
+        completeColor = completeColor || this.option.settings.completeColor;
+        let fromElement = this.getElementById(fromElementId);
+        if (!fromElement) {
+            this.alertMessage("开始节点[id=" + fromElementId + "]不存在", 5);
+            return;
+        }
+        let toElement = null, connect = null;
+        let connects = fromElement.data("out");
+        if (connects) {
+            for (let connectId in connects) {
+                let conn = connects[connectId];
+                let ele = conn.data("to");
+                if (ele.id == toElementId) {
+                    connect = conn;
+                    toElement = ele;
+                    break;
+                }
+            }
+        }
+        if (!toElement) {
+            this.alertMessage("结束节点[id=" + toElementId + "]不存在或无效", 5);
+            return;
+        }
+        this.setElementColor(fromElement, completeColor);
+        this.setElementColor(connect, completeColor);
+
+        if(toElement.nodeType == NodeTypes.End) {
+            this.setElementColor(toElement, completeColor);
+        } else {
+            if (toElementColor) {
+                this.setElementColor(toElement, toElementColor);
+            }
+        }
+    };
+
+    /**
+     * 完成一条路径,点亮开始节点和路径，结束节点通过参数设置的颜色设置，如果没有设置，结束节点忽略设置
+     *
+     * @param connectId          连线id
+     * @param completeColor      完成颜色
+     * @param toElementColor     结束节点设置颜色
+     */
+    completeConnectById(connectId, completeColor, toElementColor) {
+        completeColor = completeColor || this.option.settings.completeColor;
+        let connect = this.getElementById(connectId);
+        if (!connect || !connect.isPath()) {
+            this.alertMessage("连线[id=" + connectId + "]不存在", 5);
+            return;
+        }
+        let fromElement = connect.data("from"), toElement = connect.data("to");
+        this.setElementColor(fromElement, completeColor);
+        this.setElementColor(connect, completeColor);
+        if(toElement.nodeType == NodeTypes.End) {
+            this.setElementColor(toElement, completeColor);
+        } else {
+            if (toElementColor) {
+                this.setElementColor(toElement, toElementColor);
+            }
+        }
+    };
+
     //
     // /**
     //  * 按节点被完成的顺序进行批量的状态标色
