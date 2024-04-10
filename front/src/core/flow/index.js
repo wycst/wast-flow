@@ -2454,7 +2454,7 @@ class FlowDesign {
             if (startCenterX - (endX + endWidth) > 10) {
                 if (startY - endCenterY > 10) {
                     // 开始节点北面中点连接结束节点东面中点，不需要拐点
-                    points.push(['M', startCenterX, startY + 5]);
+                    points.push(['M', startCenterX, startY]);
                     points.push(['L', startCenterX, endCenterY]);
                     points.push(['L', endX + endWidth + 5, endCenterY]);
                 } else {
@@ -2484,7 +2484,7 @@ class FlowDesign {
                     // 西中 -> 北中
                     points.push(['M', startX, startCenterY]);
                     points.push(['L', endCenterX, startCenterY]);
-                    points.push(['L', endCenterX, endY]);
+                    points.push(['L', endCenterX, endY - 5]);
                 } else {
                     // y方向太近 西中 -> 东中
                     let inflectionPointX = (startX + endX + endWidth) / 2;
@@ -2777,8 +2777,8 @@ class FlowDesign {
                 temp.remove();
             }
             // remove ref
-            targetElement.data("start", null);
-            targetElement.data("end", null);
+            targetElement.removeData("start");
+            targetElement.removeData("end");
         }
     };
 
