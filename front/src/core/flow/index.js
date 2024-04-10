@@ -878,10 +878,15 @@ class FlowDesign {
 
     /**
      * 设置背景网格
+     *
      * @param background
      */
-    setBackgroundGrid() {
-        this.setBackground(`url("${bg}")`);
+    setBackgroundGrid(flag) {
+        if(flag) {
+            this.setBackground(`url("${bg}")`);
+        } else {
+            this.setBackground(`unset`);
+        }
     };
 
     /** 启用滚动条 */
@@ -922,7 +927,7 @@ class FlowDesign {
             background: "hsla(0,0%,100%,.9)",
             boxShadow: "0 1px 4px rgba(0,0,0,.3)",
             userSelect: "none",
-        });
+        }, this.option.menu.style || {});
 
         // 拖动上下文
         const dragContext = {
@@ -2429,15 +2434,17 @@ class FlowDesign {
         }
         let elementStart = pathElement.data("from"), elementEnd = pathElement.data("to");
 
-        let startX = elementStart.attr("x") - 5;
-        let startY = elementStart.attr("y") - 5;
-        let startWidth = elementStart.attr("width") + 10;
-        let startHeight = elementStart.attr("height") + 10;
+        const d = 3;
 
-        let endX = elementEnd.attr("x") - 5;
-        let endY = elementEnd.attr("y") - 5;
-        let endWidth = elementEnd.attr("width") + 10;
-        let endHeight = elementEnd.attr("height") + 10;
+        let startX = elementStart.attr("x") - d;
+        let startY = elementStart.attr("y") - d;
+        let startWidth = elementStart.attr("width") + d * 2;
+        let startHeight = elementStart.attr("height") + d * 2;
+
+        let endX = elementEnd.attr("x") - d;
+        let endY = elementEnd.attr("y") - d;
+        let endWidth = elementEnd.attr("width") + d * 2;
+        let endHeight = elementEnd.attr("height") + d * 2;
 
         // 计算2个重心连接与2个元素的交点 一共4个交点（分8中情况，8个方位）
         let startCenterX = startX + startWidth / 2;
@@ -2456,27 +2463,27 @@ class FlowDesign {
                     // 开始节点北面中点连接结束节点东面中点，不需要拐点
                     points.push(['M', startCenterX, startY]);
                     points.push(['L', startCenterX, endCenterY]);
-                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                    points.push(['L', endX + endWidth + d, endCenterY]);
                 } else {
                     // y方向靠太近需要从开始节点西面终点连接结束节点东面中点，中间需要一个拐点
                     let inflectionPointX = (startX + endX + endWidth) / 2;
                     points.push(['M', startX, startCenterY]);
                     points.push(['L', inflectionPointX, startCenterY]);
                     points.push(['L', inflectionPointX, endCenterY]);
-                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                    points.push(['L', endX + endWidth + d, endCenterY]);
                 }
             } else {
                 // x方向靠太近，开始节点的北面中点连接结束节点的南面中点，中间需要一个拐点
                 let inflectionPointY = (startCenterY + endCenterY) / 2;
-                points.push(['M', startCenterX, startY + 5]);
+                points.push(['M', startCenterX, startY]);
                 points.push(['L', startCenterX, inflectionPointY]);
                 points.push(['L', endCenterX, inflectionPointY]);
-                points.push(['L', endCenterX, endY + endHeight + 5]);
+                points.push(['L', endCenterX, endY + endHeight + d]);
             }
         } else if (endCenterX < startCenterX && endCenterY == startCenterY) {
             // 结束节点位与开始节点水平对齐且位于开始节点的左边
             points.push(['M', startX, startCenterY]);
-            points.push(['L', endX + endWidth + 5, endCenterY]);
+            points.push(['L', endX + endWidth + d, endCenterY]);
         } else if (endCenterX < startCenterX && endCenterY > startCenterY) {
             // 结束节点在开始节点的左下方
             if (startX - endCenterX > 10) {
@@ -2484,14 +2491,14 @@ class FlowDesign {
                     // 西中 -> 北中
                     points.push(['M', startX, startCenterY]);
                     points.push(['L', endCenterX, startCenterY]);
-                    points.push(['L', endCenterX, endY - 5]);
+                    points.push(['L', endCenterX, endY - d]);
                 } else {
                     // y方向太近 西中 -> 东中
                     let inflectionPointX = (startX + endX + endWidth) / 2;
                     points.push(['M', startX, startCenterY]);
                     points.push(['L', inflectionPointX, startCenterY]);
                     points.push(['L', inflectionPointX, endCenterY]);
-                    points.push(['L', endX + endWidth + 5, endCenterY]);
+                    points.push(['L', endX + endWidth + d, endCenterY]);
                 }
             } else {
                 // x方向太近
@@ -2499,16 +2506,16 @@ class FlowDesign {
                 points.push(['M', startCenterX, startY + startHeight]);
                 points.push(['L', startCenterX, inflectionPointY]);
                 points.push(['L', endCenterX, inflectionPointY]);
-                points.push(['L', endCenterX, endY - 5]);
+                points.push(['L', endCenterX, endY - d]);
             }
         } else if (endCenterX == startCenterX && endCenterY < startCenterY) {
             // 结束节点位与开始节点垂直对齐且位于开始节点的上方
             points.push(['M', startCenterX, startY]);
-            points.push(['L', startCenterX, endY + endHeight + 5]);
+            points.push(['L', startCenterX, endY + endHeight + d]);
         } else if (endCenterX == startCenterX && endCenterY > startCenterY) {
             // 结束节点位与开始节点垂直对齐且位于开始节点的下方
             points.push(['M', startCenterX, startY + startHeight]);
-            points.push(['L', startCenterX, endY - 5]);
+            points.push(['L', startCenterX, endY - d]);
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
             // 结束节点在开始节点的右上方
             if(startY - endCenterY > 10) {
@@ -2516,14 +2523,14 @@ class FlowDesign {
                     // 西中 -> 北中
                     points.push(['M', startCenterX, startY]);
                     points.push(['L', startCenterX, endCenterY]);
-                    points.push(['L', endX - 5, endCenterY]);
+                    points.push(['L', endX - d, endCenterY]);
                 } else {
                     // x方向太近
                     let inflectionPointY = (startY + endY + endHeight) / 2;
                     points.push(['M', startCenterX, startY]);
                     points.push(['L', startCenterX, inflectionPointY]);
                     points.push(['L', endCenterX, inflectionPointY]);
-                    points.push(['L', endCenterX, endY + endHeight + 5]);
+                    points.push(['L', endCenterX, endY + endHeight + d]);
                 }
             } else {
                 // x方向太近
@@ -2531,33 +2538,33 @@ class FlowDesign {
                 points.push(['M', startX + startWidth, startCenterY]);
                 points.push(['L', inflectionPointX, startCenterY]);
                 points.push(['L', inflectionPointX, endCenterY]);
-                points.push(['L', endX - 5, endCenterY]);
+                points.push(['L', endX - d, endCenterY]);
             }
         } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
             // 结束节点在开始节点的水平对齐靠右
             points.push(['M', startX + startWidth, startCenterY]);
-            points.push(['L', endX - 5, startCenterY]);
+            points.push(['L', endX - d, startCenterY]);
         } else {
             // endCenterX > startCenterX && endCenterY > startCenterY
             // 结束节点在开始节点的右下方
-            if(endCenterX - startX - startWidth > 10) {
+            if(endCenterX - startX - startWidth > 10 && endX - startCenterX > 10) {
                 if(endCenterY - startY - startHeight > 10) {
                     points.push(['M', startCenterX, startY + startHeight]);
                     points.push(['L', startCenterX, endCenterY]);
-                    points.push(['L', endX - 5, endCenterY]);
+                    points.push(['L', endX - d, endCenterY]);
                 } else {
                     let inflectionPointX = (startX + startWidth + endX) / 2;
                     points.push(['M', startX + startWidth, startCenterY]);
                     points.push(['L', inflectionPointX, startCenterY]);
                     points.push(['L', inflectionPointX, endCenterY]);
-                    points.push(['L', endX - 5, endCenterY]);
+                    points.push(['L', endX - d, endCenterY]);
                 }
             } else {
                 let inflectionPointY = (startY + startHeight + endY) / 2;
                 points.push(['M', startCenterX, startY + startHeight]);
                 points.push(['L', startCenterX, inflectionPointY]);
                 points.push(['L', endCenterX, inflectionPointY]);
-                points.push(['L', endCenterX, endY - 5]);
+                points.push(['L', endCenterX, endY - d]);
             }
         }
         let p1 = {
@@ -2586,7 +2593,7 @@ class FlowDesign {
             start = p1;
             end = p2;
         }
-        return {data: pointsToPathD(points), start, end};
+        return {data: pointsToPathD(points), start, end, points};
     };
 
     /**
@@ -3079,7 +3086,7 @@ class FlowDesign {
         for (let elementId in elements) {
             let element = elements[elementId];
             if (element.type == "path") {
-                this.updateLine(element);
+                this.updatePath(element);
             } else {
                 // this.updateElements(element);
             }
@@ -3484,17 +3491,16 @@ class FlowDesign {
     /**
      * 根据数据构建节点
      *
-     * @param node
+     * @param nodeData
      * @returns {null}
      */
-    createNodeElement(node) {
-        let {id, type, component} = node;
+    createNodeElement(nodeData) {
+        let {id, type, component} = nodeData;
         let {type: componentType, attrs, textAttrs} = component;
         let nodeElement = null;
         if (componentType == "rect") {
             nodeElement = this.renderRect(0, 0, 0, 0, 0);
         } else if (componentType == "image") {
-            //
             // element = this.loadImageElement(node, editable);
             // element.data("meta", assign(node.meta, element.data("meta") || {}));
         }
@@ -3811,7 +3817,7 @@ class FlowDesign {
             controlDragRect.data("host", pathElement);
         }
         let me = this;
-        // 绑定事件
+        // bind event
         controlDragRect.drag(function (dx, dy, x, y) {
             me.controlOnMove(this, dx, dy, x, y);
         }, function () {
@@ -3846,7 +3852,7 @@ class FlowDesign {
                 y: (controlRect.attr("y") + rightElement.attr("y")) / 2
             });
             // update path
-            this.updatePath(host);
+            this.updatePathDataAndText(host);
         } else if (type == "end") {
             controlRect.hide();
             let leftElement = controlRect.data("left");
@@ -3856,7 +3862,7 @@ class FlowDesign {
                 y: (controlRect.attr("y") + leftElement.attr("y")) / 2
             });
             // update path
-            this.updatePath(host);
+            this.updatePathDataAndText(host);
         } else {
             this.updatePathByControlRect(controlRect);
         }
@@ -3895,7 +3901,7 @@ class FlowDesign {
             if (!this.validateDropLink(hostElement, type == "start")) {
                 // 还原
                 this.updatePathBound(hostElement);
-                this.updatePath(hostElement);
+                this.updatePathDataAndText(hostElement);
                 this.dragingLine = null;
                 return;
             }
@@ -3918,7 +3924,7 @@ class FlowDesign {
                 newFromNode.data("out", outLines);
 
                 this.updatePathBound(selectPath);
-                this.updatePath(selectPath);
+                this.updatePathDataAndText(selectPath);
 
             } else if (type == "end") {
                 controlRect.show();
@@ -3937,12 +3943,12 @@ class FlowDesign {
                 newToNode.data("in", inLines);
 
                 this.updatePathBound(selectPath);
-                this.updatePath(selectPath);
+                this.updatePathDataAndText(selectPath);
             }
         } else {
             // 还原
             this.updatePathBound(hostElement);
-            this.updatePath(hostElement);
+            this.updatePathDataAndText(hostElement);
         }
 
         this.dragingLine = null;
@@ -4309,9 +4315,6 @@ class FlowDesign {
                         x: x0,
                         y: y0
                     });
-                    // if (outPath.data("container")) {
-                    //     this.relativePosition(controlElement, outPath.data("container"));
-                    // }
                     this.updatePathByControlRect(controlElement);
                 }
             }
@@ -4558,18 +4561,18 @@ class FlowDesign {
         if (targetElement.data("in")) {
             let inLines = targetElement.data("in");
             for (let i in inLines) {
-                me.updateLine(inLines[i]);
+                me.updatePath(inLines[i]);
             }
         }
         if (targetElement.data("out")) {
             let outLines = targetElement.data("out");
             for (let j in outLines) {
-                me.updateLine(outLines[j]);
+                me.updatePath(outLines[j]);
             }
         }
     };
 
-    updateLine(pathElement) {
+    updatePath(pathElement) {
         let pathStyle = pathElement.data("pathStyle");
         switch (pathStyle) {
             case "broken": {
@@ -4660,8 +4663,8 @@ class FlowDesign {
         let hvPathData = this.getH2VPathData(pathElement);
         // pathD
         pathElement.attr("d", hvPathData.data);
-        // update text
 
+        // update text
         let pathStartPoint = hvPathData.start;
         let pathEndPoint = hvPathData.end;
         let startX = pathStartPoint.x, startY = pathStartPoint.y;
@@ -4679,43 +4682,28 @@ class FlowDesign {
         }
     };
 
-    /** 拖拽过程中实时更新path */
-    updatePath(pathElement) {
+    /** 拖拽过程中实时更新pathD和文本文本 */
+    updatePathDataAndText(pathElement) {
         let pathStyle = pathElement.data("pathStyle");
-        let pathStyleSet = pathElement.data("pathStyleSet");
-        switch (pathStyle) {
-            case "broken": {
-                // 分段线通过源端节点到目的节点以及中间每个拐点组合生成pathD
-                let startElement = pathElement.data("start");
-                let startRightRect = startElement.data("rightRect");
-                // path文本位置更新
-                pathElement.data("text").attr({
-                    x: startRightRect.attr("x") - 10,
-                    y: startRightRect.attr("y") - 10
-                });
-                let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
-                let nextElement = startElement.data("right");
-                while (nextElement) {
-                    pathData += "L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5);
-                    nextElement = nextElement.data("right");
-                }
-                pathElement.attr("d", pathData);
-                break;
+        if(pathStyle == "broken") {
+            // 分段线通过源端节点到目的节点以及中间每个拐点组合生成pathD
+            let startElement = pathElement.data("start");
+            let startRightRect = startElement.data("rightRect");
+            // path文本位置更新
+            pathElement.data("text").attr({
+                x: startRightRect.attr("x") - 10,
+                y: startRightRect.attr("y") - 10
+            });
+            let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
+            let nextElement = startElement.data("right");
+            while (nextElement) {
+                pathData += "L" + (nextElement.attr("x") + 2.5) + "," + (nextElement.attr("y") + 2.5);
+                nextElement = nextElement.data("right");
             }
-            case "straight": {
-                // 重置
-                this.resetPathData(pathElement, pathElement.data("from"), pathElement.data("to"), pathStyle);
-                break;
-            }
-            case "hv": {
-                // 垂平线
-                if (!pathStyleSet) {
-                    pathElement.data("pathStyleSet", pathStyleSet = {});
-                }
-                console.log("pathElement", pathElement);
-            }
-            default: {
-            }
+            pathElement.attr("d", pathData);
+        } else {
+            // straight // hv
+            // let pathStyleSet = pathElement.data("pathStyleSet");
         }
     };
 
@@ -4735,9 +4723,6 @@ class FlowDesign {
                 x: (leftElement.attr("x") + rightElement.attr("x")) / 2,
                 y: (leftElement.attr("y") + rightElement.attr("y")) / 2
             });
-            // if (hostElement.data("container")) {
-            //     this.relativePosition(controlElement, hostElement.data("container"));
-            // }
             return;
         }
 
@@ -4749,9 +4734,6 @@ class FlowDesign {
                 x: pathStartPoint.x - 2.5,
                 y: pathStartPoint.y - 2.5
             });
-            //		if(hostElement.data("container")) {
-            //			relativePosition(leftElement,hostElement.data("container"));
-            //		}
         }
 
         if (rightElement && rightElement.data("toNode")) {
@@ -4762,9 +4744,6 @@ class FlowDesign {
                 x: pathEndPoint.x - 2.5,
                 y: pathEndPoint.y - 2.5
             });
-            // if (hostElement.data("container")) {
-            //     this.relativePosition(rightElement, hostElement.data("container"));
-            // }
         }
 
         if (cpIndex == -1) {
@@ -4780,11 +4759,6 @@ class FlowDesign {
 
             rightDragRect.attr("x", (rightElement.attr("x") + controlElement.attr("x")) / 2);
             rightDragRect.attr("y", (rightElement.attr("y") + controlElement.attr("y")) / 2);
-
-            //		if(hostElement.data("container")) {
-            //			relativePosition(leftDragRect,hostElement.data("container"));
-            //			relativePosition(rightDragRect,hostElement.data("container"));
-            //		}
 
             if (!disableRestore) {
                 // 当拖动的矩形元素接近left和right所在的直线时，自动还原到当前直线上
@@ -4813,9 +4787,6 @@ class FlowDesign {
                         x: (leftElement.attr("x") + rightElement.attr("x")) / 2,
                         y: (leftElement.attr("y") + rightElement.attr("y")) / 2
                     });
-                    //				if(hostElement.data("container")) {
-                    //					relativePosition(controlElement,hostElement.data("container"));
-                    //				}
                 }
             }
         } else {
@@ -4846,7 +4817,7 @@ class FlowDesign {
         }
 
         // 更新path
-        this.updatePath(hostElement);
+        this.updatePathDataAndText(hostElement);
     };
 
     updatePathBound(hostElement) {

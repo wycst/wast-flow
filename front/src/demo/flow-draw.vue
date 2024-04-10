@@ -27,7 +27,7 @@
 
                 <template v-if="selectElement.isPath()">
                     <el-form-item label="连线风格">
-                        <el-select v-model="selectElement.pathStyle">
+                        <el-select v-model="selectElement.pathStyle" @change="onPathStyleChange">
                             <el-option label="折线段" value="broken"></el-option>
                             <el-option label="垂平线" value="hv"></el-option>
                             <el-option label="直线" value="straight"></el-option>
@@ -176,6 +176,11 @@ export default {
         },
         clickBlank() {
             this.visible = false;
+        },
+        onPathStyleChange(pathStyle) {
+            if(this.selectElement && this.selectElement.isPath()) {
+                this.flow.updatePath(this.selectElement) ;
+            }
         },
     },
     computed: {
