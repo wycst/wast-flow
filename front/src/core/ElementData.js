@@ -287,6 +287,15 @@ class ElementData {
     }
 
     /**
+     * is text
+     *
+     * @returns {boolean}
+     */
+    isText() {
+        return false;
+    }
+
+    /**
      * is task
      *
      * @returns {boolean}
@@ -643,6 +652,10 @@ export class HtmlTextElementData extends ElementData {
             boxSizing: "border-box"
         })
     };
+
+    isText() {
+        return true;
+    }
 
     // set text
     setText(text) {

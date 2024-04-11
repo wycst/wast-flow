@@ -3610,6 +3610,7 @@ class FlowDesign {
         // text
         let pathText = this.renderHtmlText(0, 0, this.option.maxPathTextWidth || 100).attr(textAttrs);
         connect.data("text", pathText);
+        this.dragableElement(pathText);
 
         // bind data
         connect.data("from", fromElement);
@@ -3780,8 +3781,10 @@ class FlowDesign {
                     text: this.settings.linkName || " "
                 });
                 pathElement.data("text", pathText);
+                this.dragableElement(pathText);
             } else {
-                pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
+                // 重置dx, dy
+                pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10, dx: 0, dy: 0});
             }
         }
     };
@@ -3992,6 +3995,7 @@ class FlowDesign {
         }, () => {
             // drag up
             if (!me.option.editable) return;
+            me.elementDragUp(target);
             me.dragingElement = null;
             target.attr({opacity: 1});
             me.hideAlignLines();
@@ -4105,23 +4109,6 @@ class FlowDesign {
         this.register(target);
     };
 
-    elementDragMove(element, dx, dy) {
-        let scaleValue = this.scaleValue;
-        let location = {
-            x: element.ox + dx / scaleValue,
-            y: element.oy + dy / scaleValue
-        };
-
-        // set position
-        element.attr(location);
-
-        // 处理对齐线的显示和隐藏
-        this.handleAlignLines(element);
-
-        this.updateElements(element);
-        this.showEditElements(element);
-    };
-
     elementDragStart(element) {
         // storing original coordinates
         element.ox = element.attr("x");
@@ -4131,6 +4118,37 @@ class FlowDesign {
         });
         this.endInputEdit();
         element.attr("cursor", "move");
+    };
+
+    elementDragMove(element, dx, dy) {
+        let scaleValue = this.scaleValue;
+        let location = {
+            x: element.ox + dx / scaleValue,
+            y: element.oy + dy / scaleValue
+        };
+        // set position
+        element.attr(location);
+        if (!element.isText()) {
+            // 处理对齐线的显示和隐藏
+            this.handleAlignLines(element);
+            this.updateElements(element);
+            // 是否显示编辑辅助项组件元素
+            this.showEditElements(element);
+        }
+    };
+
+    elementDragUp(element) {
+        if (element.isText()) {
+            // update text dx dy
+            let {ox, oy} = element;
+            let {x, y, dx = 0, dy = 0} = element.attr();
+            element.attr({
+                dx: dx + x - ox,
+                dy: dy + y - oy
+            })
+        }
+        delete element.ox;
+        delete element.oy;
     };
 
     resizeOnStart(rect) {
@@ -4149,22 +4167,10 @@ class FlowDesign {
         let dgl = rect.data("dgl");
         let selectRect = rect.data("host");
         if (dgl) {
-
             newx = min(rect.attr("x"), dgl.attr("x")) + 7.5;
             newy = min(rect.attr("y"), dgl.attr("y")) + 7.5;
             width = abs(rect.attr("x") - dgl.attr("x")) - 10;
             height = abs(rect.attr("y") - dgl.attr("y")) - 10;
-
-            // // 子流程设置最小宽高 300 150
-            // if (selectRect.data("type") == "mutiSubProcess") {
-            //     // 获取容器边界信息
-            //     let boundary = this.getContainerBoundary(selectRect.id);
-            //     if (boundary) {
-            //         width = max(width, (boundary.boundaryX - newx));
-            //         height = max(height, (boundary.boundaryY - newy));
-            //     }
-            // } else {
-            // }
             // 其他默认最小 80 30
             width = max(width, 80);
             height = max(height, 30);
@@ -4644,10 +4650,12 @@ class FlowDesign {
 
             let startRightRect = startElement.data("rightRect");
             // update path text
-            pathElement.data("text").attr({
+            let pathText = pathElement.data("text");
+            this.updateText(pathText, {
                 x: startRightRect.attr("x") - 10,
                 y: startRightRect.attr("y") - 10
             });
+
             let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
             let nextElement = startElement.data("right");
             while (nextElement) {
@@ -4670,15 +4678,19 @@ class FlowDesign {
         let startX = pathStartPoint.x, startY = pathStartPoint.y;
         let endX = pathEndPoint.x, endY = pathEndPoint.y;
         let centerX = (startX + endX) / 2, centerY = (startY + endY) / 2;
-        // text
+
+        // path text
+        let textX = centerX - 2.5 - 10, textY = centerY - 2.5 - 10;
         let pathText = pathElement.data("text");
         if (!pathText) {
-            pathText = this.renderHtmlText(centerX - 2.5 - 10, centerY - 2.5 - 10, this.option.maxPathTextWidth || 100).attr({
+            pathText = this.renderHtmlText(textX, textY, this.option.maxPathTextWidth || 100).attr({
                 text: this.settings.linkName || " "
             });
             pathElement.data("text", pathText);
+            this.dragableElement(pathText);
         } else {
-            pathText.attr({x: centerX - 2.5 - 10, y: centerY - 2.5 - 10});
+            // update path position
+            this.updateText(pathText, {x: textX, y: textY});
         }
     };
 
@@ -4689,11 +4701,14 @@ class FlowDesign {
             // 分段线通过源端节点到目的节点以及中间每个拐点组合生成pathD
             let startElement = pathElement.data("start");
             let startRightRect = startElement.data("rightRect");
+
             // path文本位置更新
-            pathElement.data("text").attr({
+            this.updateText(pathElement.data("text"), {
                 x: startRightRect.attr("x") - 10,
                 y: startRightRect.attr("y") - 10
             });
+
+            // 路径数据
             let pathData = "M" + (startElement.attr("x") + 2.5) + "," + (startElement.attr("y") + 2.5);
             let nextElement = startElement.data("right");
             while (nextElement) {
@@ -4705,6 +4720,16 @@ class FlowDesign {
             // straight // hv
             // let pathStyleSet = pathElement.data("pathStyleSet");
         }
+    };
+
+    updateText(textElement, attrs) {
+        let {x, y, ...props} = attrs;
+        let {dx = 0, dy = 0} = textElement.attr();
+        textElement.attr({
+            x: x + dx,
+            y: y + dy,
+            ...props
+        });
     };
 
     updatePathByControlRect(controlElement) {
@@ -5841,7 +5866,7 @@ class FlowDesign {
         this.setElementColor(fromElement, completeColor);
         this.setElementColor(connect, completeColor);
 
-        if(toElement.nodeType == NodeTypes.End) {
+        if (toElement.nodeType == NodeTypes.End) {
             this.setElementColor(toElement, completeColor);
         } else {
             if (toElementColor) {
@@ -5867,7 +5892,7 @@ class FlowDesign {
         let fromElement = connect.data("from"), toElement = connect.data("to");
         this.setElementColor(fromElement, completeColor);
         this.setElementColor(connect, completeColor);
-        if(toElement.nodeType == NodeTypes.End) {
+        if (toElement.nodeType == NodeTypes.End) {
             this.setElementColor(toElement, completeColor);
         } else {
             if (toElementColor) {
