@@ -1993,6 +1993,10 @@ class FlowDesign {
         let elementsBoundingWidth = maxEndx - rectX, elementsBoundingHeight = maxEndy - rectY;
         let {width, height} = this.flowWrapper.parentNode.getBoundingClientRect();
         console.log("flowWrapper parentNode", width, height);
+        if(width == 0 || height == 0) {
+            console.warn("flow wrapper maybe display none, overview is cancel");
+            return;
+        }
         let center = {
             x: minX + elementsBoundingWidth / 2,
             y: minY + elementsBoundingHeight / 2
