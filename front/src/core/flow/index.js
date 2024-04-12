@@ -2863,6 +2863,9 @@ class FlowDesign {
                 let connectAttrs = me.getConnectBoundRect(targetElement);
                 me.connectRect.attr(connectAttrs).show();
                 me.connectRect.data("target", targetElement);
+                if(!me.option.editable) {
+                    me.connectRect.attr({"stroke": "transparent"});
+                }
             }, function () {
                 // this.attr("stroke-width", 2);
                 // me.connectRect.attr("stroke-width", 0);
