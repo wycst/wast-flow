@@ -1,4 +1,4 @@
-// 移动端可能不支持navigator
+// only supported Browser or H5
 const userAgent = navigator.userAgent;
 /**
  * browser env
