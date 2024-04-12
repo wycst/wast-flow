@@ -1648,7 +1648,7 @@ class FlowDesign {
                 position: "absolute",
                 right: "5px",
                 top: "75%",
-                transform: "translate(0, -50%)",
+                transform: "translate(0, -50%) scale(.95)",
                 width: "48px",
                 display: "flex",
                 flexDirection: "column",
