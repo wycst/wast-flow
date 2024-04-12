@@ -18,17 +18,13 @@ export const mousemoveName = isMobile ? "touchmove" : "mousemove";
 export const mousedownName = isMobile ? "touchstart" : "mousedown";
 export const mouseupName = isMobile ? "touchend" : "mouseup";
 export const mouseoutName = isMobile ? "touchend" : "mouseout";
-export const clickName = isMobile ? "tap" : "click";
-export const dblclickName = isMobile ? "touchend" : "dblclick";
 export const getPageEvent = (event) => {
     return isMobile ? event.touches[0] : event;
 }
 
-
 const {floor, random, sqrt} = Math;
 
 // ID使用长整数序列（时间戳/1000+序号（小于1000））转36进制字符串
-
 let lastSeconds = -1;
 let seq = 0;
 

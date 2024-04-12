@@ -7,9 +7,7 @@ import {
     bindDomEvent,
     bindDomClickEvent,
     browser,
-    clickName,
     createDomElement,
-    dblclickName,
     distanceToLine,
     eventStop,
     exportBlob,
@@ -169,7 +167,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let children = this.node.children;
         for (let child of children) {
             let index = child.dataset.index;
-            bindDomEvent(child, clickName, (evt) => {
+            bindDomClickEvent(child,(evt) => {
                 actions[index]();
             });
             bindDomEvent(child, "mouseover", () => {
