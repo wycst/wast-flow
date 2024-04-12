@@ -1,3 +1,4 @@
+// 移动端可能不支持navigator
 const userAgent = navigator.userAgent;
 /**
  * browser env
@@ -8,10 +9,23 @@ export const browser = {
     isFF: userAgent.indexOf("Firefox") > -1,// Firefox
     isChrome: userAgent.indexOf("Chrome") > -1,// Chrome
     isIE: userAgent.indexOf("MSIE") > -1,
-    isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1
+    isEdge: userAgent.indexOf("Windows NT 6.1; Trident/7.0;") > -1,
+    isMobile: /mobile/i.test(userAgent)
 }
-const {floor, random, sqrt} = Math;
 
+const isMobile = browser.isMobile;
+export const mousemoveName = isMobile ? "touchmove" : "mousemove";
+export const mousedownName = isMobile ? "touchstart" : "mousedown";
+export const mouseupName = isMobile ? "touchend" : "mouseup";
+export const mouseoutName = isMobile ? "touchend" : "mouseout";
+export const clickName = isMobile ? "tap" : "click";
+export const dblclickName = isMobile ? "touchend" : "dblclick";
+export const getPageEvent = (event) => {
+    return isMobile ? event.touches[0] : event;
+}
+
+
+const {floor, random, sqrt} = Math;
 
 // ID使用长整数序列（时间戳/1000+序号（小于1000））转36进制字符串
 
@@ -216,6 +230,50 @@ export const bindDomEvent = (dom, eventName, eventFn) => {
 }
 
 /**
+ * 针对单击事件绑定
+ *
+ * @param item
+ * @param func
+ */
+export const bindDomClickEvent = (item, func) => {
+    if (isMobile) {
+        bindDomEvent(item, "touchstart", func);
+        // bindDomEvent(item, "touchend", func);
+    } else {
+        bindDomEvent(item, "click", func);
+    }
+}
+
+/**
+ * 针对双击事件绑定
+ *
+ * @param item
+ * @param func
+ */
+export const bindDomDblClickEvent = (item, func) => {
+    if (isMobile) {
+        // 使用单击事件模拟
+        bindDomClickEvent(item, (event) => {
+            let currentTouchTime = new Date().getTime();
+            if (!item.__lastTouchTime) {
+                item.__lastTouchTime = currentTouchTime;
+                return;
+            }
+            // 两次touch间隔200毫秒判定为双击
+            if (currentTouchTime - item.__lastTouchTime < 200) {
+                // 判定双击
+                func(event);
+            }
+            item.__lastTouchTime = currentTouchTime;
+        });
+        // bindDomEvent(item, "touchstart", func);
+        // bindDomEvent(item, "touchend", func);
+    } else {
+        bindDomEvent(item, "dblclick", func);
+    }
+}
+
+/**
  * 给dom解绑事件（除非业务逻辑需要解绑，一般没有必要解绑）
  *
  * @param dom         节点对象（dom）
@@ -298,6 +356,20 @@ export const distanceToLine = (x0, y0, x1, y1, x2, y2) => {
 };
 
 /**
+ * 计算两点之间的距离
+ *
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @returns {number}
+ */
+export const getDistance = (x1, y1, x2, y2) => {
+    let x = x1 - x2, y = y1 - y2;
+    return sqrt((x * x) + (y * y));
+};
+
+/**
  * 阻止事件冒泡
  *
  * @param evt
@@ -307,4 +379,14 @@ export const eventStop = (evt) => {
     evt.preventDefault();
     // 阻止冒泡
     evt.stopPropagation();
+}
+
+/**
+ * 阻止指定事件
+ *
+ * @param dom
+ * @param eventName
+ */
+export const eventStopOnElement = (dom, eventName) => {
+    bindDomEvent(dom, eventName, eventStop);
 }

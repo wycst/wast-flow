@@ -1,5 +1,5 @@
 <template>
-    <div style="position: relative;">
+    <div style="position: relative;" @tap="handleTap">
 
         <el-form inline>
             <el-form-item label="主题色">
@@ -7,7 +7,7 @@
             </el-form-item>
         </el-form>
 
-        <div ref="flow" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;">
+        <div ref="flow" class="wast-flow" style="width: 100%; height: 75vh; overflow: hidden;" @tap="handleTap">
         </div>
 
         <div
@@ -161,6 +161,10 @@ export default {
         this.flow.destroy();
     },
     methods: {
+        handleTap(event) {
+          console.log("handleTap", event);
+        },
+
         getData() {
             this.tmpData = this.flow.getData();
             console.log(this.tmpData);

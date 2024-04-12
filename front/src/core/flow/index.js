@@ -5,15 +5,24 @@ import split from './img/tools/split.svg'
 
 import {
     bindDomEvent,
+    bindDomClickEvent,
     browser,
+    clickName,
     createDomElement,
+    dblclickName,
     distanceToLine,
     eventStop,
     exportBlob,
     exportTextFile,
+    getDistance,
+    getPageEvent,
+    mousedownName,
+    mousemoveName,
+    mouseoutName,
+    mouseupName,
     pathDToPoints,
     pointsToPathD,
-    uuid
+    uuid, bindDomDblClickEvent
 } from "../util"
 
 import {
@@ -160,13 +169,13 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let children = this.node.children;
         for (let child of children) {
             let index = child.dataset.index;
-            bindDomEvent(child, "click", (evt) => {
+            bindDomEvent(child, clickName, (evt) => {
                 actions[index]();
             });
             bindDomEvent(child, "mouseover", () => {
                 child.style.background = "#ddd";
             });
-            bindDomEvent(child, "mouseout", () => {
+            bindDomEvent(child, mouseoutName, () => {
                 child.style.background = "unset";
             });
         }
@@ -652,7 +661,7 @@ class FlowDesign {
         if (!target) return;
         // get mouse pos relative root dom
         let me = this;
-        let {pageX, pageY} = evt;
+        let {pageX, pageY} = getPageEvent(evt);
         let {left, top, right} = this.dom.getBoundingClientRect();
         let x = pageX - left, y = pageY - top;
         let nodeType = target.nodeType;
@@ -938,7 +947,7 @@ class FlowDesign {
 
         /** 拖动初始化 */
         const onDragStart = (event, domHandle) => {
-            const {pageX, pageY} = event;
+            const {pageX, pageY} = getPageEvent(event);
 
             let dragmenu = domHandle == menuDom;
             if (!dragmenu) {
@@ -970,7 +979,7 @@ class FlowDesign {
          */
         const onDragMove = (event) => {
             let {type, element, dragmenu, left, top} = dragContext;
-            const {pageX, pageY} = event;
+            const {pageX, pageY} = getPageEvent(event);
             let dx = pageX - dragContext.px;
             let dy = pageY - dragContext.py;
             if (dragmenu) {
@@ -1045,8 +1054,8 @@ class FlowDesign {
             delete dragContext.element;
             delete dragContext.dragmenu;
             me.hideAlignLines();
-            removeEventListener("mousemove", onDragMove);
-            removeEventListener("mouseup", onDragUp);
+            removeEventListener(mousemoveName, onDragMove);
+            removeEventListener(mouseupName, onDragUp);
         }
 
         // 支持菜单拖拽移动
@@ -1055,10 +1064,10 @@ class FlowDesign {
                 cursor: "move"
             });
             // 拖动处理
-            bindDomEvent(menuDom, "mousedown", function (event) {
+            bindDomEvent(menuDom, mousedownName, function (event) {
                 onDragStart(event, menuDom);
-                addEventListener("mousemove", onDragMove);
-                addEventListener("mouseup", onDragUp);
+                addEventListener(mousemoveName, onDragMove);
+                addEventListener(mouseupName, onDragUp);
                 eventStop(event);
             });
         }
@@ -1097,26 +1106,21 @@ class FlowDesign {
                     display: `none`
                 });
             }
-
             if (type == "select") {
                 // 绑定全选事件
                 item.style.cursor = `pointer`;
                 item.innerHTML = DEFAULT_HTML_TYPES["select"];
                 // 点击处理
-                bindDomEvent(item, "click", function (event) {
+                bindDomClickEvent(item,function (event) {
                     me.groupSelectionFlag = true;
                     me.paper.node.style.cursor = "crosshair";
                     eventStop(event);
                 });
-
             } else if (type == "reset") {
                 item.style.cursor = `pointer`;
                 item.innerHTML = DEFAULT_HTML_TYPES["reset"];
-                bindDomEvent(item, "mousedown", function (event) {
-                    eventStop(event);
-                });
                 // 点击处理
-                bindDomEvent(item, "click", function (event) {
+                bindDomClickEvent(item, function (event) {
                     me.reset();
                     eventStop(event);
                 });
@@ -1125,11 +1129,7 @@ class FlowDesign {
                 //item.style.color = this.themeColor;
                 item.innerHTML = DEFAULT_HTML_TYPES["exp"];
                 // 点击处理
-                bindDomEvent(item, "mousedown", function (event) {
-                    eventStop(event);
-                });
-                // 点击处理
-                bindDomEvent(item, "click", function (event) {
+                bindDomClickEvent(item, function (event) {
                     me.exportJSON();
                     eventStop(event);
                 });
@@ -1137,11 +1137,8 @@ class FlowDesign {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.themeColor;
                 item.innerHTML = DEFAULT_HTML_TYPES["imp"];
-                bindDomEvent(item, "mousedown", function (event) {
-                    eventStop(event);
-                });
                 // 点击处理
-                bindDomEvent(item, "click", function (event) {
+                bindDomClickEvent(item, function (event) {
                     me.handleImport();
                     eventStop(event);
                 });
@@ -1149,11 +1146,11 @@ class FlowDesign {
                 item.style.cursor = `pointer`;
                 //item.style.color = this.themeColor;
                 item.innerHTML = DEFAULT_HTML_TYPES["picture"];
-                bindDomEvent(item, "mousedown", function (event) {
-                    eventStop(event);
-                });
+                // bindDomEvent(item, mousedownName, function (event) {
+                //     eventStop(event);
+                // });
                 // 点击处理
-                bindDomEvent(item, "click", function (event) {
+                bindDomClickEvent(item, function (event) {
                     me.exportImage();
                     eventStop(event);
                 });
@@ -1166,10 +1163,10 @@ class FlowDesign {
                     let innerHTML = this.getCustomInnerHTML(type, {scene: "menu"});
                     item.innerHTML = innerHTML;
                     // 拖动处理
-                    bindDomEvent(item, "mousedown", function (event) {
+                    bindDomEvent(item, mousedownName, function (event) {
                         onDragStart(event, item);
-                        addEventListener("mousemove", onDragMove);
-                        addEventListener("mouseup", onDragUp);
+                        addEventListener(mousemoveName, onDragMove);
+                        addEventListener(mouseupName, onDragUp);
                         eventStop(event);
                     });
                 }, 0);
@@ -1236,7 +1233,7 @@ class FlowDesign {
         });
 
         // 鼠标按下拦截组织冒泡平移事件
-        bindDomEvent(inputDom, "mousedown", function (evt) {
+        bindDomEvent(inputDom, mousedownName, function (evt) {
             me.disablePan = true;
         });
 
@@ -1628,11 +1625,11 @@ class FlowDesign {
         let me = this;
         let paperSvgNode = me.paper.node;
         // 单击事件
-        bindDomEvent(paperSvgNode, "click", (evt) => me.handleClickBlank(evt));
+        bindDomClickEvent(paperSvgNode, (evt) => me.handleClickBlank(evt));
         // 右键事件
         bindDomEvent(paperSvgNode, "contextmenu", (evt) => me.handleContextmenu(evt));
         // 绑定双击事件
-        bindDomEvent(paperSvgNode, "dblclick", (evt) => me.handleDblClickBlank(evt));
+        bindDomDblClickEvent(paperSvgNode, (evt) => me.handleDblClickBlank(evt));
         // 键盘事件
         this.handleKeyboardEvents();
         // 根节点的鼠标拖动事件
@@ -1673,14 +1670,7 @@ class FlowDesign {
                 });
                 // item.style.color = this.themeColor;
                 item.innerHTML = DEFAULT_HTML_TYPES[type];
-
-                // stop propagation
-                bindDomEvent(item, "mousedown", function (event) {
-                    eventStop(event);
-                });
-
-                // zoom处理
-                bindDomEvent(item, "click", function (event) {
+                const clickFn = function (event) {
                     eventStop(event);
                     if (type == "overview") {
                         me.overview();
@@ -1704,6 +1694,12 @@ class FlowDesign {
                         }
                     }
 
+                };
+                // zoom处理
+                bindDomClickEvent(item, clickFn);
+                // stop panto
+                bindDomEvent(item, mousedownName, (event) => {
+                    eventStop(event);
                 });
             });
         }
@@ -1771,7 +1767,7 @@ class FlowDesign {
             moved: false
         };
         const onCanvasDragStart = (event) => {
-            const {pageX, pageY} = event;
+            const {pageX, pageY} = getPageEvent(event);
             canvasDragContext.px = pageX;
             canvasDragContext.py = pageY;
             if (me.groupSelectionMode()) {
@@ -1794,7 +1790,7 @@ class FlowDesign {
             }
         }
         const onCanvasDragMove = (event) => {
-            const {pageX, pageY} = event;
+            const {pageX, pageY} = getPageEvent(event);
             let dx = pageX - canvasDragContext.px;
             let dy = pageY - canvasDragContext.py;
             if (dx * dx + dy * dy > 0) {
@@ -1851,20 +1847,20 @@ class FlowDesign {
                 canvasDragContext.moved = false;
                 me.paper.node.style.cursor = "default";
             } finally {
-                removeEventListener("mousemove", onCanvasDragMove);
-                removeEventListener("mouseup", onCanvasDragUp);
+                removeEventListener(mousemoveName, onCanvasDragMove);
+                removeEventListener(mouseupName, onCanvasDragUp);
             }
         }
         // 平移处理
-        bindDomEvent(me.dom, "mousedown", function (event) {
+        bindDomEvent(me.dom, mousedownName, function (event) {
             if (!me.dragingElement && !me.disablePan) {
                 if (!me.enablePanable() && !me.groupSelectionMode()) {
                     return;
                 }
                 onCanvasDragStart(event);
                 me.endInputEdit();
-                addEventListener("mousemove", onCanvasDragMove);
-                addEventListener("mouseup", onCanvasDragUp);
+                addEventListener(mousemoveName, onCanvasDragMove);
+                addEventListener(mouseupName, onCanvasDragUp);
                 eventStop(event);
             }
         });
@@ -1889,20 +1885,54 @@ class FlowDesign {
     setScaleable(zoomable) {
         let me = this;
         if (zoomable) {
-            let wheelEventFn = (event) => {
-                let data = event.wheelDelta || -event.detail;
-                if (data > 0) {
-                    // 向上滚 放大
-                    me.zoomIn();
-                } else {
-                    // 向下滚 缩小
-                    me.zoomOut();
+            // 移动端和PC端兼容处理
+            if (browser.isMobile) {
+                // APP手机端使用触摸
+                let isTouch = false;
+                let start = [];
+                let touchmoveFn = (event) => {
+                    // originalEvent
+                    if (event.touches.length >= 2 && isTouch) {
+                        var now = event.touches;
+                        Math.abs(event.touches[0].pageX - event.touches[1].pageX)
+                        //当前距离变小， getDistance 是勾股定理的一个方法
+                        if (getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) < getDistance(start[0].pageX, start[0].pageY, start[1].pageX, start[1].pageY)) {
+                            // 缩小
+                            me.zoomOut();
+                        } else {
+                            // 放大
+                            me.zoomIn();
+                        }
+                    }
+                    // eventStop(event);
                 }
-                eventStop(event);
+                bindDomEvent(me.dom, "touchstart", (event) => {
+                    if (event.touches.length >= 2) {
+                        start = event.originalEvent.touches;
+                        isTouch = true;
+                    }
+                });
+                bindDomEvent(me.dom, "touchend", () => {
+                    isTouch = false;
+                });
+                // touchmove
+                bindDomEvent(me.dom, "touchmove", touchmoveFn);
+            } else {
+                // PC端使用滚轮
+                let wheelEventFn = (event) => {
+                    let data = event.wheelDelta || -event.detail;
+                    if (data > 0) {
+                        // 向上滚 放大
+                        me.zoomIn();
+                    } else {
+                        // 向下滚 缩小
+                        me.zoomOut();
+                    }
+                    eventStop(event);
+                }
+                // 滑轮
+                bindDomEvent(me.dom, "wheel", wheelEventFn);
             }
-            this.wheelEventFn = wheelEventFn;
-            // 平移处理
-            bindDomEvent(me.dom, "wheel", wheelEventFn);
         }
     };
 

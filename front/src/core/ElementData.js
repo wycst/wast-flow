@@ -1,4 +1,14 @@
-import {bindDomEvent, createDomElement, pointsToPathD, setDomAttrs, unbindDomEvent, id} from "./util";
+import {
+    bindDomClickEvent,
+    bindDomDblClickEvent,
+    bindDomEvent,
+    createDomElement,
+    id,
+    pointsToPathD,
+    setDomAttrs,
+    unbindDomEvent
+} from "./util";
+import {mousemoveName, mousedownName, mouseupName, mouseoutName, getPageEvent} from "./util"
 
 // svg namespace
 export const svgNS = "http://www.w3.org/2000/svg";
@@ -313,12 +323,13 @@ class ElementData {
      * @returns {ElementData}
      */
     drag(moveFn, startFn, upFn) {
+
         // context
         let me = this;
         let dragContext = {};
         // start
         const onDragStart = (event) => {
-            const {pageX, pageY} = event;
+            const {pageX, pageY} = getPageEvent(event);
             Object.assign(dragContext, {pageX, pageY})
             if (typeof startFn == functionType) {
                 startFn.call(me, event);
@@ -328,7 +339,7 @@ class ElementData {
         const onDragMove = (event) => {
             if (typeof moveFn == functionType) {
                 // computer dx, dy
-                const {pageX, pageY} = event;
+                const {pageX, pageY} = getPageEvent(event);
                 let {pageX: x1, pageY: y1} = dragContext;
                 moveFn.call(me, pageX - x1, pageY - y1, event);
             }
@@ -340,27 +351,26 @@ class ElementData {
             }
             delete dragContext.pageX;
             delete dragContext.pageY;
-            document.removeEventListener("mousemove", onDragMove);
-            document.removeEventListener("mouseup", onDragUp);
+            document.removeEventListener(mousemoveName, onDragMove);
+            document.removeEventListener(mouseupName, onDragUp);
         }
 
         let mousedownFn = function (event) {
             onDragStart(event);
-            document.addEventListener("mousemove", onDragMove);
-            document.addEventListener("mouseup", onDragUp);
+            document.addEventListener(mousemoveName, onDragMove);
+            document.addEventListener(mouseupName, onDragUp);
             event.stopPropagation();
             event.preventDefault();
         }
         this.mousedownFn = mousedownFn;
-
         // 拖动处理
-        bindDomEvent(this.node, "mousedown", mousedownFn);
+        bindDomEvent(this.node, mousedownName, mousedownFn);
         return this;
     };
 
     /** unbind drag */
     undrag() {
-        unbindDomEvent(this.node, "mousedown", this.mousedownFn);
+        unbindDomEvent(this.node, mousedownName, this.mousedownFn);
     };
 
     /**
@@ -370,7 +380,7 @@ class ElementData {
      */
     click(func) {
         let me = this;
-        bindDomEvent(this.node, "click", (event) => {
+        bindDomClickEvent(this.node, (event) => {
             func.call(me, event);
         });
         return this;
@@ -383,9 +393,9 @@ class ElementData {
      */
     dblclick(func) {
         let me = this;
-        bindDomEvent(this.node, "dblclick", (event) => {
+        bindDomDblClickEvent(this.node, (event) => {
             func.call(me, event);
-        });
+        })
         return this;
     };
 
@@ -397,7 +407,7 @@ class ElementData {
      */
     mouseover(func) {
         let me = this;
-        bindDomEvent(this.node, "mouseover", (event) => {
+        bindDomEvent(this.node, mousemoveName, (event) => {
             func.call(me, event);
         });
         return this;
@@ -411,7 +421,7 @@ class ElementData {
      */
     mouseout(func) {
         let me = this;
-        bindDomEvent(this.node, "mouseout", (event) => {
+        bindDomEvent(this.node, mouseoutName, (event) => {
             func.call(me, event);
         });
         return this;
@@ -781,7 +791,7 @@ export class SvgRectElementData extends SvgNodeElementData {
         let icon = this.icon;
         console.log(icon);
         console.log(this.nodeType);
-        if(icon) {
+        if (icon) {
             icon.setHtmlType(this.nodeType.toLowerCase());
         }
     }
