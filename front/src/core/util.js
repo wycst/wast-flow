@@ -19,6 +19,16 @@ export const mousedownName = isMobile ? "touchstart" : "mousedown";
 export const mouseupName = isMobile ? "touchend" : "mouseup";
 export const mouseoutName = isMobile ? "touchend" : "mouseout";
 export const getPageEvent = (event) => {
+    if(event.touches && !isMobile) {
+        if(/mobile/i.test(navigator.userAgent)) {
+            return event.touches[0];
+        }
+    }
+    if(!event.touches && isMobile) {
+        if(!/mobile/i.test(navigator.userAgent)) {
+            return event;
+        }
+    }
     return isMobile ? event.touches[0] : event;
 }
 
@@ -232,12 +242,12 @@ export const bindDomEvent = (dom, eventName, eventFn) => {
  * @param func
  */
 export const bindDomClickEvent = (item, func) => {
-    if (isMobile) {
-        bindDomEvent(item, "touchstart", func);
-        // bindDomEvent(item, "touchend", func);
-    } else {
-        bindDomEvent(item, "click", func);
-    }
+    // if (isMobile) {
+    //     // bindDomEvent(item, "touchend", func);
+    // } else {
+    // }
+    bindDomEvent(item, "touchstart", func);
+    bindDomEvent(item, "click", func);
 }
 
 /**

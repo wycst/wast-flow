@@ -1855,23 +1855,33 @@ class FlowDesign {
                 canvasDragContext.moved = false;
                 me.paper.node.style.cursor = "default";
             } finally {
-                removeEventListener(mousemoveName, onCanvasDragMove);
-                removeEventListener(mouseupName, onCanvasDragUp);
+                removeEventListener("mousemove", onCanvasDragMove);
+                removeEventListener("touchmove", onCanvasDragMove);
+
+                removeEventListener("mouseup", onCanvasDragUp);
+                removeEventListener("touchend", onCanvasDragUp);
             }
         }
-        // 平移处理
-        bindDomEvent(me.dom, mousedownName, function (event) {
+
+        const onCanvasDragBegin = (event) => {
             if (!me.dragingElement && !me.disablePan) {
                 if (!me.enablePanable() && !me.groupSelectionMode()) {
                     return;
                 }
                 onCanvasDragStart(event);
                 me.endInputEdit();
-                addEventListener(mousemoveName, onCanvasDragMove);
-                addEventListener(mouseupName, onCanvasDragUp);
+                addEventListener("mousemove", onCanvasDragMove);
+                addEventListener("touchmove", onCanvasDragMove);
+
+                addEventListener("mouseup", onCanvasDragUp);
+                addEventListener("touchend", onCanvasDragUp);
                 eventStop(event);
             }
-        });
+        }
+
+        // 平移处理
+        bindDomEvent(me.dom, "mousedown", onCanvasDragBegin);
+        bindDomEvent(me.dom, "touchstart", onCanvasDragBegin);
     };
 
     // 刷新文本位置
@@ -2928,7 +2938,9 @@ class FlowDesign {
      * @param element
      */
     checkEventInsideElement(event, element) {
-        let {pageX, pageY} = getPageEvent(event);
+        let evtObject = getPageEvent(event);
+        if(!evtObject) return false;
+        let {pageX, pageY} = evtObject;
         let {left, top, width, height} = element.node.getBoundingClientRect();
         return pageX >= left && pageX <= left + width && pageY >= top && pageY <= top + height;
     };
