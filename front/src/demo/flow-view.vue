@@ -4,7 +4,7 @@
             <el-form-item label="主题色">
                 <el-color-picker v-model="themeColor"></el-color-picker>
             </el-form-item>
-            <el-form-item label="背景色">
+            <el-form-item label="背景色1">
                 <el-color-picker v-model="background"></el-color-picker>
             </el-form-item>
         </el-form>
@@ -43,7 +43,9 @@ export default {
             settings: {
                 themeColor: "#00CCA7",
             },
-            mouseover: this.mouseover,
+            // 元素的悬浮事件
+            mouseoverElement: this.mouseoverElement,
+            mouseoutElement: this.mouseoutElement,
             // 元素单击事件
             clickElement: this.clickElement,
             // 元素双击事件
@@ -89,8 +91,11 @@ export default {
         }
     },
     methods: {
-        mouseover(element, evt) {
-            console.log(element);
+        mouseoverElement(element, evt) {
+            console.log("mouseoverElement ", evt);
+        },
+        mouseoutElement(element, evt) {
+            console.log("mouseoutElement ", evt);
         },
         clickElement(element, evt) {
             console.log(element);

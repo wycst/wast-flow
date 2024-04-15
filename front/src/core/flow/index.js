@@ -4,8 +4,9 @@ import task from './img/tools/task.png'
 import split from './img/tools/split.svg'
 
 import {
-    bindDomEvent,
     bindDomClickEvent,
+    bindDomDblClickEvent,
+    bindDomEvent,
     browser,
     createDomElement,
     distanceToLine,
@@ -20,7 +21,7 @@ import {
     mouseupName,
     pathDToPoints,
     pointsToPathD,
-    uuid, bindDomDblClickEvent
+    uuid
 } from "../util"
 
 import {
@@ -167,7 +168,7 @@ export class PopupMenuHtmlElementData extends HtmlElementData {
         let children = this.node.children;
         for (let child of children) {
             let index = child.dataset.index;
-            bindDomClickEvent(child,(evt) => {
+            bindDomClickEvent(child, (evt) => {
                 actions[index]();
             });
             bindDomEvent(child, "mouseover", () => {
@@ -340,6 +341,15 @@ class FlowDesign {
         this.offsetX = 0;
         this.offsetY = 0;
         this.scaleValue = 1;
+    };
+
+    /**
+     * 是否移动端(H5)
+     *
+     * @returns {boolean}
+     */
+    isMobile() {
+        return browser.isMobile;
     };
 
     /**
@@ -1109,7 +1119,7 @@ class FlowDesign {
                 item.style.cursor = `pointer`;
                 item.innerHTML = DEFAULT_HTML_TYPES["select"];
                 // 点击处理
-                bindDomClickEvent(item,function (event) {
+                bindDomClickEvent(item, function (event) {
                     me.groupSelectionFlag = true;
                     me.paper.node.style.cursor = "crosshair";
                     eventStop(event);
@@ -1993,7 +2003,7 @@ class FlowDesign {
         let elementsBoundingWidth = maxEndx - rectX, elementsBoundingHeight = maxEndy - rectY;
         let {width, height} = this.flowWrapper.parentNode.getBoundingClientRect();
         console.log("flowWrapper parentNode", width, height);
-        if(width == 0 || height == 0) {
+        if (width == 0 || height == 0) {
             console.warn("flow wrapper maybe display none, overview is cancel");
             return;
         }
@@ -2867,7 +2877,7 @@ class FlowDesign {
                 let connectAttrs = me.getConnectBoundRect(targetElement);
                 me.connectRect.attr(connectAttrs).show();
                 me.connectRect.data("target", targetElement);
-                if(!me.option.editable) {
+                if (!me.option.editable) {
                     me.connectRect.attr({"stroke": "transparent"});
                 }
             }, function () {
@@ -2911,12 +2921,54 @@ class FlowDesign {
         // }
     };
 
+    /**
+     * 检查event所在的点是否在元素内部
+     *
+     * @param event
+     * @param element
+     */
+    checkEventInsideElement(event, element) {
+        let {pageX, pageY} = getPageEvent(event);
+        let {left, top, width, height} = element.node.getBoundingClientRect();
+        return pageX >= left && pageX <= left + width && pageY >= top && pageY <= top + height;
+    };
+
+    /**
+     * <p> 由于包含文本的节点在处理mouseover时会出现问题(节点和文本是独立的两个节点对象，没有父子关系，如果悬浮到文本上会触发节点的离开的事件,导致重复触发mouseover)
+     * <p> mouseout时需要判断位置是否还落在节点内部，确保离开后才触发mouseout;
+     *
+     * @param element
+     */
     bindOptionMouseover(element) {
-        let mouseoverFn = this.option.mouseover;
-        if (typeof mouseoverFn == 'function') {
-            element.mouseover(function (evt) {
-                mouseoverFn(element, evt);
+        // 是否禁用移动端？
+        let mouseoverElementFn = this.option.mouseoverElement;
+        if (typeof mouseoverElementFn == 'function') {
+            element.mouseover((evt) => {
+                mouseoverElementFn(element, evt);
             });
+            if (element.data("text")) {
+                let textElement = element.data("text");
+                console.log("文本", textElement);
+                textElement.mouseover((evt) => {
+                    mouseoverElementFn(element, evt);
+                });
+            }
+        }
+
+        // 是否考虑添加防抖机制
+        let mouseoutElementFn = this.option.mouseoutElement;
+        if (typeof mouseoutElementFn == 'function') {
+            const mouseoutFn = (evt) => {
+                let inside = this.checkEventInsideElement(evt, element);
+                if (!inside) {
+                    mouseoutElementFn(element, evt);
+                }
+            }
+            element.mouseout(mouseoutFn);
+            if (element.data("text")) {
+                let textElement = element.data("text");
+                textElement.mouseout(mouseoutFn);
+            }
         }
     };
 

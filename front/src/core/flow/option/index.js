@@ -116,21 +116,39 @@ export default {
      * @param message
      */
     alertMessage(message) {
-        alert(message);
+        // alert(message);
+        console.warn("alertMessage", message);
     },
 
     /**
-     * 鼠标悬浮事件
+     * 鼠标悬浮事件(svg文档，可以通过evt查找对象或者连线)
      *
-     * @param element
      * @param evt
      */
-    mouseover(element, evt) {
+    mouseover(evt) {
     },
 
     /**
-     * 单击事件（可覆盖）
-     * @param element
+     * 元素的鼠标悬浮事件
+     *
+     * @param element 元素
+     * @param evt
+     */
+    mouseoverElement(element, evt) {
+    },
+
+    /**
+     * 元素的鼠标离开事件
+     *
+     * @param element 元素
+     * @param evt
+     */
+    mouseoutElement(element, evt) {
+    },
+
+    /**
+     * 元素单击事件（可覆盖）
+     * @param element 元素
      * @param evt
      */
     clickElement(element, evt) {
