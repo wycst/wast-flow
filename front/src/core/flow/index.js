@@ -2939,7 +2939,7 @@ class FlowDesign {
      */
     checkEventInsideElement(event, element) {
         let evtObject = getPageEvent(event);
-        if(!evtObject) return false;
+        if (!evtObject) return false;
         let {pageX, pageY} = evtObject;
         let {left, top, width, height} = element.node.getBoundingClientRect();
         return pageX >= left && pageX <= left + width && pageY >= top && pageY <= top + height;
@@ -2987,25 +2987,32 @@ class FlowDesign {
     bindMouseOverOutEvent(targetElement) {
         // option event supported
         this.bindOptionMouseover(targetElement);
-        let type = targetElement.type;
+        // let type = targetElement.type;
         let me = this;
-        if (type == "rect" || type == "image" || type == "html") {
+        if (!targetElement.isPath()) {
             let nodeType = targetElement.data("nodeType");
             if (nodeType != "Start") {
-                targetElement.mouseover(function () {
+                const mouseoverDropFn = () => {
                     if (!me.option.editable) return;
                     me.dropNode = null;
                     if (!me.dragingLine) {
                         return;
                     }
                     me.showDropRect(targetElement);
-                    me.dropNode = this;
-                }).mouseout(function () {
+                    me.dropNode = targetElement;
+                }
+                targetElement.mouseover(mouseoverDropFn).mouseout(function () {
                     if (!me.option.editable) return;
                     me.hideDropRect();
                     this.attr("cursor", "default");
                     me.dropNode = null;
                 });
+                // 延迟处理
+                setTimeout(() => {
+                    if (targetElement.data("text")) {
+                        targetElement.data("text").mouseover(mouseoverDropFn);
+                    }
+                }, 0);
             }
         }
     };
@@ -4134,12 +4141,38 @@ class FlowDesign {
                 y: y0 + h0 / 2
             }
             // 检查所有的
-            let nodeElements = this.getVisibleNodes();
+            let targetElements = this.getVisibleNodes();
+            let ele = null;
+            if ((ele = target.data("left"))) {
+                targetElements.push(ele);
+            }
+            if ((ele = target.data("right"))) {
+                targetElements.push(ele);
+            }
+            // 添加拐点对齐（影响拖动体验）
+            // let outLines = target.data("out");
+            // if(outLines) {
+            //     for(let lineId in outLines) {
+            //         let outLine = outLines[lineId];
+            //         if((ele = outLine.data("start"))) {
+            //             targetElements.push(ele);
+            //         }
+            //     }
+            // }
+            // let inLines = target.data("in");
+            // if(inLines) {
+            //     for(let lineId in inLines) {
+            //         let inline = inLines[lineId];
+            //         if((ele = inline.data("end"))) {
+            //             targetElements.push(ele);
+            //         }
+            //     }
+            // }
 
             // 声明显示标志
             let horizontalVisible = false, verticalVisible = false;
             let cx = 0, cy = 0;
-            for (let nodeElement of nodeElements) {
+            for (let nodeElement of targetElements) {
                 if (nodeElement == target) continue;
                 let {x: x1, y: y1, width: w1, height: h1} = nodeElement.attrs;
                 let c1 = {
@@ -4370,14 +4403,16 @@ class FlowDesign {
                 this.dragingLine = null;
                 return;
             }
+
             // 创建link之前判断是否from和to是否连通（不一定是直接相连）
             let isConnected = this.isConnected(fromNode, dropNode, true);
             let outPath = this.createPath(fromNode, dropNode);
+            let pathStyle = outPath.data("pathStyle");
             this.dropNode = null;
             this.dragingLine = null;
 
             // 如果from和to已经连通，有可能是回退或新增的分支连线，处理用户体验方面的问题（连线被遮住）
-            if (isConnected) {
+            if (isConnected && pathStyle == "broken") {
                 // 移动中央控制点，终点位置取fromNode和dropNode连线线段的2点做中垂线，偏离2点的15度角度
                 let x1 = outPath.data("start").attr("x");
                 let y1 = outPath.data("start").attr("y");
@@ -5346,6 +5381,45 @@ class FlowDesign {
     };
 
     /**
+     * sync elements
+     *
+     * （只有外界破坏了节点的id规则，比如修改了某些节点的id导致出现多个元素的id相同，或者连线的开始节点和结束节点因为这个原因导致丢失将清除无效的元素)
+     */
+    syncElements() {
+        let {elements} = this;
+        let newElements = {};
+        // 1. 遍历所有element，如果id为空使用注册的id,否则更新注册id
+        let connects = [];
+        for (let id in elements) {
+            let element = elements[id];
+            let elementId = element.id;
+            if (!elementId) {
+                elementId = id;
+                element.id = elementId;
+            }
+            if (element.isPath()) {
+                connects.push(element);
+            }
+            if(newElements[elementId]) {
+                newElements[elementId].remove();
+            }
+            newElements[elementId] = element;
+        }
+        // 2. 删除所有连线中开始节点和结束节点相同的连线或者不存在的元素连线
+        for (let connect of connects) {
+            let {from, to} = connect.data();
+            let fromId = from.id;
+            let toId = to.id;
+            if (fromId == toId || !newElements[fromId] || !newElements[toId]) {
+                connect.remove();
+                delete newElements[connect.id];
+            }
+        }
+        // 更新注册的elements
+        this.elements = newElements;
+    };
+
+    /**
      * 获取绘制的流程图数据
      *
      * */
@@ -5353,25 +5427,24 @@ class FlowDesign {
         let {processId: id, processName: name} = this;
         let data = {id, name};
         let startNodeId = null;
-        let {elements} = this;
         let nodes = (data.nodes = []), connects = (data.connects = []);
+        this.syncElements();
+        let {elements} = this;
         for (let id in elements) {
             let element = elements[id];
+            // 元素的数据信息(节点/连线)
             let elementData = this.toElementData(element);
-            // 组件类型
-            let componentType = element.type;
-            // 节点类型
-            if (componentType != "path") {
+            if (element.isPath()) {
+                connects.push(elementData);
+            } else {
+                // 节点类型
                 let nodeType = element.data("nodeType");
                 if (nodeType == "Start") {
                     startNodeId = id;
                 }
                 nodes.push(elementData);
-            } else {
-                connects.push(elementData);
             }
         }
-
         data.startNodeId = startNodeId;
         return data;
     };

@@ -208,10 +208,10 @@ export const pointsToPathD = function (points) {
     for (let point of points) {
         let [v1, v2, v3] = point;
         pathD.push(v1);
-        pathD.push(v2);
+        pathD.push(v2 || 0);
         if (v3) {
             pathD.push(",");
-            pathD.push(v3);
+            pathD.push(v3 || 0);
         }
     }
     return pathD.join("");

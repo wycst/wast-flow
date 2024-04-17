@@ -3,12 +3,16 @@ import {
     bindDomDblClickEvent,
     bindDomEvent,
     createDomElement,
+    getPageEvent,
     id,
+    mousedownName,
+    mousemoveName,
+    mouseoutName,
+    mouseupName,
     pointsToPathD,
     setDomAttrs,
     unbindDomEvent
 } from "./util";
-import {mousemoveName, mousedownName, mouseupName, mouseoutName, getPageEvent} from "./util"
 
 // svg namespace
 export const svgNS = "http://www.w3.org/2000/svg";
