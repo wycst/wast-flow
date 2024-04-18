@@ -43,6 +43,8 @@ export default {
             settings: {
                 themeColor: "#00CCA7",
             },
+            // 自适应后微调
+            overviewOffsetTop: -40,
             // 元素的悬浮事件
             mouseoverElement: this.mouseoverElement,
             mouseoutElement: this.mouseoutElement,
@@ -52,7 +54,15 @@ export default {
             dblclickElement: this.dblclickElement,
             // 空白点击事件
             clickBlank: this.clickBlank
-        })
+        });
+
+        flow.setToolStyle({
+            top: '20px',
+            right: '20px',
+            display: 'flex',
+            width: 'auto',
+            flexDirection: 'unset'
+        });
 
         // 自定义开始和结束节点覆盖内置
         // 自定义开始

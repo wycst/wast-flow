@@ -1713,6 +1713,18 @@ class FlowDesign {
         }
     };
 
+    /**
+     * 设置工具栏样式(放大/缩小/大纲视图)
+     *
+     * @param style
+     */
+    setToolStyle(style) {
+      console.log("setToolStyle ", style, this.flowToolsDom);
+      if(this.flowToolsDom) {
+          Object.assign(this.flowToolsDom.style, style || {});
+      }
+    };
+
     // 处理键盘事件
     handleKeyboardEvents() {
         let me = this;
@@ -2021,13 +2033,12 @@ class FlowDesign {
             x: minX + elementsBoundingWidth / 2,
             y: minY + elementsBoundingHeight / 2
         }
-        console.log("minX minY", minX, minY);
         let targetCenter = {
             x: width / 2,
             y: height / 2
         }
-        let {overviewOffsetWidth: offsetW, overviewOffsetHeight: offsetH} = this.option;
-        let viewWidth = width - 2 * offsetW, viewHeight = height - 2 * offsetH;
+        let viewWidth = width, viewHeight = height;
+        console.log("viewHeight ", viewHeight);
         let scale = 1;
         if (viewWidth < elementsBoundingWidth || viewHeight < elementsBoundingHeight) {
             scale = min(viewWidth / (elementsBoundingWidth || 1), viewHeight / (elementsBoundingHeight || 1));
@@ -2036,7 +2047,9 @@ class FlowDesign {
         let dx = (targetCenter.x - center.x) * scale;
         let dy = (targetCenter.y - center.y) * scale;
 
-        this.translateTo(dx, dy);
+        let {overviewOffsetLeft = 0, overviewOffsetTop = 0} = this.option;
+
+        this.translateTo(dx + overviewOffsetLeft, dy + overviewOffsetTop);
         this.setScale(scale);
     };
 
@@ -2855,26 +2868,28 @@ class FlowDesign {
             me.handleClickElement(targetElement, e);
         });
 
-        if (targetElement.data('text')) {
-            targetElement.data('text').click(function (e) {
-                if (me.option.textEditOnClick) {
-                    me.beginInputEdit(targetElement);
-                } else {
-                    me.handleClickElement(targetElement, e);
-                }
-                eventStop(e);
-            });
-            targetElement.data('text').dblclick(function (e) {
-                // 点击文本直接修改文本，不再触发双击事件
-                // me.option.dblclickElement && me.option.dblclickElement(targetElement, e);
-                if (me.option.textEditOnDblClick) {
-                    me.beginInputEdit(targetElement);
-                } else {
-                    me.handleDblclickElement(targetElement, e);
-                }
-                eventStop(e);
-            });
-        }
+        setTimeout(() => {
+            if (targetElement.data('text')) {
+                targetElement.data('text').click(function (e) {
+                    if (me.option.textEditOnClick) {
+                        me.beginInputEdit(targetElement);
+                    } else {
+                        me.handleClickElement(targetElement, e);
+                    }
+                    eventStop(e);
+                });
+                targetElement.data('text').dblclick(function (e) {
+                    // 点击文本直接修改文本，不再触发双击事件
+                    // me.option.dblclickElement && me.option.dblclickElement(targetElement, e);
+                    if (me.option.textEditOnDblClick) {
+                        me.beginInputEdit(targetElement);
+                    } else {
+                        me.handleDblclickElement(targetElement, e);
+                    }
+                    eventStop(e);
+                });
+            }
+        }, 0);
 
         targetElement.dblclick(function (e) {
             eventStop(e);
