@@ -24,6 +24,10 @@
                 <el-form-item label="名称">
                     <el-input v-model="selectElement.name"></el-input>
                 </el-form-item>
+                <el-form-item label="xxxx">
+                    <el-input v-model="selectElement.meta.aaa"></el-input>
+                </el-form-item>
+
 
                 <template v-if="selectElement.isPath()">
                     <el-form-item label="连线风格">
@@ -87,7 +91,7 @@ export default {
             /**
              * 拖拽菜单中排除哪些类型不显示
              */
-            excludeTypes: ["manual", "message", "service", "businessTask", "or", "join"],
+            excludeTypes: ["manual", "message", "service", "businessTask", "or", "join", "and", "xor"],
 
             /** 默认条件类型 */
             defaultConditionType: "Always",

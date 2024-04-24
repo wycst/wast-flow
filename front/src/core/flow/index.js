@@ -3032,6 +3032,24 @@ class FlowDesign {
         }
     };
 
+    bindTouchEvent(element) {
+        let longtapElementFn = this.option.longtapElement;
+        console.log(" longtapElement ", longtapElementFn);
+        if (typeof longtapElementFn == 'function') {
+            element.longtap((evt) => {
+                longtapElementFn(element, evt);
+            });
+            setTimeout(() => {
+                if (element.data("text")) {
+                    let textElement = element.data("text");
+                    textElement.longtap((evt) => {
+                        longtapElementFn(element, evt);
+                    });
+                }
+            }, 0);
+        }
+    };
+
     showDropRect(targetElement) {
         let {dropNw, dropNe, dropSw, dropSe} = this;
         let {x, y, width, height} = targetElement.attrs;
@@ -4252,6 +4270,8 @@ class FlowDesign {
         this.bindSelectEvent(target);
         // 绑定鼠标over和out事件
         this.bindMouseOverOutEvent(target);
+        // 绑定移动端事件
+        this.bindTouchEvent(target);
         // 注册
         this.register(target);
     };

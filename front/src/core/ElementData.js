@@ -2,6 +2,7 @@ import {
     bindDomClickEvent,
     bindDomDblClickEvent,
     bindDomEvent,
+    bindDomLongtapEvent,
     createDomElement,
     getPageEvent,
     id,
@@ -445,6 +446,20 @@ class ElementData {
         if (typeof mouseoutFn == functionType) {
             this.mouseout(mouseoutFn);
         }
+        return this;
+    };
+
+    /**
+     * 移动端长按事件
+     * 
+     * @param longtapFn
+     * @returns {ElementData}
+     */
+    longtap(longtapFn) {
+        let me = this;
+        bindDomLongtapEvent(this.node, (event) => {
+            longtapFn.call(me, event);
+        });
         return this;
     };
 

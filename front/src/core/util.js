@@ -19,13 +19,13 @@ export const mousedownName = isMobile ? "touchstart" : "mousedown";
 export const mouseupName = isMobile ? "touchend" : "mouseup";
 export const mouseoutName = isMobile ? "touchend" : "mouseout";
 export const getPageEvent = (event) => {
-    if(event.touches && !isMobile) {
-        if(/mobile/i.test(navigator.userAgent)) {
+    if (event.touches && !isMobile) {
+        if (/mobile/i.test(navigator.userAgent)) {
             return event.touches[0];
         }
     }
-    if(!event.touches && isMobile) {
-        if(!/mobile/i.test(navigator.userAgent)) {
+    if (!event.touches && isMobile) {
+        if (!/mobile/i.test(navigator.userAgent)) {
             return event;
         }
     }
@@ -235,6 +235,15 @@ export const bindDomEvent = (dom, eventName, eventFn) => {
     }
 }
 
+const bindTouchstartEvent = (item) => {
+    if (!item.__touchstart) {
+        bindDomEvent(item, "touchstart", (event) => {
+            item.__touchstart_time = new Date().getTime();
+        });
+        item.__touchstart = true;
+    }
+}
+
 /**
  * 针对单击事件绑定
  *
@@ -246,7 +255,16 @@ export const bindDomClickEvent = (item, func) => {
     //     // bindDomEvent(item, "touchend", func);
     // } else {
     // }
-    bindDomEvent(item, "touchstart", func);
+    bindTouchstartEvent(item);
+    // 移动端单击事件使用touchend - touchstart间隔模拟
+    // 移动端这里区分下，如果长按则不触发单击事件
+    bindDomEvent(item, "touchend", (event) => {
+        let touchendTime = new Date().getTime();
+        if (touchendTime - item.__touchstart_time < 2000) {
+            func(event);
+        }
+    });
+    // PC端点击事件(单击)
     bindDomEvent(item, "click", func);
 }
 
@@ -258,7 +276,7 @@ export const bindDomClickEvent = (item, func) => {
  */
 export const bindDomDblClickEvent = (item, func) => {
     if (isMobile) {
-        // 使用单击事件模拟
+        // 使用单击事件模拟移动端
         bindDomClickEvent(item, (event) => {
             let currentTouchTime = new Date().getTime();
             if (!item.__lastTouchTime) {
@@ -267,15 +285,33 @@ export const bindDomDblClickEvent = (item, func) => {
             }
             // 两次touch间隔200毫秒判定为双击
             if (currentTouchTime - item.__lastTouchTime < 200) {
-                // 判定双击
+                // 触发移动端双击事件
                 func(event);
             }
             item.__lastTouchTime = currentTouchTime;
         });
-        // bindDomEvent(item, "touchstart", func);
-        // bindDomEvent(item, "touchend", func);
     } else {
         bindDomEvent(item, "dblclick", func);
+    }
+}
+
+/**
+ * 3秒判定长按(移动端)
+ *
+ * @param item
+ * @param func
+ */
+export const bindDomLongtapEvent = (item, func) => {
+    if (isMobile) {
+        bindTouchstartEvent(item);
+        bindDomEvent(item, "touchend", (event) => {
+            let touchendTime = new Date().getTime();
+            if (touchendTime - item.__touchstart_time >= 2000) {
+                func(event);
+            }
+        });
+    } else {
+        console.error("longtap not supported for PC")
     }
 }
 

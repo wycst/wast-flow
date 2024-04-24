@@ -52,6 +52,7 @@ export default {
             clickElement: this.clickElement,
             // 元素双击事件
             dblclickElement: this.dblclickElement,
+            longtapElement: this.longtapElement,
             // 空白点击事件
             clickBlank: this.clickBlank
         });
@@ -102,10 +103,10 @@ export default {
     },
     methods: {
         mouseoverElement(element, evt) {
-            console.log("mouseoverElement ", evt);
+            // console.log("mouseoverElement ", evt);
         },
         mouseoutElement(element, evt) {
-            console.log("mouseoutElement ", evt);
+            // console.log("mouseoutElement ", evt);
         },
         clickElement(element, evt) {
             console.log(element);
@@ -115,6 +116,9 @@ export default {
         dblclickElement(element, evt) {
             this.selectElement = element;
             this.visible = true;
+        },
+        longtapElement(element, evt) {
+            console.log("longtapElement ", element, evt);
         },
         clickBlank() {
             this.visible = false;
@@ -140,4 +144,11 @@ export default {
 </script>
 
 <style scoped>
+
+div[data-id] {
+    span {
+        line-height: 1.5;
+    }
+}
+
 </style>
