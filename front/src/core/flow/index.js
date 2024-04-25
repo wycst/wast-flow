@@ -21,7 +21,8 @@ import {
     mouseupName,
     pathDToPoints,
     pointsToPathD,
-    uuid
+    uuid,
+    throttle
 } from "../util"
 
 import {
@@ -341,6 +342,7 @@ class FlowDesign {
         this.offsetX = 0;
         this.offsetY = 0;
         this.scaleValue = 1;
+        this.zoomInterval = 0.1;
     };
 
     /**
@@ -1880,6 +1882,14 @@ class FlowDesign {
                 if (!me.enablePanable() && !me.groupSelectionMode()) {
                     return;
                 }
+                if(me.isMobile()) {
+                    let touches = event.touches || event.originalEvent.touches
+                    if(touches.length > 1) {
+                        removeEventListener("mousemove", onCanvasDragMove);
+                        removeEventListener("touchmove", onCanvasDragMove);
+                        return;
+                    }
+                }
                 onCanvasDragStart(event);
                 me.endInputEdit();
                 addEventListener("mousemove", onCanvasDragMove);
@@ -1915,30 +1925,47 @@ class FlowDesign {
     setScaleable(zoomable) {
         let me = this;
         if (zoomable) {
+            const zoomInThrottle = throttle(() => {
+                me.zoomIn();
+            }, 100);
+            const zoomOutThrottle = throttle(() => {
+                me.zoomOut();
+            }, 100);
             // 移动端和PC端兼容处理
             if (browser.isMobile) {
                 // APP手机端使用触摸
                 let isTouch = false;
-                let start = [];
+                let last = [];
+                let lastTime = null;
                 let touchmoveFn = (event) => {
+                    let touches = event.touches || event.originalEvent.touches
                     // originalEvent
-                    if (event.touches.length >= 2 && isTouch) {
-                        var now = event.touches;
+                    if (touches.length >= 2 && isTouch) {
+                        let current = new Date();
+                        if(current - lastTime < 200) {
+                            return;
+                        }
+                        let now = touches;
                         // Math.abs(event.touches[0].pageX - event.touches[1].pageX)
                         // getDistance
-                        if (getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) < getDistance(start[0].pageX, start[0].pageY, start[1].pageX, start[1].pageY)) {
+                        let distanceDiff = getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) - getDistance(last[0].pageX, last[0].pageY, last[1].pageX, last[1].pageY);
+                        if(Math.abs(distanceDiff) < 10) return;
+                        if (distanceDiff < 0) {
                             // 缩小
-                            me.zoomOut();
+                            zoomOutThrottle();
                         } else {
                             // 放大
-                            me.zoomIn();
+                            zoomInThrottle();
                         }
+                        lastTime = new Date();
+                        last = now;
                     }
                     // eventStop(event);
                 }
                 bindDomEvent(me.dom, "touchstart", (event) => {
-                    if (event.touches.length >= 2) {
-                        start = event.originalEvent.touches;
+                    let touches = event.touches || event.originalEvent.touches;
+                    if (touches.length >= 2) {
+                        last = touches;
                         isTouch = true;
                     }
                 });
@@ -1953,10 +1980,12 @@ class FlowDesign {
                     let data = event.wheelDelta || -event.detail;
                     if (data > 0) {
                         // 向上滚 放大
-                        me.zoomIn();
+                        // me.zoomIn();
+                        zoomInThrottle();
                     } else {
                         // 向下滚 缩小
-                        me.zoomOut();
+                        // me.zoomOut();
+                        zoomOutThrottle();
                     }
                     eventStop(event);
                 }
@@ -1968,12 +1997,12 @@ class FlowDesign {
 
     // 放大
     zoomIn() {
-        this.setScale(this.scaleValue + 0.2);
+        this.setScale(this.scaleValue + this.zoomInterval);
     };
 
     // 缩小
     zoomOut() {
-        this.setScale(this.scaleValue - 0.2);
+        this.setScale(this.scaleValue - this.zoomInterval);
     };
 
     // reset zoom

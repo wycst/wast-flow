@@ -432,3 +432,22 @@ export const eventStop = (evt) => {
 export const eventStopOnElement = (dom, eventName) => {
     bindDomEvent(dom, eventName, eventStop);
 }
+
+/**
+ * 节流函数
+ *
+ * @param fn
+ * @param delay
+ * @returns {(function(*): void)|*}
+ */
+export const throttle = (fn, delay) => {
+    let timer = null;
+    let that = this;
+    return (args) => {
+        if (timer) return;
+        timer = setTimeout(() => {
+            fn.apply(that, args);
+            timer = null;
+        }, delay);
+    }
+}
