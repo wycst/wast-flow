@@ -1,4 +1,4 @@
-import {createDomElementNs, pointsToPathD, id} from "./util";
+import {createDomElementNs, id, pointsToPathD} from "./util";
 import {
     SvgCircleElementData,
     SvgImageElementData,
@@ -9,17 +9,20 @@ import {
     xlinkNS
 } from "./ElementData"
 
+import Paper from "./Paper"
+
 /**
  * svg paper
  *
  * Note: svg text support capability is not as good as conventional dom nodes, unless foreignObject is used,
  */
-export default class SvgPaper {
+export default class SvgPaper extends Paper {
     _id;
     _node;
     _removed = false;
 
     constructor(selector, width, height) {
+        super();
         let parentNode;
         if (typeof selector == "string") {
             parentNode = document.querySelector(dom);
@@ -49,7 +52,7 @@ export default class SvgPaper {
     };
     get removed() {
         return this._removed;
-    }
+    };
 
     /**
      * draw rect
