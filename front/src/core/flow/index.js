@@ -1924,8 +1924,8 @@ class FlowDesign {
                     // originalEvent
                     if (event.touches.length >= 2 && isTouch) {
                         var now = event.touches;
-                        Math.abs(event.touches[0].pageX - event.touches[1].pageX)
-                        //当前距离变小， getDistance 是勾股定理的一个方法
+                        // Math.abs(event.touches[0].pageX - event.touches[1].pageX)
+                        // getDistance
                         if (getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) < getDistance(start[0].pageX, start[0].pageY, start[1].pageX, start[1].pageY)) {
                             // 缩小
                             me.zoomOut();

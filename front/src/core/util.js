@@ -260,7 +260,7 @@ export const bindDomClickEvent = (item, func) => {
     // 移动端这里区分下，如果长按则不触发单击事件
     bindDomEvent(item, "touchend", (event) => {
         let touchendTime = new Date().getTime();
-        if (touchendTime - item.__touchstart_time < 2000) {
+        if (touchendTime - item.__touchstart_time < 1500) {
             func(event);
         }
     });
@@ -306,12 +306,12 @@ export const bindDomLongtapEvent = (item, func) => {
         bindTouchstartEvent(item);
         bindDomEvent(item, "touchend", (event) => {
             let touchendTime = new Date().getTime();
-            if (touchendTime - item.__touchstart_time >= 2000) {
+            if (touchendTime - item.__touchstart_time >= 1500) {
                 func(event);
             }
         });
     } else {
-        console.error("longtap not supported for PC")
+        console.warn("longtap not supported for PC")
     }
 }
 
