@@ -16,8 +16,7 @@
 <script>
 import {wf} from "../core/index"
 import flowJson from "./flow.json"
-import done from "./done.png"
-import undo from "./undo.png"
+import element from "./element";
 export default {
     name: "flow-view.vue",
     props: {
@@ -42,17 +41,8 @@ export default {
             nowrap: false,
             // others settings
             settings: {
-                themeColor: "#A4404A",
+                themeColor: "#00CCA7",
             },
-            onNodeCreated(node, flow) {
-                console.log("onNodeCreated", node, flow);
-                if(node.text) {
-                    Object.assign(node.text.node.style, {
-                        transform: "translate(-50%, calc(-50% + 15px))",
-                    });
-                }
-            },
-
             // 自适应后微调
             overviewOffsetTop: -40,
             // 元素的悬浮事件
@@ -79,37 +69,19 @@ export default {
         // 自定义开始
         flow.registerHTML("start", (flow, options) => {
             let themeColor = (options && options.color) || flow.themeColor;
-            if (options && options.scene == "menu") {
-                return `<div style='height: 100%; width: 100%; background: #fff;border-radius: 50%; border: 1px solid ${themeColor}; color: ${themeColor}; display: flex;align-items: center;justify-content: center;font-size: 10px;'>开始</div>`;
-            }
-            return `<div style='height: 100%; width: 100%; background: #fff; border: 2px solid ${themeColor}; color: ${themeColor}; display: flex;align-items: center;justify-content: center;font-size: .9em;'>开始</div>`;
-        }, {
-            width: 180,
-            height: 60,
-            text: true
+            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border-radius: 30px;display: flex;align-items: center;justify-content: center;font-size: .9em;'>开始</div>`;
         });
         // 自定义结束
         flow.registerHTML("end", (flow, options) => {
             let themeColor = (options && options.color) || flow.themeColor;
-            if (options && options.scene == "menu") {
-                return `<div style='height: 100%; width: 100%; background: ${themeColor};border-radius: 50%; border: 1px solid ${themeColor}; color: #fff; display: flex;align-items: center;justify-content: center;font-size: 10px;'>结束</div>`;
-            }
-            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff; display: flex;align-items: center;justify-content: center;font-size: .9em;'>结束</div>`;
+            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff; border-radius: 30px;display: flex;align-items: center;justify-content: center;font-size: .9em;'>结束</div>`;
         });
         // 自定义节点(支持设置初始化大小)
-        flow.registerHTML("custom-node", (flow, options, element) => {
+        flow.registerHTML("custom-node", (flow, options) => {
             let themeColor = (options && options.color) || flow.themeColor;
-            if (options && options.scene == "menu") {
-                return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; overflow: hidden;display: flex;align-items: center;justify-content: center;'>
-                            <span style="font-size: 10px;">节点</span>
-                        </div>`;
-            }
-            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; overflow: hidden;'>
-                          <div style="width: 100%; height: 30px; display: flex; align-items: center;">
-                                <img src="${done}" width="18" height="18" style="margin: 0 5px; ">
-                                <span style="font-size: 12px;">已执行</span>
-                          </div>
-                          <div style="width: 100%; height: calc(100% - 30px);background: #fff"></div>
+            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; border-radius: 12px;overflow: hidden;'>
+                          <div style="width: 100%; height: 20%"></div>
+                          <div style="width: 100%; height: 80%;background: #fff"></div>
                       </div>`;
         }, {
             width: 180,

@@ -603,6 +603,14 @@ class NodeElementData extends ElementData {
         }
     }
 
+    get status() {
+        return this.data("status");
+    }
+
+    set status(val) {
+        this.data("status", val);
+    }
+
     updateTypeView() {
     }
 

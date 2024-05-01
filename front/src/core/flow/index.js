@@ -21,8 +21,8 @@ import {
     mouseupName,
     pathDToPoints,
     pointsToPathD,
-    uuid,
-    throttle
+    throttle,
+    uuid
 } from "../util"
 
 import {
@@ -376,13 +376,13 @@ class FlowDesign {
      * @param type
      * @returns {*|null|string}
      */
-    getCustomInnerHTML(type, options) {
+    getCustomInnerHTML(type, options, htmlNode) {
         let htmlObject = this.customHtmlTypes[type];
         if (typeof htmlObject == 'string') return htmlObject;
         if (htmlObject) {
             let innerHTML = htmlObject.innerHTML;
             if (innerHTML) {
-                return typeof innerHTML == 'function' ? innerHTML(this, options) : innerHTML;
+                return typeof innerHTML == 'function' ? innerHTML(this, options, htmlNode) : innerHTML;
             }
         }
         return null;
@@ -1721,10 +1721,10 @@ class FlowDesign {
      * @param style
      */
     setToolStyle(style) {
-      console.log("setToolStyle ", style, this.flowToolsDom);
-      if(this.flowToolsDom) {
-          Object.assign(this.flowToolsDom.style, style || {});
-      }
+        console.log("setToolStyle ", style, this.flowToolsDom);
+        if (this.flowToolsDom) {
+            Object.assign(this.flowToolsDom.style, style || {});
+        }
     };
 
     // 处理键盘事件
@@ -1882,9 +1882,9 @@ class FlowDesign {
                 if (!me.enablePanable() && !me.groupSelectionMode()) {
                     return;
                 }
-                if(me.isMobile()) {
+                if (me.isMobile()) {
                     let touches = event.touches || event.originalEvent.touches
-                    if(touches.length > 1) {
+                    if (touches.length > 1) {
                         removeEventListener("mousemove", onCanvasDragMove);
                         removeEventListener("touchmove", onCanvasDragMove);
                         return;
@@ -1942,14 +1942,14 @@ class FlowDesign {
                     // originalEvent
                     if (touches.length >= 2 && isTouch) {
                         let current = new Date();
-                        if(current - lastTime < 200) {
+                        if (current - lastTime < 200) {
                             return;
                         }
                         let now = touches;
                         // Math.abs(event.touches[0].pageX - event.touches[1].pageX)
                         // getDistance
                         let distanceDiff = getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) - getDistance(last[0].pageX, last[0].pageY, last[1].pageX, last[1].pageY);
-                        if(Math.abs(distanceDiff) < 10) return;
+                        if (Math.abs(distanceDiff) < 10) return;
                         if (distanceDiff < 0) {
                             // 缩小
                             zoomOutThrottle();
@@ -2268,8 +2268,9 @@ class FlowDesign {
     /**
      * 渲染html文本
      *
-     * @param rect
-     * @param text
+     * @param x
+     * @param y
+     * @param width
      * @returns {HtmlTextElementData}
      */
     renderHtmlText(x, y, width) {
@@ -3516,7 +3517,6 @@ class FlowDesign {
     createHTMLNode(type, x, y, w, h, nodeType, createFunction) {
         let htmlElement = this.renderHtmlNode(type, x, y, w, h, createFunction);
         this.setUUID(htmlElement);
-        onNodeCreated(htmlElement, this);
         htmlElement.data("handler", {});
         htmlElement.data("nodeType", nodeType);
         this.initElement(htmlElement);
@@ -3597,6 +3597,9 @@ class FlowDesign {
             text: this.settings.nodeName + " " + this.nextId()
         });
         node.data("text", text);
+
+        // trigger node created
+        onNodeCreated(node, this);
 
         // this.initElement(node);
         return node;
@@ -3735,6 +3738,7 @@ class FlowDesign {
             htmlElement.data("text", nodeText);
         }
 
+        onNodeCreated(htmlElement, this);
         this.initElement(htmlElement);
         return htmlElement;
     };
@@ -5302,7 +5306,7 @@ class FlowDesign {
             htmlType = htmlNode.customType;
         }
         if (htmlType) {
-            let innerHTML = this.getCustomInnerHTML(htmlType, {color, scene: "element"});
+            let innerHTML = this.getCustomInnerHTML(htmlType, {color, scene: "element"}, htmlNode);
             if (innerHTML) {
                 htmlNode.updateHTML(innerHTML);
             }
@@ -5464,7 +5468,7 @@ class FlowDesign {
             if (element.isPath()) {
                 connects.push(element);
             }
-            if(newElements[elementId]) {
+            if (newElements[elementId]) {
                 newElements[elementId].remove();
             }
             newElements[elementId] = element;
@@ -5980,6 +5984,33 @@ class FlowDesign {
     };
 
     /**
+     * 重置所有元素的完成状态为初始状态(颜色)
+     *
+     * @param color
+     */
+    resetComplete(color) {
+        let {elements} = this;
+        for (let elementId in elements) {
+            let element = elements[elementId];
+            if (element) {
+                element.status = "init";
+                this.setElementColor(element, color || this.themeColor);
+            }
+        }
+    };
+
+    /**
+     * 设置节点的状态为完成并以指定颜色点亮
+     *
+     * @param element
+     * @param color
+     */
+    completeElement(element, color) {
+        element.status = "completed";
+        this.setElementColor(element, color);
+    };
+
+    /**
      * 根据id完成一个元素状态
      */
     completeElementColorById(id, completeColor) {
@@ -6099,11 +6130,11 @@ class FlowDesign {
             this.alertMessage("结束节点[id=" + toElementId + "]不存在或无效", 5);
             return;
         }
-        this.setElementColor(fromElement, completeColor);
-        this.setElementColor(connect, completeColor);
+        this.completeElement(fromElement, completeColor);
+        this.completeElement(connect, completeColor);
 
         if (toElement.nodeType == NodeTypes.End) {
-            this.setElementColor(toElement, completeColor);
+            this.completeElement(toElement, completeColor);
         } else {
             if (toElementColor) {
                 this.setElementColor(toElement, toElementColor);
@@ -6126,10 +6157,10 @@ class FlowDesign {
             return;
         }
         let fromElement = connect.data("from"), toElement = connect.data("to");
-        this.setElementColor(fromElement, completeColor);
-        this.setElementColor(connect, completeColor);
+        this.completeElement(fromElement, completeColor);
+        this.completeElement(connect, completeColor);
         if (toElement.nodeType == NodeTypes.End) {
-            this.setElementColor(toElement, completeColor);
+            this.completeElement(toElement, completeColor);
         } else {
             if (toElementColor) {
                 this.setElementColor(toElement, toElementColor);

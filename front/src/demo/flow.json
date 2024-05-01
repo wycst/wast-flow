@@ -3,327 +3,271 @@
   "name": "test",
   "nodes": [
     {
-      "id": "luqc55wo",
+      "id": "lvnyfvfk",
       "type": "Start",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "414d5e74-5112-4b04-bac8-935cb39ef7bf",
+      "uuid": "257445e8-df06-4168-825a-1aed98d105f1",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 162,
-          "y": 158.5,
-          "width": 48,
-          "height": 48,
-          "color": "#074A23"
+          "x": 286,
+          "y": 27,
+          "width": 180,
+          "height": 60,
+          "color": "#A4404A"
         }
       }
     },
     {
-      "id": "luqc56og",
-      "name": "节点名称 4",
+      "id": "lvnyfwz4",
+      "name": "节点名称 1",
       "type": "Custom",
       "customType": "custom-node",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "7c0c7d66-81f2-4494-a644-6b02d2f68303",
+      "uuid": "7e4094e1-d439-400c-9bf7-2f1de91f3383",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 360,
-          "y": 142.5,
+          "x": 286,
+          "y": 181,
           "width": 180,
-          "height": 80,
-          "color": "#074A23"
+          "height": 80
         },
         "textAttrs": {
-          "x": 450,
-          "y": 182.5,
+          "x": 376,
+          "y": 221,
           "width": 144,
-          "text": "节点名称 4"
+          "text": "节点名称 1"
         }
       }
     },
     {
-      "id": "luqc5880",
-      "name": "节点名称 5",
+      "id": "lvnygh1c",
+      "name": "节点名称 2",
       "type": "Custom",
       "customType": "custom-node",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "f4e2345c-39a9-4c5e-a32e-d4eb70cf5d94",
+      "uuid": "63d274cb-c45a-47f9-ae8c-7f2b15014aaf",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 689,
-          "y": 142.5,
+          "x": 616,
+          "y": 31,
           "width": 180,
-          "height": 80,
-          "color": "#074A23"
+          "height": 80
         },
         "textAttrs": {
-          "x": 779,
-          "y": 182.5,
+          "x": 706,
+          "y": 71,
           "width": 144,
-          "text": "节点名称 5"
+          "text": "节点名称 2"
         }
       }
     },
     {
-      "id": "luqc59rk",
-      "name": "节点名称 6",
+      "id": "lvnygh1j",
+      "name": "节点名称 3",
       "type": "Custom",
       "customType": "custom-node",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "ca95f9ff-e39a-447e-898d-e00b50dcb69f",
+      "uuid": "11d70252-12a8-4266-ae87-6f67ba7557e8",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 1020,
-          "y": 42.5,
+          "x": 616,
+          "y": 373,
           "width": 180,
-          "height": 80,
-          "color": "#074A23"
+          "height": 80
         },
         "textAttrs": {
-          "x": 1110,
-          "y": 82.5,
+          "x": 706,
+          "y": 413,
           "width": 144,
-          "text": "节点名称 6"
+          "text": "节点名称 3"
         }
       }
     },
     {
-      "id": "luqc59rr",
-      "name": "节点名称 7",
-      "type": "Custom",
-      "customType": "custom-node",
-      "gateway": "XOR",
-      "handler": {},
-      "uuid": "0632b999-738d-40e1-8f11-e615a150a938",
-      "meta": {},
-      "component": {
-        "type": "html",
-        "attrs": {
-          "x": 1020,
-          "y": 242.5,
-          "width": 180,
-          "height": 80,
-          "color": "#074A23"
-        },
-        "textAttrs": {
-          "x": 1110,
-          "y": 282.5,
-          "width": 144,
-          "text": "节点名称 7"
-        }
-      }
-    },
-    {
-      "id": "luqc5bb4",
+      "id": "lvnygkw8",
       "type": "End",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "41d453ea-a10b-4c3b-8bd0-9da48b39db6f",
+      "uuid": "e150c250-e904-43fb-8bd1-c2c8d68e6dcf",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 1350,
-          "y": 58.5,
-          "width": 48,
-          "height": 48,
-          "color": "#074A23"
+          "x": 946,
+          "y": 41,
+          "width": 180,
+          "height": 60,
+          "color": "#A4404A"
         }
       }
     },
     {
-      "id": "luqc5cuo",
+      "id": "lvnygmfs",
       "type": "End",
       "gateway": "XOR",
       "handler": {},
-      "uuid": "a2efb35f-3b1a-4a73-b70f-9d523b477377",
+      "uuid": "68caef34-273b-474e-b2b7-5dab376a31d7",
       "meta": {},
       "component": {
         "type": "html",
         "attrs": {
-          "x": 1350,
-          "y": 258.5,
-          "width": 48,
-          "height": 48,
-          "color": "#074A23"
+          "x": 946,
+          "y": 383,
+          "width": 180,
+          "height": 60,
+          "color": "#A4404A"
         }
       }
     }
   ],
   "connects": [
     {
-      "id": "luqc56oi",
+      "id": "lvnyfwz6",
       "name": " ",
-      "fromId": "luqc55wo",
-      "toId": "luqc56og",
+      "fromId": "lvnyfvfk",
+      "toId": "lvnyfwz4",
       "priority": 0,
       "conditionType": "Always",
       "script": "",
-      "uuid": "464fe02f-7c11-40f4-9e2c-a91b3d5c4e29",
+      "uuid": "a232ec09-3d85-4a17-8a0f-ec348dc994a1",
       "meta": {},
       "pathStyle": "broken",
       "component": {
         "type": "path",
         "attrs": {
-          "d": "M215,182.5L355,182.5",
-          "stroke": "#074A23",
+          "d": "M376,92L376,176",
+          "stroke": "#A4404A",
           "stroke-width": 2,
           "cursor": "auto"
         },
         "textAttrs": {
-          "x": 272.5,
-          "y": 170,
+          "x": 363.5,
+          "y": 121.5,
           "width": 100,
           "text": " "
         }
       }
     },
     {
-      "id": "luqc5882",
+      "id": "lvnygh1e",
       "name": " ",
-      "fromId": "luqc56og",
-      "toId": "luqc5880",
+      "fromId": "lvnyfwz4",
+      "toId": "lvnygh1c",
       "priority": 0,
       "conditionType": "Always",
       "script": "",
-      "uuid": "e7842a2b-d29c-4f1d-8095-0e8c61f70891",
+      "uuid": "7a8779f4-147a-4f70-9884-09e71a6f82e0",
       "meta": {},
       "pathStyle": "broken",
       "component": {
         "type": "path",
         "attrs": {
-          "d": "M545,182.5L684,182.5",
-          "stroke": "#074A23",
+          "d": "M471,177.81818181818184L611,114.18181818181819",
+          "stroke": "#A4404A",
           "stroke-width": 2,
           "cursor": "auto"
         },
         "textAttrs": {
-          "x": 602,
-          "y": 170,
+          "x": 528.5,
+          "y": 133.5,
           "width": 100,
           "text": " "
         }
       }
     },
     {
-      "id": "luqc59rm",
+      "id": "lvnygh1l",
       "name": " ",
-      "fromId": "luqc5880",
-      "toId": "luqc59rk",
+      "fromId": "lvnyfwz4",
+      "toId": "lvnygh1j",
       "priority": 0,
       "conditionType": "Always",
       "script": "",
-      "uuid": "fa3aef3c-1a3f-4082-ae47-f7596824710c",
+      "uuid": "69ff6a9f-7495-4cd1-a404-79a63d47f55b",
       "meta": {},
       "pathStyle": "broken",
       "component": {
         "type": "path",
         "attrs": {
-          "d": "M779.45,137.5L780,82.5L1015,82.5",
-          "stroke": "#074A23",
+          "d": "M453.34375,266L628.65625,368",
+          "stroke": "#A4404A",
           "stroke-width": 2,
           "cursor": "auto"
         },
         "textAttrs": {
-          "x": 767.225,
-          "y": 97.5,
+          "x": 528.5,
+          "y": 304.5,
           "width": 100,
           "text": " "
         }
       }
     },
     {
-      "id": "luqc59rt",
+      "id": "lvnygkw9",
       "name": " ",
-      "fromId": "luqc5880",
-      "toId": "luqc59rr",
+      "fromId": "lvnygh1c",
+      "toId": "lvnygkw8",
       "priority": 0,
       "conditionType": "Always",
       "script": "",
-      "uuid": "6c1f298c-0d2b-42a8-bfcc-4c883dd9a41a",
+      "uuid": "3b17d004-d53f-403c-b2db-5d3fa3856cda",
       "meta": {},
       "pathStyle": "broken",
       "component": {
         "type": "path",
         "attrs": {
-          "d": "M779,227.5L779,282.5L1015,282.5",
-          "stroke": "#074A23",
+          "d": "M801,71L941,71",
+          "stroke": "#A4404A",
           "stroke-width": 2,
           "cursor": "auto"
         },
         "textAttrs": {
-          "x": 766.5,
-          "y": 242.5,
+          "x": 858.5,
+          "y": 58.5,
           "width": 100,
           "text": " "
         }
       }
     },
     {
-      "id": "luqc5bb5",
+      "id": "lvnygmft",
       "name": " ",
-      "fromId": "luqc59rk",
-      "toId": "luqc5bb4",
+      "fromId": "lvnygh1j",
+      "toId": "lvnygmfs",
       "priority": 0,
       "conditionType": "Always",
       "script": "",
-      "uuid": "4b236dfb-c171-43d5-865e-a4e3690d629a",
+      "uuid": "13adb9c1-f953-4b3b-abf8-4c3efd0d34fb",
       "meta": {},
       "pathStyle": "broken",
       "component": {
         "type": "path",
         "attrs": {
-          "d": "M1205,82.5L1345,82.5",
-          "stroke": "#074A23",
+          "d": "M801,413L941,413",
+          "stroke": "#A4404A",
           "stroke-width": 2,
           "cursor": "auto"
         },
         "textAttrs": {
-          "x": 1262.5,
-          "y": 70,
-          "width": 100,
-          "text": " "
-        }
-      }
-    },
-    {
-      "id": "luqc5cup",
-      "name": " ",
-      "fromId": "luqc59rr",
-      "toId": "luqc5cuo",
-      "priority": 0,
-      "conditionType": "Always",
-      "script": "",
-      "uuid": "67a0f377-d803-47a7-8366-c71d70e14677",
-      "meta": {},
-      "pathStyle": "broken",
-      "component": {
-        "type": "path",
-        "attrs": {
-          "d": "M1205,282.5L1345,282.5",
-          "stroke": "#074A23",
-          "stroke-width": 2,
-          "cursor": "auto"
-        },
-        "textAttrs": {
-          "x": 1262.5,
-          "y": 270,
+          "x": 858.5,
+          "y": 400.5,
           "width": 100,
           "text": " "
         }
       }
     }
   ],
-  "startNodeId": "luqc55wo"
+  "startNodeId": "lvnyfvfk"
 }
