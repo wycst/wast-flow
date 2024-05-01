@@ -251,13 +251,7 @@ const bindTouchstartEvent = (item) => {
  * @param func
  */
 export const bindDomClickEvent = (item, func) => {
-    // if (isMobile) {
-    //     // bindDomEvent(item, "touchend", func);
-    // } else {
-    // }
     bindTouchstartEvent(item);
-    // 移动端单击事件使用touchend - touchstart间隔模拟
-    // 移动端这里区分下，如果长按则不触发单击事件
     bindDomEvent(item, "touchend", (event) => {
         let touchendTime = new Date().getTime();
         if (touchendTime - item.__touchstart_time < 1500) {
@@ -296,7 +290,7 @@ export const bindDomDblClickEvent = (item, func) => {
 }
 
 /**
- * 3秒判定长按(移动端)
+ * 1.5秒判定长按(移动端)
  *
  * @param item
  * @param func
@@ -389,8 +383,6 @@ export const distanceToLine = (x0, y0, x1, y1, x2, y2) => {
     let a = sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
     let b = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     let c = sqrt((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
-    // 根据海伦公式求3个点围成的面积
-    // S=√[p(p-a)(p-b)(p-c)]
     let halfP = (a + b + c) / 2;
     let s = sqrt(halfP * (halfP - a) * (halfP - b) * (halfP - c));
     let h = 2 * s / b;
@@ -412,7 +404,7 @@ export const getDistance = (x1, y1, x2, y2) => {
 };
 
 /**
- * 阻止事件冒泡
+ * 阻止事件冒泡和默认事件
  *
  * @param evt
  */
