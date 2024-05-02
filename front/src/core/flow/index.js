@@ -2372,6 +2372,7 @@ class FlowDesign {
 
         let start = {};
         let end = {};
+        let fromSide = "e", toSide = "w";
         if (endCenterX < startCenterX && endCenterY < startCenterY) {
             // 结束节点位于开始节点的左上角
             let horizontalStartPoint = {};
@@ -2381,33 +2382,38 @@ class FlowDesign {
 
             if (horizontalStartPoint.x >= startX) {
                 start = horizontalStartPoint;
+                fromSide = "n";
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
                 start = verticalStartPoint;
+                fromSide = "w";
             }
-
             let horizontalEndPoint = {};
             horizontalEndPoint.y = endY + endHeight;
             horizontalEndPoint.x = this.getCoordinate(startCenterY, startCenterX,
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX && horizontalEndPoint.x <= endX + endWidth) {
                 end = horizontalEndPoint;
+                toSide = "s";
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX + endWidth;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
                 end = verticalEndPoint;
+                toSide = "e"
             }
 
         } else if (endCenterX < startCenterX && endCenterY == startCenterY) {
             assign(start, {x: startX, y: startCenterY});
             assign(end, {x: endX + endWidth, y: endCenterY});
+            fromSide = "w";
+            toSide = "e";
         } else if (endCenterX < startCenterX && endCenterY > startCenterY) {
-
+            // 结束节点位于开始节点的左下角
             let horizontalStartPoint = {};
             horizontalStartPoint.y = startY + startHeight;
             horizontalStartPoint.x =
@@ -2415,12 +2421,14 @@ class FlowDesign {
 
             if (horizontalStartPoint.x >= startX) {
                 start = horizontalStartPoint;
+                fromSide = "s";
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
                 start = verticalStartPoint;
+                fromSide = "w";
             }
 
             let horizontalEndPoint = {};
@@ -2429,21 +2437,29 @@ class FlowDesign {
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX && horizontalEndPoint.x <= endX + endWidth) {
                 end = horizontalEndPoint;
+                toSide = "n";
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX + endWidth;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
                 end = verticalEndPoint;
+                toSide = "e";
             }
         } else if (endCenterX == startCenterX && endCenterY < startCenterY) {
+            // 结束节点位于开始节点正上方
             assign(start, {x: startCenterX, y: startY});
             assign(end, {x: endCenterX, y: endY + endHeight});
+            fromSide = "n";
+            toSide = "s";
         } else if (endCenterX == startCenterX && endCenterY > startCenterY) {
+            // 结束节点位于开始节点正下方
             assign(start, {x: startCenterX, y: startY + startHeight});
             assign(end, {x: endCenterX, y: endY});
+            fromSide = "s";
+            toSide = "n";
         } else if (endCenterX > startCenterX && endCenterY < startCenterY) {
-
+            // 结束节点位于开始节点右上方
             let horizontalStartPoint = {};
             horizontalStartPoint.y = startY;
             horizontalStartPoint.x =
@@ -2451,12 +2467,14 @@ class FlowDesign {
 
             if (horizontalStartPoint.x <= startX + startWidth) {
                 start = horizontalStartPoint;
+                fromSide = "n";
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX + startWidth;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
                 start = verticalStartPoint;
+                fromSide = "e";
             }
 
             let horizontalEndPoint = {};
@@ -2465,17 +2483,23 @@ class FlowDesign {
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX) {
                 end = horizontalEndPoint;
+                toSide = "s";
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
                 end = verticalEndPoint;
+                toSide = "w";
             }
         } else if (endCenterX > startCenterX && endCenterY == startCenterY) {
+            // 结束节点位于开始节点正右方
             assign(start, {x: startX + startWidth, y: endCenterY});
             assign(end, {x: endX, y: endCenterY});
+            fromSide = "e";
+            toSide = "w";
         } else {
+            // 结束节点位于开始节点右下方
             // endCenterX > startCenterX && endCenterY > startCenterY
             let horizontalStartPoint = {};
             horizontalStartPoint.y = startY + startHeight;
@@ -2484,12 +2508,14 @@ class FlowDesign {
 
             if (horizontalStartPoint.x <= startX + startWidth) {
                 start = horizontalStartPoint;
+                fromSide = "s";
             } else {
                 let verticalStartPoint = {};
                 verticalStartPoint.x = startX + startWidth;
                 verticalStartPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalStartPoint.x);
                 start = verticalStartPoint;
+                fromSide = "e";
             }
 
             let horizontalEndPoint = {};
@@ -2498,15 +2524,17 @@ class FlowDesign {
                 endCenterY, endCenterX, horizontalEndPoint.y);
             if (horizontalEndPoint.x >= endX) {
                 end = horizontalEndPoint;
+                toSide = "n";
             } else {
                 let verticalEndPoint = {};
                 verticalEndPoint.x = endX;
                 verticalEndPoint.y = this.getCoordinate(startCenterX, startCenterY,
                     endCenterX, endCenterY, verticalEndPoint.x);
                 end = verticalEndPoint;
+                toSide = "w";
             }
         }
-        return {data: "M" + start.x + "," + start.y + "L" + end.x + "," + end.y, start, end};
+        return {data: "M" + start.x + "," + start.y + "L" + end.x + "," + end.y, start, end, fromSide, toSide};
     };
 
     /**
@@ -3935,7 +3963,7 @@ class FlowDesign {
             // line data
             let linePathData = this.getPathData(fromElement, toElement);
             // create qbc_control
-            let {start, end} = linePathData;
+            let {start, end, fromSide, toSide} = linePathData;
             console.log(start, end);
 
 
@@ -4947,10 +4975,23 @@ class FlowDesign {
         this.removePathRelationRects(pathElement);
         let qpb_control = pathElement.data("qpb_control");
         if(!qpb_control) {
+            // create
             let {from,to} = pathElement.data();
-            let {start, end} = this.getPathData(from, to);
+            let {x: fx, y: fy, width: fw, height:fh} = from.attr();
+            let {x: tx, y: ty, width: tw, height:th} = to.attr();
+            let {start, end, fromSide, toSide} = this.getPathData(from, to);
+            if(fromSide == 'n' || fromSide == 's') {
+                start.x = fx + fw / 2;
+            } else {
+                start.y = fy + fh / 2;
+            }
+            if(toSide == 'n' || toSide == 's') {
+                end.x = tx + tw / 2;
+            } else {
+                end.y = ty + th / 2;
+            }
             let qpb_control_x, qpb_control_y;
-            let distance = 20;
+            let distance = 50;
 
             let cx = (start.x + end.x) / 2;
             let cy = (start.y + end.y) / 2;
@@ -4960,9 +5001,11 @@ class FlowDesign {
                 qpb_control_x = cx;
                 qpb_control_y = cy + distance;
             } else {
-                let angle = atan(-1 / k);
+                let angle = atan(1 / k);
                 let sinValue = sin(angle);
                 let cosValue = cos(angle);
+                console.log("sinValue", sinValue);
+                console.log("cosValue", cosValue);
 
                 let dy = distance * sinValue;
                 let dx = distance * cosValue;
@@ -4971,8 +5014,12 @@ class FlowDesign {
             }
             let pathD = "M" + start.x + "," + start.y + "Q" + qpb_control_x + "," + qpb_control_y + "," + end.x + "," + end.y;
             pathElement.attr("d", pathD);
+            // qpb_control = this.createQpbControlDragRect(qpb_control_x, qpb_control_y, pathElement);
+            // pathElement.data("qpb_control", qpb_control);
+        } else {
+            // update path D
+
         }
-        // build the path d
     };
 
     /** 拖拽过程中实时更新pathD和文本文本 */

@@ -132,7 +132,7 @@ export default {
             if (options && options.scene == "menu") {
                 return `<div style='height: 100%; width: 100%; background: #fff;border-radius: 50%; border: 1px solid ${themeColor}; color: ${themeColor}; display: flex;align-items: center;justify-content: center;font-size: 10px;'>开始</div>`;
             }
-            return `<div style='height: 100%; width: 100%; background: #fff; border: 2px solid ${themeColor}; color: ${themeColor}; display: flex;align-items: center;justify-content: center;font-size: .9em;font-weight: bold;'>开始</div>`;
+            return `<div style='height: 100%; width: 100%; background: #fff; border: 2px solid ${themeColor};box-sizing: border-box; color: ${themeColor}; display: flex;align-items: center;justify-content: center;font-size: .9em;font-weight: bold;'>开始</div>`;
         }, {
             width: 180,
             height: 60,
@@ -150,11 +150,11 @@ export default {
         flow.registerHTML("custom-node", (flow, options, element) => {
             let themeColor = (options && options.color) || flow.themeColor;
             if (options && options.scene == "menu") {
-                return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; overflow: hidden;display: flex;align-items: center;justify-content: center;'>
+                return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; box-sizing: border-box; overflow: hidden;display: flex;align-items: center;justify-content: center;'>
                             <span style="font-size: 10px;">节点</span>
                         </div>`;
             }
-            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; overflow: hidden;'>
+            return `<div style='height: 100%; width: 100%; background: ${themeColor};color: #fff;border: 1px solid ghostwhite; box-sizing: border-box; overflow: hidden;'>
                           <div style="width: 100%; height: 30px; display: flex; align-items: center;">
                                 <img src="${done}" width="18" height="18" style="margin: 0 5px; ">
                                 <span style="font-size: 12px;">已执行</span>
