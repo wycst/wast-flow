@@ -2864,23 +2864,45 @@ class FlowDesign {
 
     /** 移除路径关联的rects */
     removePathRelationRects(targetElement) {
-        // 比如折线
-        let startElement = targetElement && targetElement.data("start");
-        if (startElement) {
-            let nextElement = startElement.data("right");
-            startElement.remove();
-            while (nextElement) {
-                let temp = nextElement;
-                let leftRect = temp.data("leftRect");
-                // leftRect.undrag();
-                leftRect.remove();
-                nextElement = nextElement.data("right");
-                // temp.undrag();
-                temp.remove();
+        let pathStyle = null;
+        if(targetElement && (pathStyle = targetElement.pathStyle)) {
+            if(pathStyle != "qbc") {
+                // 二次贝塞尔曲线控制点(1个)
+                let qbc_control = targetElement.data("qbc_control");
+                if(qbc_control) {
+                    qbc_control.remove();
+                }
             }
-            // remove ref
-            targetElement.removeData("start");
-            targetElement.removeData("end");
+            if(pathStyle != "cbc") {
+                // 三次贝塞尔曲线控制点(2个)
+                let cbc_control1 = targetElement.data("cbc_control1");
+                let cbc_control2 = targetElement.data("cbc_control2");
+                if(cbc_control1) {
+                    cbc_control1.remove();
+                }
+                if(cbc_control2) {
+                    cbc_control1.remove();
+                }
+            }
+
+            // 清除折线的链路控制点(递归)
+            let startElement = targetElement.data("start");
+            if (startElement) {
+                let nextElement = startElement.data("right");
+                startElement.remove();
+                while (nextElement) {
+                    let temp = nextElement;
+                    let leftRect = temp.data("leftRect");
+                    // leftRect.undrag();
+                    leftRect.remove();
+                    nextElement = nextElement.data("right");
+                    // temp.undrag();
+                    temp.remove();
+                }
+                // remove ref
+                targetElement.removeData("start");
+                targetElement.removeData("end");
+            }
         }
     };
 
@@ -3905,8 +3927,26 @@ class FlowDesign {
     resetPathData(pathElement, fromElement, toElement, pathStyle) {
         // reset pathElement
         if (pathStyle == "hv") {
+            // 垂平线
             this.updateH2VPath(pathElement);
+        } else if(pathStyle == "qbc") {
+            // 二次贝塞尔曲线
+            this.removePathRelationRects(pathElement);
+            // line data
+            let linePathData = this.getPathData(fromElement, toElement);
+            // create qbc_control
+            let {start, end} = linePathData;
+            console.log(start, end);
+
+
+
+        } else if(pathStyle == "cbc") {
+            // 三次贝塞尔曲线
+            this.removePathRelationRects(pathElement);
+            // line data
+            let linePathData = this.getPathData(fromElement, toElement);
         } else {
+            // broken or straight
             this.removePathRelationRects(pathElement);
             // line data
             let linePathData = this.getPathData(fromElement, toElement);
@@ -4797,6 +4837,13 @@ class FlowDesign {
                 this.updateH2VPath(pathElement);
                 break;
             }
+            case "qbc": {
+                // 二次贝塞尔曲线
+                this.updateQbcPath(pathElement);
+            }
+            case "cbc": {
+
+            }
             default: {
             }
         }
@@ -4894,6 +4941,38 @@ class FlowDesign {
             // update path position
             this.updateText(pathText, {x: textX, y: textY});
         }
+    };
+
+    updateQbcPath(pathElement) {
+        this.removePathRelationRects(pathElement);
+        let qpb_control = pathElement.data("qpb_control");
+        if(!qpb_control) {
+            let {from,to} = pathElement.data();
+            let {start, end} = this.getPathData(from, to);
+            let qpb_control_x, qpb_control_y;
+            let distance = 20;
+
+            let cx = (start.x + end.x) / 2;
+            let cy = (start.y + end.y) / 2;
+            let k = start.x == end.x ? 0 : (end.y - start.y) / (end.x - start.x);
+
+            if(k == 0) {
+                qpb_control_x = cx;
+                qpb_control_y = cy + distance;
+            } else {
+                let angle = atan(-1 / k);
+                let sinValue = sin(angle);
+                let cosValue = cos(angle);
+
+                let dy = distance * sinValue;
+                let dx = distance * cosValue;
+                qpb_control_x = dx + cx;
+                qpb_control_y = dy + cy;
+            }
+            let pathD = "M" + start.x + "," + start.y + "Q" + qpb_control_x + "," + qpb_control_y + "," + end.x + "," + end.y;
+            pathElement.attr("d", pathD);
+        }
+        // build the path d
     };
 
     /** 拖拽过程中实时更新pathD和文本文本 */

@@ -923,7 +923,7 @@ export class SvgPathElementData extends SvgElementData {
 
     // broken/straight/straight
     set pathStyle(val) {
-        if (!val || ["broken", "straight", "hv"].includes(val)) {
+        if (!val || ["broken", "straight", "hv", "qbc", "cbc"].includes(val)) {
             this.data("pathStyle", val);
         } else {
             throw new Error(`pathStyle ${val} not supported`);
