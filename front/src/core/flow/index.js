@@ -3599,6 +3599,7 @@ class FlowDesign {
             text: this.settings.nodeName + " " + this.nextId()
         });
         rect.data("text", text);
+        this.dragableElement(text, rect);
 
         // create icon
         let iconNode = this.renderHtmlNode("empty", x + 5, y + 5, 20, 20).attr({
@@ -3647,6 +3648,7 @@ class FlowDesign {
             text: this.settings.nodeName + " " + this.nextId()
         });
         node.data("text", text);
+        this.dragableElement(text, node);
 
         // trigger node created
         onNodeCreated(node, this);
@@ -3736,6 +3738,7 @@ class FlowDesign {
         // create text
         let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
         nodeElement.data("text", nodeText);
+        this.dragableElement(nodeText, nodeElement);
 
         //if has icon create icon(svg)
         let icon = type.toLowerCase();
@@ -3786,6 +3789,7 @@ class FlowDesign {
             // 判断是否需要创建text create text
             let nodeText = this.renderHtmlText(0, 0, attrs.width * 0.8).attr(textAttrs);
             htmlElement.data("text", nodeText);
+            this.dragableElement(nodeText, htmlElement);
         }
 
         onNodeCreated(htmlElement, this);
@@ -3964,10 +3968,6 @@ class FlowDesign {
             let linePathData = this.getPathData(fromElement, toElement);
             // create qbc_control
             let {start, end, fromSide, toSide} = linePathData;
-            console.log(start, end);
-
-
-
         } else if(pathStyle == "cbc") {
             // 三次贝塞尔曲线
             this.removePathRelationRects(pathElement);
@@ -4046,6 +4046,20 @@ class FlowDesign {
             width: width + 10,
             height: height + 10
         }
+    };
+
+    createDragRect(x, y, datas, dragFn) {
+        let dragRect = this.renderRect(x - 2.5, y - 2.5, 5,
+            5, 2.5, 2.5).attr({
+            fill: "#fff",
+            stroke: this.themeColor,
+            cursor: 'move'
+        });
+        if(datas) {
+            dragRect.data(datas);
+        }
+        this.dragableElement(dragRect, dragRect, dragFn);
+        return dragRect;
     };
 
     createControlDragRect(x, y, pathElement) {
@@ -4205,11 +4219,15 @@ class FlowDesign {
      *
      * @param target
      */
-    dragableElement(target) {
+    dragableElement(target, moveTarget, dragCallbackFn) {
         let me = this;
         let context = {
             moved: false
         };
+        if(!moveTarget) {
+            moveTarget = target;
+        }
+
         // 支持拖拽
         target.drag((dx, dy) => {
             // drag move
@@ -4221,11 +4239,14 @@ class FlowDesign {
                     return;
                 }
             }
-            me.elementDragMove(target, dx, dy);
+            me.elementDragMove(moveTarget, dx, dy);
+            if(dragCallbackFn) {
+                dragCallbackFn();
+            }
         }, () => {
             // drag start
             if (!me.option.editable) return;
-            me.elementDragStart(target);
+            me.elementDragStart(moveTarget);
             me.dragingElement = target;
             // history
             if (me.enableHistory()) {
@@ -4235,7 +4256,7 @@ class FlowDesign {
         }, () => {
             // drag up
             if (!me.option.editable) return;
-            me.elementDragUp(target);
+            me.elementDragUp(moveTarget);
             me.dragingElement = null;
             target.attr({opacity: 1});
             me.hideAlignLines();
@@ -4396,9 +4417,11 @@ class FlowDesign {
         };
         // set position
         element.attr(location);
-        if (!element.isText()) {
+        let {editable} = element.data();
+        if (!element.isText() && editable !== false) {
             // 处理对齐线的显示和隐藏
             this.handleAlignLines(element);
+            // 更新关联的元素信息
             this.updateElements(element);
             // 是否显示编辑辅助项组件元素
             this.showEditElements(element);
@@ -4973,53 +4996,71 @@ class FlowDesign {
 
     updateQbcPath(pathElement) {
         this.removePathRelationRects(pathElement);
-        let qpb_control = pathElement.data("qpb_control");
-        if(!qpb_control) {
-            // create
-            let {from,to} = pathElement.data();
-            let {x: fx, y: fy, width: fw, height:fh} = from.attr();
-            let {x: tx, y: ty, width: tw, height:th} = to.attr();
-            let {start, end, fromSide, toSide} = this.getPathData(from, to);
-            if(fromSide == 'n' || fromSide == 's') {
-                start.x = fx + fw / 2;
-            } else {
-                start.y = fy + fh / 2;
+        let {qbc_control, from,to, fromSide, toSide} = pathElement.data();
+        // create
+        let {x: fx, y: fy, width: fw, height:fh} = from.attr();
+        let {x: tx, y: ty, width: tw, height:th} = to.attr();
+        let start = {}, end = {};
+        let qbc_control_x, qbc_control_y, qbc_control_offsetx = 0, qbc_control_offsety = 0;
+        if(!qbc_control) {
+            let pathData = this.getPathData(from, to);
+            fromSide = pathData.fromSide;
+            toSide = pathData.toSide;
+            const onQbcControlDrag = () => {
+                let {x, y} = qbc_control.attr();
+                this.updateQbcPath(pathElement);
             }
-            if(toSide == 'n' || toSide == 's') {
-                end.x = tx + tw / 2;
-            } else {
-                end.y = ty + th / 2;
-            }
-            let qpb_control_x, qpb_control_y;
-            let distance = 50;
-
-            let cx = (start.x + end.x) / 2;
-            let cy = (start.y + end.y) / 2;
-            let k = start.x == end.x ? 0 : (end.y - start.y) / (end.x - start.x);
-
-            if(k == 0) {
-                qpb_control_x = cx;
-                qpb_control_y = cy + distance;
-            } else {
-                let angle = atan(1 / k);
-                let sinValue = sin(angle);
-                let cosValue = cos(angle);
-                console.log("sinValue", sinValue);
-                console.log("cosValue", cosValue);
-
-                let dy = distance * sinValue;
-                let dx = distance * cosValue;
-                qpb_control_x = dx + cx;
-                qpb_control_y = dy + cy;
-            }
-            let pathD = "M" + start.x + "," + start.y + "Q" + qpb_control_x + "," + qpb_control_y + "," + end.x + "," + end.y;
-            pathElement.attr("d", pathD);
-            // qpb_control = this.createQpbControlDragRect(qpb_control_x, qpb_control_y, pathElement);
-            // pathElement.data("qpb_control", qpb_control);
+            // create control rect
+            qbc_control = this.createDragRect(
+                0, 0,
+                {editable: false, qbc_control_offsetx: 0, qbc_control_offsety: 0},
+                onQbcControlDrag
+            );
+            pathElement.data("qbc_control", qbc_control);
         } else {
-            // update path D
-
+            qbc_control_offsetx = qbc_control.data('qbc_control_offsetx');
+            qbc_control_offsety = qbc_control.data('qbc_control_offsety');
         }
+        if(fromSide == 'n' || fromSide == 's') {
+            start.x = fx + fw / 2;
+            start.y = fromSide == 'n' ? fy - 5 : fy + fh + 5;
+        } else {
+            start.x = fromSide == 'w' ? fx - 5 : fx + fw + 5;
+            start.y = fy + fh / 2;
+        }
+        if(toSide == 'n' || toSide == 's') {
+            end.x = tx + tw / 2;
+            end.y = toSide == 'n' ? ty - 5 : ty + th + 5;
+        } else {
+            end.x = toSide == 'w' ? tx - 5 : tx + tw + 5;
+            end.y = ty + th / 2;
+        }
+        let distance = 50;
+        let cx = (start.x + end.x) / 2;
+        let cy = (start.y + end.y) / 2;
+        // 这里注意像素轴和坐标轴区别(像素轴斜率 + 坐标轴斜率 = 0)
+        let k = start.x == end.x ? 0 : -(end.y - start.y) / (end.x - start.x);
+        if(k == 0) {
+            qbc_control_x = cx;
+            qbc_control_y = cy + distance;
+        } else {
+            let angle = atan(k);
+            let sinValue = sin(angle);
+            let cosValue = cos(angle);
+            let dy = distance * cosValue;
+            let dx = distance * sinValue;
+            qbc_control_x = dx + cx;
+            qbc_control_y = dy + cy;
+        }
+        let pathD = "M" + start.x + "," + start.y + "Q" + qbc_control_x + "," + qbc_control_y + "," + end.x + "," + end.y;
+        pathElement.attr("d", pathD);
+
+        pathElement.data("fromSide", fromSide);
+        pathElement.data("toSide", toSide);
+        qbc_control.attr({
+            x: qbc_control_x + qbc_control_offsetx,
+            y: qbc_control_y + qbc_control_offsety
+        });
     };
 
     /** 拖拽过程中实时更新pathD和文本文本 */

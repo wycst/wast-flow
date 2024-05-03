@@ -451,7 +451,7 @@ class ElementData {
 
     /**
      * 移动端长按事件
-     * 
+     *
      * @param longtapFn
      * @returns {ElementData}
      */
@@ -549,6 +549,9 @@ class ElementData {
      * 移除元素,并释放内存
      */
     remove() {
+        if (this.removed) {
+            return;
+        }
         let ele;
         if ((ele = this.data("text")) && typeof ele.remove == "function") {
             ele.remove();
@@ -1036,6 +1039,24 @@ export class SvgPathElementData extends SvgElementData {
      */
     isPath() {
         return true;
+    }
+
+    remove() {
+        let {qbc_control, cbc_control1, cbc_control2} = this.data();
+        console.log("remove path ", qbc_control);
+        if(this.pathStyle == 'qbc') {
+            if(qbc_control) {
+                qbc_control.remove();
+            }
+        } else if(this.pathStyle == 'cbc') {
+            if(cbc_control1) {
+                cbc_control1.remove();
+            }
+            if(cbc_control2) {
+                cbc_control2.remove();
+            }
+        }
+        return super.remove();
     }
 }
 
