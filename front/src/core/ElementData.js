@@ -283,6 +283,14 @@ class ElementData {
         return false;
     };
 
+    repaint() {
+        let parentNode = this.node.parentNode;
+        if(parentNode) {
+            parentNode.removeChild(this.node);
+            parentNode.appendChild(this.node);
+        }
+    };
+
     /**
      * is gateway node
      *

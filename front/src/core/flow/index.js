@@ -297,7 +297,9 @@ class FlowDesign {
             overflow: this.option.overflow || "hidden"
         };
         assign(dom.style, rootStyle);
-        dom.innerHTML = extensionTemplate;
+
+        let originalContent = dom.innerHTML || '';
+        dom.innerHTML = originalContent + extensionTemplate;
         if (this.option.menu) {
             this.initMenu(dom.children[0]);
         }
@@ -343,6 +345,7 @@ class FlowDesign {
         this.offsetY = 0;
         this.scaleValue = 1;
         this.zoomInterval = 0.1;
+        this.elementZIndex = 0;
     };
 
     /**
@@ -1666,52 +1669,58 @@ class FlowDesign {
                 userSelect: "none",
             });
 
-            // 设置item背景图片
-            flowToolsDom.querySelectorAll(".tool-item").forEach(item => {
-                let type = item.dataset.type;
-                let width = 36, height = 36;
-                assign(item.style, {
-                    width: `${width}px`,
-                    height: `${height}px`,
-                    margin: "2px 0",
-                    cursor: "pointer",
-                    background: "hsla(0,0%,100%,.9)",
-                    boxShadow: "0 1px 4px rgba(0,0,0,.3)",
-                });
-                // item.style.color = this.themeColor;
-                item.innerHTML = DEFAULT_HTML_TYPES[type];
-                const clickFn = function (event) {
-                    eventStop(event);
-                    if (type == "overview") {
-                        me.overview();
-                    } else if (type == "zoomReset") {
-                        me.zoomReset();
-                        // chrome文本位置有兼容问题
-                        if (isChrome) {
-                            me.triggerTextRefreshPos();
-                        }
-                    } else if (type == "zoomIn") {
-                        me.zoomIn();
-                        // chrome文本位置有兼容问题
-                        if (isChrome) {
-                            me.triggerTextRefreshPos();
-                        }
-                    } else if (type == "zoomOut") {
-                        me.zoomOut();
-                        // chrome文本位置有兼容问题
-                        if (isChrome) {
-                            me.triggerTextRefreshPos();
-                        }
+            setTimeout(() => {
+                // 设置item背景图片
+                flowToolsDom.querySelectorAll(".tool-item").forEach(item => {
+                    let type = item.dataset.type;
+                    let width = 36, height = 36;
+                    assign(item.style, {
+                        width: `${width}px`,
+                        height: `${height}px`,
+                        margin: "2px 0",
+                        cursor: "pointer",
+                        background: "hsla(0,0%,100%,.9)",
+                        boxShadow: "0 1px 4px rgba(0,0,0,.3)",
+                    });
+                    // item.style.color = this.themeColor;
+                    let innerHTML = me.getCustomInnerHTML(type);
+                    item.innerHTML = innerHTML; // DEFAULT_HTML_TYPES[type];
+                    if(!innerHTML) {
+                        item.style.display = "none";
                     }
+                    const clickFn = function (event) {
+                        eventStop(event);
+                        if (type == "overview") {
+                            me.overview();
+                        } else if (type == "zoomReset") {
+                            me.zoomReset();
+                            // chrome文本位置有兼容问题
+                            if (isChrome) {
+                                me.triggerTextRefreshPos();
+                            }
+                        } else if (type == "zoomIn") {
+                            me.zoomIn();
+                            // chrome文本位置有兼容问题
+                            if (isChrome) {
+                                me.triggerTextRefreshPos();
+                            }
+                        } else if (type == "zoomOut") {
+                            me.zoomOut();
+                            // chrome文本位置有兼容问题
+                            if (isChrome) {
+                                me.triggerTextRefreshPos();
+                            }
+                        }
 
-                };
-                // zoom处理
-                bindDomClickEvent(item, clickFn);
-                // stop panto
-                bindDomEvent(item, mousedownName, (event) => {
-                    eventStop(event);
+                    };
+                    // zoom处理
+                    bindDomClickEvent(item, clickFn);
+                    // stop panto
+                    bindDomEvent(item, mousedownName, (event) => {
+                        eventStop(event);
+                    });
                 });
-            });
+            }, 0);
         }
     };
 
@@ -2247,15 +2256,16 @@ class FlowDesign {
      * 根据html创建节点（以div作为容器）
      */
     renderHtmlNode(type, x, y, width, height, createFunction) {
-        let html = this.getCustomInnerHTML(type);
-        if (html === undefined || html === null) {
-            console.error(`html type [${type}] is null or not register`);
-            return;
-        }
         let domEle = createDomElement("div", this.flowWrapper);
-        domEle.innerHTML = html;
         domEle.style.position = "absolute";
         let element = typeof createFunction == 'function' ? createFunction(domEle) : new HtmlElementData(domEle)
+        let html = this.getCustomInnerHTML(type, {}, element);
+        if (html === undefined || html === null) {
+            console.error(`html type [${type}] is null or not register`);
+            element.remove();
+            return;
+        }
+        domEle.innerHTML = html;
         element.attr({
             x: x || 0,
             y: y || 0,
@@ -2893,22 +2903,22 @@ class FlowDesign {
     /** 移除路径关联的rects */
     removePathRelationRects(targetElement) {
         let pathStyle = null;
-        if(targetElement && (pathStyle = targetElement.pathStyle)) {
-            if(pathStyle != "qbc") {
+        if (targetElement && (pathStyle = targetElement.pathStyle)) {
+            if (pathStyle != "qbc") {
                 // 二次贝塞尔曲线控制点(1个)
                 let qbc_control = targetElement.data("qbc_control");
-                if(qbc_control) {
+                if (qbc_control) {
                     qbc_control.remove();
                 }
             }
-            if(pathStyle != "cbc") {
+            if (pathStyle != "cbc") {
                 // 三次贝塞尔曲线控制点(2个)
                 let cbc_control1 = targetElement.data("cbc_control1");
                 let cbc_control2 = targetElement.data("cbc_control2");
-                if(cbc_control1) {
+                if (cbc_control1) {
                     cbc_control1.remove();
                 }
-                if(cbc_control2) {
+                if (cbc_control2) {
                     cbc_control1.remove();
                 }
             }
@@ -3055,7 +3065,6 @@ class FlowDesign {
             });
             if (element.data("text")) {
                 let textElement = element.data("text");
-                console.log("文本", textElement);
                 textElement.mouseover((evt) => {
                     mouseoverElementFn(element, evt);
                 });
@@ -3961,14 +3970,14 @@ class FlowDesign {
         if (pathStyle == "hv") {
             // 垂平线
             this.updateH2VPath(pathElement);
-        } else if(pathStyle == "qbc") {
+        } else if (pathStyle == "qbc") {
             // 二次贝塞尔曲线
             this.removePathRelationRects(pathElement);
             // line data
             let linePathData = this.getPathData(fromElement, toElement);
             // create qbc_control
             let {start, end, fromSide, toSide} = linePathData;
-        } else if(pathStyle == "cbc") {
+        } else if (pathStyle == "cbc") {
             // 三次贝塞尔曲线
             this.removePathRelationRects(pathElement);
             // line data
@@ -4055,7 +4064,7 @@ class FlowDesign {
             stroke: this.themeColor,
             cursor: 'move'
         });
-        if(datas) {
+        if (datas) {
             dragRect.data(datas);
         }
         this.dragableElement(dragRect, dragRect, dragFn);
@@ -4224,7 +4233,7 @@ class FlowDesign {
         let context = {
             moved: false
         };
-        if(!moveTarget) {
+        if (!moveTarget) {
             moveTarget = target;
         }
 
@@ -4240,7 +4249,7 @@ class FlowDesign {
                 }
             }
             me.elementDragMove(moveTarget, dx, dy);
-            if(dragCallbackFn) {
+            if (dragCallbackFn) {
                 dragCallbackFn();
             }
         }, () => {
@@ -4996,13 +5005,13 @@ class FlowDesign {
 
     updateQbcPath(pathElement) {
         this.removePathRelationRects(pathElement);
-        let {qbc_control, from,to, fromSide, toSide} = pathElement.data();
+        let {qbc_control, from, to, fromSide, toSide} = pathElement.data();
         // create
-        let {x: fx, y: fy, width: fw, height:fh} = from.attr();
-        let {x: tx, y: ty, width: tw, height:th} = to.attr();
+        let {x: fx, y: fy, width: fw, height: fh} = from.attr();
+        let {x: tx, y: ty, width: tw, height: th} = to.attr();
         let start = {}, end = {};
         let qbc_control_x, qbc_control_y, qbc_control_offsetx = 0, qbc_control_offsety = 0;
-        if(!qbc_control) {
+        if (!qbc_control) {
             let pathData = this.getPathData(from, to);
             fromSide = pathData.fromSide;
             toSide = pathData.toSide;
@@ -5021,14 +5030,14 @@ class FlowDesign {
             qbc_control_offsetx = qbc_control.data('qbc_control_offsetx');
             qbc_control_offsety = qbc_control.data('qbc_control_offsety');
         }
-        if(fromSide == 'n' || fromSide == 's') {
+        if (fromSide == 'n' || fromSide == 's') {
             start.x = fx + fw / 2;
             start.y = fromSide == 'n' ? fy - 5 : fy + fh + 5;
         } else {
             start.x = fromSide == 'w' ? fx - 5 : fx + fw + 5;
             start.y = fy + fh / 2;
         }
-        if(toSide == 'n' || toSide == 's') {
+        if (toSide == 'n' || toSide == 's') {
             end.x = tx + tw / 2;
             end.y = toSide == 'n' ? ty - 5 : ty + th + 5;
         } else {
@@ -5040,7 +5049,7 @@ class FlowDesign {
         let cy = (start.y + end.y) / 2;
         // 这里注意像素轴和坐标轴区别(像素轴斜率 + 坐标轴斜率 = 0)
         let k = start.x == end.x ? 0 : -(end.y - start.y) / (end.x - start.x);
-        if(k == 0) {
+        if (k == 0) {
             qbc_control_x = cx;
             qbc_control_y = cy + distance;
         } else {
@@ -6151,17 +6160,35 @@ class FlowDesign {
     };
 
     /**
-     * 重置所有元素的完成状态为初始状态(颜色)
+     * 重置所有元素的完成状态为初始状态(可指定颜色)
      *
      * @param color
      */
-    resetComplete(color) {
+    resetStatus(status, color) {
         let {elements} = this;
         for (let elementId in elements) {
             let element = elements[elementId];
             if (element) {
-                element.status = "init";
+                element.status = status || "init";
                 this.setElementColor(element, color || this.themeColor);
+            }
+        }
+    };
+
+    /**
+     * 将元素被遮挡时调至前端
+     * @param element
+     */
+    toFront(element) {
+        if (element) {
+            if(element.isSvg()) {
+                // svg
+                element.repaint();
+            } else {
+                element.node.style['z-index'] = ++this.elementZIndex;
+                if(element.text) {
+                    element.text.node.style['z-index'] = ++this.elementZIndex;
+                }
             }
         }
     };
@@ -6175,6 +6202,7 @@ class FlowDesign {
     completeElement(element, color) {
         element.status = "completed";
         this.setElementColor(element, color);
+        this.toFront(element);
     };
 
     /**
@@ -6184,6 +6212,7 @@ class FlowDesign {
         let element = this.setElementColorById(id, completeColor);
         if (element) {
             this.completeFrontLines(element, completeColor);
+            this.toFront(element);
         }
     };
 
@@ -6194,6 +6223,7 @@ class FlowDesign {
         let element = this.setElementColorByUUID(uuid, completeColor);
         if (element) {
             this.completeFrontLines(element, completeColor);
+            this.toFront(element);
         }
     };
 
@@ -6299,7 +6329,6 @@ class FlowDesign {
         }
         this.completeElement(fromElement, completeColor);
         this.completeElement(connect, completeColor);
-
         if (toElement.nodeType == NodeTypes.End) {
             this.completeElement(toElement, completeColor);
         } else {
