@@ -1934,52 +1934,44 @@ class FlowDesign {
     setScaleable(zoomable) {
         let me = this;
         if (zoomable) {
-            const zoomInThrottle = throttle(() => {
-                me.zoomIn();
-            }, 100);
-            const zoomOutThrottle = throttle(() => {
-                me.zoomOut();
-            }, 100);
+            // const zoomInThrottle = throttle(() => {
+            //     me.zoomIn();
+            // }, 100);
+            // const zoomOutThrottle = throttle(() => {
+            //     me.zoomOut();
+            // }, 100);
             // 移动端和PC端兼容处理
             if (browser.isMobile) {
                 // APP手机端使用触摸
                 let isTouch = false;
-                let last = [];
-                let lastTime = null;
+                let startScaleValue = null;
+                let startDistance = null;
+                // 缩放实现思路: 开始触摸记录下双指距离和缩放值，触摸过程中获取实时的双指距离，判断差值，动态设置当前的scaleValue
                 let touchmoveFn = (event) => {
                     let touches = event.touches || event.originalEvent.touches
                     // originalEvent
                     if (touches.length >= 2 && isTouch) {
-                        let current = new Date();
-                        if (current - lastTime < 200) {
+                        if (startDistance === null || startScaleValue === null) {
                             return;
                         }
-                        let now = touches;
-                        // Math.abs(event.touches[0].pageX - event.touches[1].pageX)
-                        // getDistance
-                        let distanceDiff = getDistance(now[0].pageX, now[0].pageY, now[1].pageX, now[1].pageY) - getDistance(last[0].pageX, last[0].pageY, last[1].pageX, last[1].pageY);
-                        if (Math.abs(distanceDiff) < 10) return;
-                        if (distanceDiff < 0) {
-                            // 缩小
-                            zoomOutThrottle();
-                        } else {
-                            // 放大
-                            zoomInThrottle();
-                        }
-                        lastTime = new Date();
-                        last = now;
+                        let distanceDiff = getDistance(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY) - startDistance;
+                        // 距离差值为负数缩小反之放大，50
+                        this.setScale(startScaleValue + this.zoomInterval * (distanceDiff / 50));
                     }
                     // eventStop(event);
                 }
                 bindDomEvent(me.dom, "touchstart", (event) => {
                     let touches = event.touches || event.originalEvent.touches;
                     if (touches.length >= 2) {
-                        last = touches;
+                        startScaleValue = this.scaleValue
                         isTouch = true;
+                        startDistance = getDistance(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
                     }
                 });
                 bindDomEvent(me.dom, "touchend", () => {
                     isTouch = false;
+                    startDistance = null;
+                    startScaleValue = null;
                 });
                 // touchmove
                 bindDomEvent(me.dom, "touchmove", touchmoveFn);
@@ -1989,12 +1981,10 @@ class FlowDesign {
                     let data = event.wheelDelta || -event.detail;
                     if (data > 0) {
                         // 向上滚 放大
-                        // me.zoomIn();
-                        zoomInThrottle();
+                        me.zoomIn();
                     } else {
                         // 向下滚 缩小
-                        // me.zoomOut();
-                        zoomOutThrottle();
+                        me.zoomOut();
                     }
                     eventStop(event);
                 }
@@ -2020,6 +2010,7 @@ class FlowDesign {
     };
 
     setScale(value) {
+        if(value == this.scaleValue) return;
         // this.translateX = 0;
         // this.translateY = 0;
         if (this.translateX != 0 || this.translateY != 0) {
@@ -2031,6 +2022,11 @@ class FlowDesign {
         }
         this.scaleValue = value;
         this.updateWrapperTransform();
+
+        let {onScaleChange} = this.option;
+        if(typeof onScaleChange == 'function') {
+            onScaleChange(value);
+        }
     };
 
     /**
