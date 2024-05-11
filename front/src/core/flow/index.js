@@ -2063,13 +2063,20 @@ class FlowDesign {
             console.warn("flow wrapper maybe display none, overview is cancel");
             return;
         }
+        let {overviewPadding, overviewPaddingLeft, overviewPaddingTop} = this.option;
+        console.log("overviewPaddingTop", overviewPaddingTop);
+        overviewPaddingLeft = overviewPaddingLeft || overviewPadding || 20;
+        overviewPaddingTop = overviewPaddingTop || overviewPadding || 20;
+        width -= overviewPaddingLeft * 2;
+        height -= overviewPaddingTop * 2;
+
         let center = {
             x: minX + elementsBoundingWidth / 2,
             y: minY + elementsBoundingHeight / 2
         }
         let targetCenter = {
-            x: width / 2,
-            y: height / 2
+            x: width / 2 + overviewPaddingLeft,
+            y: height / 2 + overviewPaddingTop
         }
         let viewWidth = width, viewHeight = height;
         console.log("viewHeight ", viewHeight);
@@ -6199,6 +6206,34 @@ class FlowDesign {
         element.status = "completed";
         this.setElementColor(element, color);
         this.toFront(element);
+        if(!element.isPath()) {
+            // 针对节点的入口只有一个且为开始节点时自动点亮开始
+            let connects = element.data("in");
+            if (connects && keys(connects).length == 1) {
+                for (let connectId in connects) {
+                    let conn = connects[connectId];
+                    let fromElement = conn.data("from");
+                    if (fromElement.nodeType == NodeTypes.Start && fromElement.status != 'completed') {
+                        this.completeElement(conn, color);
+                        this.completeElement(fromElement, color);
+                        break;
+                    }
+                }
+            }
+            // 针对节点的出口只有一个且为结束节点时自动点亮结束
+            connects = element.data("out");
+            if (connects && keys(connects).length == 1) {
+                for (let connectId in connects) {
+                    let conn = connects[connectId];
+                    let toElement = conn.data("to");
+                    if (toElement.nodeType == NodeTypes.End && toElement.status != 'completed') {
+                        this.completeElement(conn, color);
+                        this.completeElement(toElement, color);
+                        break;
+                    }
+                }
+            }
+        }
     };
 
     /**

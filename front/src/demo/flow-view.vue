@@ -64,7 +64,9 @@ export default {
             },
 
             // 自适应后微调
-            overviewOffsetTop: -40,
+            // overviewOffsetTop: -40,
+            overviewPaddingTop: 40,
+
             // 元素的悬浮事件
             mouseoverElement: this.mouseoverElement,
             mouseoutElement: this.mouseoutElement,
@@ -176,6 +178,8 @@ export default {
 
         // 初始化
         flow.resetStatus("init");
+
+        flow.overview();
 
         // 销毁
         // flow.destroy();
